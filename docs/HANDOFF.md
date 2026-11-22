@@ -191,3 +191,9 @@ Hecho:
 Con esto quedan hechas todas las tareas de software de las metas A y B (T01–T19). Pendiente: T13 en el monitor externo (autor, 24 nov) y T21 (póster). T20 solo si el profesor lo pide.
 
 Preguntas para el autor: fecha exacta del final de corte.
+
+## 2026-11-22 · Claude · main (relevo a Codex para visuales)
+Hecho: T22 creada en `docs/TAREAS.md` y prompt completo para GPT/Codex en `docs/PROMPT_VISUALES_GPT.md` (reglas, APIs que no se deben romper, prioridades y cómo verificar).
+A medias: nada de código.
+Siguiente paso: **Codex: T22.** Prioridad 1: el autor solo ve 1 clínica en el mapa de la ciudad; revisar el encuadre (`fit` en `src/render/map/city.ts`) en 1366×768, 1920×1080 y anchos < 900 px. Luego, rediseño visual del mapa, la escena, los personajes y la página. Claude: T21 (póster) cuando el autor lo pida.
+Preguntas para el autor: fecha exacta del final de corte.
