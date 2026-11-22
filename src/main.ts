@@ -20,61 +20,50 @@ import { LiveDriver, MockDriver } from './render/drivers';
 import { recoveryTime } from './batch/recovery';
 import { DemoMode } from './render/demo';
 
+import './ui/expo.css';
+
 const app = document.getElementById('app')!;
 app.innerHTML = `
-<style>
-  body { font-family: system-ui, sans-serif; margin: 0; background: #0f1720; color: #e6edf3; }
-  main { max-width: 1400px; margin: 0 auto; padding: 16px; }
-  h1 { font-size: 20px; } h2 { font-size: 16px; margin-top: 24px; }
-  button { background: #2563eb; color: white; border: 0; border-radius: 6px; padding: 8px 14px; cursor: pointer; margin-right: 6px; }
-  pre { background: #16202b; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 12px; }
-  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
-  nav button { background: #1e293b; } nav button[aria-selected="true"] { background: #2563eb; }
-  [data-speed][aria-pressed="true"] { outline: 2px solid #facc15; }
-  button:disabled { opacity: .4; cursor: not-allowed; }
-  #tip { position: absolute; pointer-events: none; background: rgba(15, 23, 32, .94); border: 1px solid #334155; border-radius: 6px; padding: 6px 10px; font-size: 12px; line-height: 1.45; max-width: 280px; z-index: 5; }
-  #tip b { display: block; font-size: 13px; margin-bottom: 2px; }
-  #subs { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 7; max-width: 92%; background: rgba(0, 0, 0, .78); color: #fff; font-size: 18px; line-height: 1.4; text-align: center; white-space: pre-line; padding: 8px 14px; border-radius: 8px; pointer-events: none; }
-  #demo-banner { position: absolute; top: 8px; right: 8px; z-index: 7; background: #a16207; color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 13px; pointer-events: none; }
-  #card { position: absolute; top: 8px; left: 8px; z-index: 6; max-width: 360px; background: rgba(15, 23, 32, .96); border: 1px solid #334155; border-radius: 8px; padding: 10px 12px; font-size: 13px; line-height: 1.5; }
-  #card b { display: block; font-size: 14px; margin-bottom: 4px; }
-  #card button { margin-top: 8px; padding: 4px 10px; }
-  .stage { display: grid; grid-template-columns: 1fr 320px; gap: 12px; align-items: start; }
-  @media (max-width: 900px) { .stage { grid-template-columns: 1fr; } }
-</style>
-<main>
-  <h1>SimUrgencias</h1>
-  <nav class="row" role="tablist">
+<header class="mast"><div class="mast-inner">
+  <h1><span class="brand-cross" aria-hidden="true">✚</span>SimUrgencias</h1>
+  <nav aria-label="Vistas del simulador" role="tablist">
     <button role="tab" data-tab="scene" aria-selected="true">Escena</button>
     <button role="tab" data-tab="sim" aria-selected="false">Motor (texto)</button>
     <button role="tab" data-tab="val" aria-selected="false">Validación</button>
   </nav>
-  <div class="row" id="controls">
-    <button id="pause">Pausa</button>
-    <button data-speed="1">×1</button><button data-speed="60">×60</button><button data-speed="120">×120</button><button data-speed="600">×600</button>
-    <label id="mass-wrap">Heridos <select id="mass-n" aria-label="Número de heridos del accidente"><option>5</option><option selected>8</option><option>15</option><option>25</option></select></label>
-    <button id="mass">Accidente masivo</button>
-    <button id="create" style="background:#16a34a">Crear mi paciente</button>
-    <button id="follow" style="background:#a16207">Seguir a mi paciente</button>
-    <button id="view" style="background:#0f766e">Ver ciudad</button>
-    <span id="clock"></span>
+</div></header>
+<main>
+  <header class="heading">
+    <div><div class="location">Valledupar <span> / </span> Modelos y simulación</div><h2 id="view-title">Servicio de urgencias</h2></div>
+    <div class="readouts"><div><small>Tiempo simulado</small><strong id="clock">—</strong></div><div><small>Pacientes en el sistema</small><strong id="n-patients">—</strong></div></div>
+  </header>
+  <div id="controls" class="toolbar">
+    <div class="toolgroup"><span class="group-title">Simulación</span><button id="pause">Pausa</button>
+      <div class="speeds"><button data-speed="1">×1</button><button data-speed="60">×60</button><button data-speed="120">×120</button><button data-speed="600">×600</button></div></div>
+    <div class="toolgroup" id="visitor-tools"><span class="group-title">Paciente</span>
+      <button id="create">Crear mi paciente</button><button id="follow">Seguir a mi paciente</button></div>
+    <div class="toolgroup" id="mass-tools"><label id="mass-wrap">Heridos <select id="mass-n" aria-label="Número de heridos del accidente"><option>5</option><option selected>8</option><option>15</option><option>25</option></select></label>
+      <button id="mass">Accidente masivo</button></div>
   </div>
   <section id="tab-scene">
     <div class="stage">
-      <div style="position: relative; min-width: 0">
-        <div id="scene" style="height: 680px; border-radius: 8px; overflow: hidden"></div>
-        <div id="tip" hidden></div>
-        <div id="card" role="dialog" aria-label="Recorrido del paciente" hidden></div>
-        <div id="subs" aria-live="polite" hidden></div>
-        <div id="demo-banner" hidden>Modo demostración · toca la pantalla o mueve el mouse para usar el simulador</div>
+      <div class="map-column">
+      <div class="map-card">
+        <div class="map-head"><div><span class="map-symbol" aria-hidden="true">◇</span><b id="map-heading">Plano del hospital</b></div>
+          <div class="view-group" role="group" aria-label="Vista y cámara"><button id="view">Ver ciudad</button><button id="minus" aria-label="Alejar">−</button><button id="plus" aria-label="Acercar">+</button><button id="fit">Ver todo</button></div>
+        </div>
+        <div class="canvas-wrap">
+          <div id="scene"></div><div id="tip" hidden></div>
+          <div id="card" role="dialog" aria-label="Información de la simulación" hidden></div>
+          <div id="subs" aria-live="polite" hidden></div>
+          <div id="demo-banner" hidden>Demostración · mueve el puntero para tomar el control</div>
+        </div>
+        <div class="map-foot"><div id="legend"></div><div id="city-key" hidden>Ocupación de camas <span>● &lt; 70 %</span><span>● 70–89 %</span><span>● ≥ 90 %</span></div></div>
+      </div>
+      <p id="toast" role="status"></p><p id="recovery" role="status"></p><p id="following"></p><p id="source"></p>
       </div>
       <aside id="panel"></aside>
     </div>
-    <p class="row" id="legend"></p>
-    <p id="toast" role="status" style="color:#facc15; min-height: 1em; margin: 4px 0"></p>
-    <p id="following" class="row" style="margin: 0"></p>
-    <p id="recovery" role="status" style="margin: 4px 0; color: #fca5a5"></p>
-    <p style="font-size: 12px; opacity: .75" id="source"></p>
   </section>
   <section id="tab-sim" hidden><pre id="state"></pre></section>
   <section id="tab-val" hidden></section>
@@ -89,6 +78,7 @@ document.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach(
       document.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach((o) => o.setAttribute('aria-selected', String(o === b)));
       for (const t of ['scene', 'sim', 'val']) $(`tab-${t}`).hidden = b.dataset.tab !== t;
       $('controls').hidden = b.dataset.tab === 'val';
+      $('view-title').textContent = b.dataset.tab === 'val' ? 'Validación del modelo' : b.dataset.tab === 'sim' ? 'Estado del motor' : 'Servicio de urgencias';
     }),
 );
 
@@ -110,41 +100,57 @@ const live = mockMode ? undefined : new LiveDriver(...makePair('realista'));
 const driver = live ?? new MockDriver();
 // T08: tooltips con el estado actual del motor (solo en vivo; el mock no tiene snapshot).
 const tip = $('tip');
+let lastTip = '', lastTipRead = -Infinity;
 const onHover = (hit: Hit | undefined, x: number, y: number) => {
+  const now = performance.now();
+  if(hit && !tip.hidden && now-lastTipRead<80)return;
+  lastTipRead=now;
   const t = hit && live && describe(hit, live.ed.snapshot(), (id) => live.ed.params.eps.find((e) => e.id === id)?.name ?? id, live.pb.ambulancesAway, (a) => live.pb.transfers.get(a)?.clinic);
   tip.hidden = !t;
   if (!t) return;
-  const color = t.level === undefined ? '#e6edf3' : `#${TRIAGE_COLOR[t.level].toString(16).padStart(6, '0')}`;
-  const b = document.createElement('b');
-  b.textContent = t.title;
-  b.style.color = color;
-  tip.replaceChildren(b, ...t.lines.map((l) => Object.assign(document.createElement('div'), { textContent: l })));
+  const color = t.level === undefined ? '#bdd7cb' : `#${TRIAGE_COLOR[t.level].toString(16).padStart(6, '0')}`;
+  const content = JSON.stringify([t.title,color,t.lines]);
+  if(content!==lastTip){
+    lastTip=content;
+    const b = document.createElement('b');
+    b.textContent = t.title;
+    b.style.borderLeftColor = color;
+    tip.replaceChildren(b, ...t.lines.map((l) => Object.assign(document.createElement('div'), { textContent: l })));
+  }
   // A la derecha del puntero; si no cabe, a la izquierda.
   const w = $('scene').clientWidth;
   tip.style.left = `${x + 16 + tip.offsetWidth > w ? x - 16 - tip.offsetWidth : x + 16}px`;
-  tip.style.top = `${y + 12}px`;
+  tip.style.top = `${Math.max(0,Math.min(y+12,$('scene').clientHeight-tip.offsetHeight))}px`;
 };
 // T19: mapa de la ciudad (segunda escena). Distancias ∝ tiempo medio de viaje; ocupación del snapshot del motor.
 const clinicParams = () => (live ? live.ed.params : realisticParams()).clinics;
+const clinicState = () => driver instanceof MockDriver ? driver.initialClinics : driver.ed.snapshot().clinics;
 const { hospital: scene, city } = mountScene($('scene'), driver, live ? onHover : undefined, {
   travelMeans: clinicParams().map((c) => distMean(c.travel)),
-  clinics: () => (live ? live.ed.snapshot().clinics : clinicParams().map((c) => ({ name: c.name, beds: c.beds, occupied: 0 }))),
+  clinics: clinicState,
   onClinic: (j) => {
     const p = live ? live.ed.params : realisticParams();
-    const occ = live ? live.ed.snapshot().clinics[j].occupied : 0;
+    const occ = clinicState()[j].occupied;
     const c = clinicCard(j, p, occ, driver.pb.receivedByClinic.get(j) ?? 0);
+    if (mockMode) c.lines[0] += ' · al inicio del registro';
     showInfoCard(c.title, '#e6edf3', c.lines);
   },
 });
 $('view').onclick = () => (scene.inCity ? city?.goHospital() : scene.goCity());
 // Solo en desarrollo (npm run dev): inspeccionar el estado desde la consola. No existe en el build de la feria.
 if (import.meta.env.DEV) Object.assign(window, { __sim: { driver, live, scene } });
+$('fit').onclick = () => { if (scene.inCity) city?.fit(); else { scene.follow = undefined; scene.resetCamera(); } };
+for (const [id, factor] of [['minus', .8], ['plus', 1.25]] as const)
+  $(id).onclick = () => scene.inCity ? city?.zoomBy(factor) : scene.zoomBy(factor);
+$('visitor-tools').hidden = $('mass-tools').hidden = mockMode;
+$('panel').hidden = mockMode;
+if (mockMode) $('city-key').prepend('Registro inicial · ');
 if (live) mountPanel($('panel'), live, (mode) => live.load(...makePair(mode)));
 
 $('source').textContent = mockMode
   ? 'Modo mock: reproduce src/render/mock/events.json (3 h de eventos reales del motor, semilla 2026).'
   : 'Motor en vivo. Arrastra para mover la cámara y usa la rueda para acercar. EPS y clínicas ficticias · parámetros estimados con fines académicos.';
-$('legend').innerHTML = ['Sin triage', 'I', 'II', 'III', 'IV', 'V']
+$('legend').innerHTML = '<b>Triage</b> ' + ['Sin triage', 'I', 'II', 'III', 'IV', 'V']
   .map((n, i) => `<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#${TRIAGE_COLOR[i].toString(16).padStart(6, '0')}"></span> ${n}</span>`)
   .join(' ');
 
@@ -200,7 +206,7 @@ function showCard(e: SimEvent): void {
 function showInfoCard(title: string, color: string, lines: string[]): void {
   const b = document.createElement('b');
   b.textContent = title;
-  b.style.color = color;
+  b.style.borderLeftColor = color;
   const close = Object.assign(document.createElement('button'), { textContent: 'Cerrar' });
   close.onclick = () => ($('card').hidden = true);
   $('card').replaceChildren(b, ...lines.map((l) => Object.assign(document.createElement('div'), { textContent: l })), close);
@@ -223,7 +229,11 @@ setInterval(() => {
   markSpeed(); // la demo cambia y restaura la velocidad
   $('view').textContent = scene.inCity ? 'Ver hospital' : 'Ver ciudad';
   $('pause').textContent = driver.paused ? 'Continuar' : 'Pausa';
-  $('clock').textContent = `${fmtClock(driver.pb.t)} · ×${driver.speed}${driver.paused ? ' (pausa)' : ''} · pacientes: ${driver.pb.figures.size}`;
+  $('clock').textContent = fmtClock(driver.pb.t);
+  $('n-patients').textContent = String(driver.pb.figures.size);
+  $('map-heading').textContent = scene.inCity ? 'Red de clínicas' : 'Plano del hospital';
+  $('legend').hidden = scene.inCity;
+  $('city-key').hidden = !scene.inCity;
   // T16: seguir, vigilar y mostrar la tarjeta de recorrido.
   if (followNextVisitor && newestVisitor()) {
     scene.follow = newestVisitor()!.id;
@@ -236,7 +246,7 @@ setInterval(() => {
   }
   ($('follow') as HTMLButtonElement).disabled = !newestVisitor();
   const f = scene.follow ? driver.pb.figures.get(scene.follow) : undefined;
-  $('following').textContent = f ? `Siguiendo a ${f.name} (anillo amarillo). Arrastra la escena o haz clic en el piso para soltar.` : 'Haz clic sobre un paciente para seguirlo con la cámara.';
+  $('following').textContent = scene.inCity ? 'Selecciona una clínica para consultar sus camas y convenios, o el hospital para entrar.' : f ? `Siguiendo a ${f.name} (anillo amarillo). Arrastra la escena o haz clic en el piso para soltar.` : 'Haz clic sobre un paciente para seguirlo con la cámara.';
   if (!live) return;
   const ed = live.ed;
   // T17: recuperación en vivo contra el gemelo sin accidente (misma semilla).

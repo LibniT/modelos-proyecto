@@ -12,7 +12,7 @@ Chart.register(LineController, LineElement, PointElement, LinearScale);
 type CapKey = keyof Params['capacity'];
 /** Límites = puestos dibujados en la escena (SPEC D4). */
 const SLIDERS: { key: CapKey | 'lambda'; label: string; min: number; max: number; step: number }[] = [
-  { key: 'lambda', label: 'Llegadas λ (pac/h, media)', min: 1, max: 30, step: 0.5 },
+  { key: 'lambda', label: 'Llegadas λ (pac/h)', min: 1, max: 30, step: 0.5 },
   { key: 'doctors', label: 'Médicos', min: 1, max: MAX.doctor, step: 1 },
   { key: 'triage', label: 'Enfermeras de triage', min: 1, max: MAX.triage, step: 1 },
   { key: 'admission', label: 'Auxiliares de admisión', min: 1, max: MAX.admission, step: 1 },
@@ -44,32 +44,23 @@ const clock = (t: number) => `${String(Math.floor((t % 1440) / 60)).padStart(2, 
 /** `reload(mode)` carga en el driver un motor nuevo del modo pedido (y su gemelo, T17). */
 export function mountPanel(root: HTMLElement, driver: LiveDriver, reload: (mode: Mode) => void): void {
   root.innerHTML = `
-<style>
-  .pnl { background: #16202b; border-radius: 8px; padding: 12px; font-size: 13px; }
-  .pnl h3 { font-size: 14px; margin: 12px 0 6px; } .pnl h3:first-child { margin-top: 0; }
-  .pnl label { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; margin-bottom: 6px; }
-  .pnl input[type=range] { grid-column: 1 / -1; width: 100%; }
-  .pnl select { width: 100%; padding: 4px; background: #0f1720; color: inherit; border: 1px solid #334155; border-radius: 4px; }
-  .pnl dl { display: grid; grid-template-columns: 1fr auto; gap: 3px 8px; margin: 0; }
-  .pnl dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
-  .pnl .note { font-size: 11px; opacity: .7; margin: 6px 0 0; }
-  .pnl .warn { background: #422006; color: #fde68a; padding: 6px 8px; border-radius: 6px; font-size: 12px; margin-top: 10px; }
-</style>
 <div class="pnl">
-  <h3>Modo</h3>
+  <h3><label for="pn-mode">Modo de simulación</label></h3>
   <select id="pn-mode">
-    <option value="realista">Realista (perfil horario, abandono)</option>
-    <option value="validacion">Validación (todo exponencial, λ constante)</option>
+    <option value="realista">Realista · perfil horario y abandono</option>
+    <option value="validacion">Validación · λ constante</option>
   </select>
-  <h3>Parámetros</h3>
-  ${SLIDERS.map((s) => `<label>${s.label}<output id="pn-out-${s.key}"></output><input type="range" id="pn-${s.key}" aria-label="${s.label}" min="${s.min}" max="${s.max}" step="${s.step}"></label>`).join('')}
-  <h3>Métricas <span id="pn-since" style="font-weight: normal; opacity: .7"></span></h3>
-  <dl>${METRICS.map((m, i) => `<dt>${m.label}</dt><dd id="pn-m${i}">—</dd>`).join('')}</dl>
-  <p class="note">Cada cambio de parámetros reinicia las métricas: miden solo la configuración actual (incluye su transitorio).</p>
-  <h3>Pacientes en el sistema N(t)</h3>
-  <div style="height: 150px"><canvas id="pn-chart"></canvas></div>
-  <p class="note" id="pn-twin-note" hidden>Línea gris punteada: el mismo hospital sin el accidente (misma semilla).</p>
-  <p class="warn">EPS y clínicas ficticias · parámetros estimados con fines académicos.</p>
+  <details open><summary>Capacidad y llegadas</summary><div class="sliders">
+    ${SLIDERS.map((s) => `<label>${s.label}<output id="pn-out-${s.key}"></output><input type="range" id="pn-${s.key}" aria-label="${s.label}" min="${s.min}" max="${s.max}" step="${s.step}"></label>`).join('')}
+  </div></details>
+  <div class="chart"><h3>Pacientes en el sistema</h3>
+    <div class="chart-box"><canvas id="pn-chart" aria-label="Pacientes a lo largo de las últimas doce horas simuladas"></canvas></div>
+    <p class="note" id="pn-twin-note" hidden>La línea punteada muestra el mismo hospital sin el accidente, con la misma semilla.</p>
+  </div>
+  <details open><summary>Métricas <small id="pn-since"></small></summary>
+    <dl>${METRICS.map((m, i) => `<dt>${m.label}</dt><dd id="pn-m${i}">—</dd>`).join('')}</dl>
+    <p class="note">Cada cambio de parámetros reinicia las métricas. Incluyen el transitorio de la configuración actual.</p>
+  </details>
 </div>`;
 
   const $ = <T extends HTMLElement>(id: string) => root.querySelector<T>(`#${id}`)!;
@@ -78,17 +69,20 @@ export function mountPanel(root: HTMLElement, driver: LiveDriver, reload: (mode:
     data: {
       datasets: [
         // stepped 'after': el valor se mantiene hasta el instante del siguiente evento (trayectoria escalonada exacta)
-        { data: [] as { x: number; y: number }[], borderColor: '#60a5fa', borderWidth: 1.5, pointRadius: 0, stepped: 'after' },
+        { data: [] as { x: number; y: number }[], borderColor: '#257d76', borderWidth: 2.5, pointRadius: 0, stepped: 'after' },
         // T17: el gemelo sin accidente (solo se llena después de un accidente)
-        { data: [] as { x: number; y: number }[], borderColor: '#94a3b8', borderWidth: 1.5, borderDash: [4, 3], pointRadius: 0, stepped: 'after' },
+        { data: [] as { x: number; y: number }[], borderColor: '#677373', borderWidth: 1.5, borderDash: [4, 3], pointRadius: 0, stepped: 'after' },
       ],
     },
     options: {
       animation: false,
       maintainAspectRatio: false,
       scales: {
-        x: { type: 'linear', ticks: { color: '#94a3b8', callback: (v) => clock(Number(v) * 60), maxTicksLimit: 6 }, grid: { color: '#1e293b' } },
-        y: { beginAtZero: true, ticks: { color: '#94a3b8', precision: 0 }, grid: { color: '#1e293b' } },
+        x: { type: 'linear', ticks: { color: '#536e69', callback(v) {
+          const minutes = Number(v) * 60;
+          return this.max - this.min < .12 ? clock(minutes) + ':' + String(Math.floor(minutes * 60) % 60).padStart(2, '0') : clock(minutes);
+        }, maxTicksLimit: 4 }, grid: { color: '#dce4d8' } },
+        y: { beginAtZero: true, ticks: { color: '#536e69', precision: 0 }, grid: { color: '#dce4d8' } },
       },
       plugins: { legend: { display: false } },
     },

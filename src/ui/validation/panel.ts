@@ -23,9 +23,10 @@ export function mountValidationPanel(root: HTMLElement): void {
   root.innerHTML = `
 <style>
   .val table { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 12px; }
-  .val th, .val td { border-bottom: 1px solid #2a3644; padding: 6px 8px; text-align: right; }
+  .val th, .val td { border-bottom: 1px solid #d1dbcf; padding: 7px 9px; text-align: right; }
+  .val th { background: #e8eedf; color: #234c4d; }
   .val th:first-child, .val td:first-child, .val td:nth-child(2) { text-align: left; }
-  .val .ok { color: #4ade80; } .val .warn { color: #facc15; } .val .bad { color: #f87171; font-weight: bold; }
+  .val .ok { color: #146444; } .val .warn { color: #866019; } .val .bad { color: #a53d35; font-weight: bold; }
   .val progress { width: 220px; vertical-align: middle; }
   .val .wrap { overflow-x: auto; }
 </style>

@@ -59,4 +59,4 @@ Estados: `pendiente` · `en curso (agente, fecha)` · `hecha` · `bloqueada (por
 | T19 | Mapa de la ciudad con hospital y 3 clínicas (ocupación en vivo, ambulancias) | Claude | `src/render/map` | hecha (Claude, 22 nov) |
 | T20 | Notebook SimPy de contraste (solo si el profesor lo pide) | Claude | `notebooks/` | pendiente |
 | T21 | Póster / informe: textos y figuras desde `docs/VALIDACION.md` y T14 | Autor + Claude | `docs/` | pendiente |
-| T22 | **Mejorar visuales**: arreglar el encuadre del mapa (hoy el autor solo ve 1 clínica), rediseñar mapa y escena del hospital (paredes, muebles, profundidad), personajes e interfaz. Instrucciones completas en `docs/PROMPT_VISUALES_GPT.md` | Codex (GPT) | `src/render`, `src/ui`, `src/main.ts`, `tools/` | en curso (Codex, 2026-11-22) |
+| T22 | **Mejorar visuales**: arreglar el encuadre del mapa (hoy el autor solo ve 1 clínica), rediseñar mapa y escena del hospital (paredes, muebles, profundidad), personajes e interfaz. Instrucciones completas en `docs/PROMPT_VISUALES_GPT.md` | Codex (GPT) | `src/render`, `src/ui`, `src/main.ts`, `tools/` | hecha (Codex, 22 nov) |

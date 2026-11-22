@@ -26,24 +26,25 @@ export function mountCreator(openButton: HTMLButtonElement, getEd: () => Pick<Em
   dlg.className = 'cr';
   dlg.innerHTML = `
 <style>
-  dialog.cr { background: #16202b; color: #e6edf3; border: 1px solid #334155; border-radius: 10px; padding: 16px; max-width: 640px; width: calc(100% - 32px); }
-  dialog.cr::backdrop { background: rgba(0, 0, 0, .55); }
-  .cr h2 { margin: 0 0 10px; font-size: 18px; }
+  dialog.cr { background: #fffdf6; color: #213f40; border: 1px solid #aec4b5; border-radius: 14px; padding: clamp(16px,2vw,28px); max-width: 690px; width: calc(100% - 24px); max-height: 92svh; overflow: auto; }
+  dialog.cr::backdrop { background: rgba(24, 51, 52, .64); }
+  .cr h2 { margin: 0 0 16px; font-size: 28px; }
   .cr form { display: grid; grid-template-columns: 1fr 150px; gap: 12px; }
-  .cr .fields { display: grid; gap: 8px; font-size: 13px; }
+  .cr .fields { display: grid; gap: 8px; font-size: 14px; }
   .cr .fields > label { display: grid; gap: 3px; }
-  .cr input[type=text], .cr select { padding: 5px; background: #0f1720; color: inherit; border: 1px solid #334155; border-radius: 4px; }
+  .cr input[type=text], .cr select { padding: 6px; background: #f4f6ec; color: inherit; border: 1px solid #bbcabc; border-radius: 5px; }
   .cr-sw { display: flex; gap: 4px; flex-wrap: wrap; }
   .cr-sw input { position: absolute; opacity: 0; }
-  .cr-sw span { display: block; width: 20px; height: 20px; border-radius: 4px; border: 2px solid #334155; cursor: pointer; }
-  .cr-sw input:checked + span { border-color: #facc15; }
+  .cr-sw span { display: block; width: 22px; height: 22px; border-radius: 50%; border: 2px solid #e1e6da; cursor: pointer; }
+  .cr-sw input:checked + span { border-color: white; outline: 2px solid #245e59; }
   .cr-sw input:focus-visible + span { outline: 2px solid #60a5fa; }
-  .cr .prev { text-align: center; }
-  .cr canvas { image-rendering: pixelated; width: ${W * 3}px; height: ${H * 3}px; background: #e5e7eb; border-radius: 6px; }
+  .cr .prev { text-align: center; align-self: start; background: #deeadf; border-radius: 10px; padding: 12px; }
+  .cr canvas { image-rendering: pixelated; width: ${W * 3}px; height: ${H * 3}px; }
   .cr .lvl { font-weight: bold; }
   .cr .note { font-size: 11px; opacity: .7; grid-column: 1 / -1; margin: 0; }
   .cr .act { grid-column: 1 / -1; display: flex; gap: 8px; justify-content: flex-end; }
-  .cr .err { color: #fca5a5; grid-column: 1 / -1; margin: 0; }
+  .cr .err { color: #9d422b; grid-column: 1 / -1; margin: 0; }
+  .cr [type=submit] { background: #226d69; color: white; }
   @media (max-width: 560px) { .cr form { grid-template-columns: 1fr; } }
 </style>
 <h2>Crea tu paciente</h2>
@@ -68,7 +69,7 @@ export function mountCreator(openButton: HTMLButtonElement, getEd: () => Pick<Em
   </div>
   <p class="note">Los síntomas son ejemplos para la simulación, ordenados según los niveles de la Resolución 5596 de 2015; en la vida real el triage lo hace un profesional. Tu paciente reemplaza la próxima llegada al hospital, así que el modelo de llegadas no cambia.</p>
   <p class="err" id="cr-err" hidden></p>
-  <div class="act"><button type="button" id="cr-cancel" style="background:#334155">Cancelar</button><button type="submit" value="send">Enviar al hospital</button></div>
+  <div class="act"><button type="button" id="cr-cancel">Cancelar</button><button type="submit" value="send">Enviar al hospital</button></div>
 </form>`;
   document.body.appendChild(dlg);
 

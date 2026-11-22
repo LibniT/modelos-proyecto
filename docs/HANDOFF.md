@@ -197,3 +197,12 @@ Hecho: T22 creada en `docs/TAREAS.md` y prompt completo para GPT/Codex en `docs/
 A medias: nada de código.
 Siguiente paso: **Codex: T22.** Prioridad 1: el autor solo ve 1 clínica en el mapa de la ciudad; revisar el encuadre (`fit` en `src/render/map/city.ts`) en 1366×768, 1920×1080 y anchos < 900 px. Luego, rediseño visual del mapa, la escena, los personajes y la página. Claude: T21 (póster) cuando el autor lo pida.
 Preguntas para el autor: fecha exacta del final de corte.
+
+## 2026-11-22 · Codex · feat/T22-visuales
+Hecho: T22. La ciudad encuadra las siluetas y las placas de las cuatro sedes al entrar, regresar y redimensionar. Río Claro, La Pilonera y Valle Verde conservan sus distancias del modelo. La red muestra ocupación del snapshot, resalta los edificios bajo el puntero y ofrece acercar, alejar y ver todo. El registro grabado identifica la ocupación inicial que contiene. Se dibujaron por código las fachadas, calles, parque, río y ambulancias orientadas por la vía.
+El plano del hospital tiene paredes, ventanas, umbral, guías de piso, mobiliario y cortinas. Personal, pacientes y muebles comparten el orden de profundidad. El arte estático se guarda en texturas y los vehículos se reutilizan. Se revisaron los personajes de 24×32, la detección bajo el puntero, los controles por grupo, el vestidor, las tarjetas y la gráfica.
+Verificado en Chrome: al abrir el mapa en 1366×768, 1920×1080, 800×780 y 390×844 caben las cuatro sedes con su placa. En la versión anterior las tres clínicas también aparecieron en la primera apertura de estas pruebas, aunque los rótulos eran diminutos en móvil y volver al mapa conservaba el desplazamiento. En la nueva versión se comprobaron las tres tarjetas, el regreso al mapa tras desplazar la cámara, el cambio de ancho, un visitante y su recorrido, el accidente, la pausa, Validación (16/16), la demo con subtítulos, el mock y la hoja de personajes. A ×600, Phaser indicó unos 166 fps en una muestra corta de Chrome automatizado en este equipo.
+Pasaron las 87 pruebas, TypeScript y el build. Preview funcionó desde localhost con peticiones externas bloqueadas, incluido el Worker de validación. La consola de la prueba no registró excepciones ni solicitudes externas.
+A medias: ninguna parte obligatoria de T22. La vista interior opcional de las clínicas quedó fuera.
+Siguiente paso: T13, probar el portátil y el monitor físico de la feria a dos metros el 24 de noviembre.
+Preguntas para el autor: ninguna sobre T22.
