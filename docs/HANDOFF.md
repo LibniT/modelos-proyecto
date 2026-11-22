@@ -121,3 +121,19 @@ Hecho:
 Siguiente paso: T09 (personajes) y T10 (creador) siguen asignadas a Codex B. Claude: T21 (textos y figuras del póster desde VALIDACION.md, EXPERIMENTO_MEDICOS.md y WELCH.md).
 
 Preguntas para el autor: fecha exacta del final de corte. ¿T09/T10 los hace Codex o Claude?
+
+## 2026-11-22 · Claude · main (rama feat/T09-T10-personajes, ya fusionada)
+Hecho:
+- T09 (la tomó Claude por decisión del autor). `src/render/characters/pixels.ts`: personajes de 24×32 px dibujados por código como **matriz de píxeles pura** (`characterPixels`) + `paint(ctx)`. Vistas SE y NE (SW y NW por reflejo), caminar con 4 cuadros, sentado, 5 tonos de piel, 5 peinados × 6 colores de pelo, 3 tipos de camisa, colores de ropa, gorra/gafas/tapabocas, contorno de 1 px. Personal con uniforme: médico (bata blanca), enfermera de triage (verde azulado) y auxiliar de admisión.
+  - Escena: texturas en caché, dirección según el vector del MOVE, cuadro de caminata según la **distancia recorrida en el MOVE** (sin MOVE no hay paso), sentados en la sala de espera, acostados en cama y camilla. Burbuja de color del triage sobre la cabeza y flecha amarilla para los visitantes. Niños más pequeños; canas a los 65+.
+  - Pacientes del motor: aspecto de un catálogo determinista de 64 combinaciones (hash del id, sin Math.random) para no crear texturas sin límite.
+  - Hoja de personajes para revisar: `npm run dev` → http://localhost:5173/tools/characters.html
+- T10. `src/ui/creator/`: botón "Crear mi paciente" → ventana modal con nombre, edad, EPS, síntoma (12 ejemplos que cubren los 5 niveles de la Res. 5596, con advertencia de que son ilustrativos) y vestidor con vista previa de frente y de espaldas. Llama `ed.injectVisitor(...)`: el visitante **reemplaza la próxima llegada Poisson** y su nivel es el de su síntoma. Desactivado en validación.
+- `window.__sim = { driver, live }` solo en `npm run dev` (no existe en el build) para inspeccionar desde la consola.
+- 75 pruebas pasan, `npm run build` compila. SPEC §11.10 documenta que los personajes se generan en tiempo de ejecución, no como PNG.
+
+Probado en el navegador: el creador inyecta a "Visitante Expo", llega a los ~6 min simulados, el triage le da nivel II (dolor en el pecho) y aparece con su gorra y la flecha amarilla.
+
+Siguiente paso: T16 (seguir a mi personaje + tarjeta de recorrido con `DEPARTURE.data.journey`) encaja con el creador. Luego T17–T19 (Meta B) y T21 (póster).
+
+Preguntas para el autor: fecha exacta del final de corte. Revisar en el monitor de la feria que los personajes se lean bien a esa distancia (escala ADULT = 1,6 en scene.ts).
