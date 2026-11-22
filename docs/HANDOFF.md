@@ -164,3 +164,16 @@ Hecho:
 Siguiente paso: T18 (modo demo automático), T19 (mapa de la ciudad), T21 (póster: ya hay figuras de validación, T14, Welch y accidente).
 
 Preguntas para el autor: fecha exacta del final de corte.
+
+## 2026-11-22 · Claude · main (rama feat/T18-demo, ya fusionada)
+Hecho:
+- T18 (la tomó Claude por decisión del autor). `src/render/demo.ts`:
+  - `caption(e, nameOf, epsName)`: subtítulo de cada evento (llegada, triage con la explicación de su nivel y la Res. 5596 en el II, sala de espera por prioridad, consultorio, desenlace, pasillo, ambulancia, abandono, accidente masivo). Solo usa datos del evento.
+  - `DemoMode`: tras 60 s sin uso (pointer, tecla, rueda, toque) vuelve a la pestaña Escena, pone ×60, acerca la cámara y **sigue al siguiente paciente que llega**, narrando sus eventos (3 líneas, las viejas se van). Al salir el paciente aparece su tarjeta de recorrido (T16), que se oculta sola a los 8 s, y la cámara toma al próximo en llegar (máximo 2 min reales por paciente). Cualquier uso detiene la demo y restaura velocidad, pausa y cámara.
+  - `Playback.onApply` (se llama antes de aplicar cada evento) y `HospitalScene.resetCamera()` / `demoZoom()`.
+  - `?demo=10` en la URL adelanta la demo a 10 s (para probar o para la feria).
+- 84 pruebas pasan, `npm run build` compila. Probado en el navegador con `?demo=3`: arranca sola, sigue y narra; mover el mouse la detiene y restaura.
+
+Siguiente paso: T19 (mapa de la ciudad con hospital y clínicas) y T21 (póster).
+
+Preguntas para el autor: fecha exacta del final de corte. En la feria: ¿60 s de inactividad está bien o prefieres menos (`?demo=30`)?
