@@ -54,3 +54,14 @@ Decisiones (fieles al modelo):
 Siguiente paso: T06 (conectar al motor en vivo): crear un `LiveDriver` que implemente `Driver` (`ed.step(t)`, `pb.push(ed.drainEvents())`, `pb.advance(t)`) y construir `Playback` con `ed.snapshot()`. T07/T08/T12 ya no están bloqueadas.
 
 Preguntas para el autor: ¿T06 la hago yo (Claude) o Codex? Fecha exacta del final de corte.
+
+## 2026-11-22 · Claude · main (rama feat/T06-en-vivo, ya fusionada)
+Hecho:
+- T06. `src/render/drivers.ts` (sin Phaser): interfaz `Driver`, `LiveDriver(ed)` y `MockDriver` (movido desde `scene.ts`). `LiveDriver.tick(dt)`: `ed.step(t)` → `pb.push(ed.drainEvents())` → `pb.advance(t)`; un cuadro largo se limita a 0,25 s reales.
+- Ambulancias: su regreso no emite evento, así que `LiveDriver` lee qué ambulancias están fuera del recurso. Para eso agregué `Resource.isFree(id)` (solo lectura) en `src/engine/resource.ts`. El contrato de eventos no cambió.
+- `main.ts`: un solo motor alimenta la escena y la pestaña "Motor (texto)". Controles compartidos: pausa, ×1/×60/×120/×600 y accidente masivo. `?mock` en la URL reproduce el mock.
+- `tests/render/live.test.ts`: 10 h simuladas a ×600, con accidente masivo y cambio de médicos; en 120 comparaciones la escena coincide con `snapshot()` (pacientes, puestos, ambulancias fuera, capacidad). 60 pruebas pasan, `npm run build` compila.
+
+Siguiente paso: T07 (panel con deslizadores, `src/ui`): usa `driver.ed.setCapacity(...)` / `setArrivalRate(...)`; la escena ya reacciona a `PARAM_CHANGE` (puestos en gris). T08 tooltips: `driver.pb.figures` + `ed.snapshot()`.
+
+Preguntas para el autor: ¿T07 la hago yo o Codex? Fecha exacta del final de corte.
