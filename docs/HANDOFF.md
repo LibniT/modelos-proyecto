@@ -81,3 +81,19 @@ Meta A: T05, T06, T07 y T11 hechas. Falta T08 (tooltips) como mejora y T13 (prue
 Siguiente paso: T08 (tooltips: `driver.pb.figures` para ubicar al paciente bajo el puntero + `ed.snapshot()` para sus datos), T09 (personajes, Codex B), T12 (ambulancia animada).
 
 Preguntas para el autor: fecha exacta del final de corte.
+
+## 2026-11-22 · Claude · main (rama feat/T08-tooltips, ya fusionada)
+Hecho:
+- T08 (la tomó Claude por decisión del autor). Al pasar el mouse por la escena:
+  - **Paciente:** nombre, triage, edad, EPS, estado, tiempo en el servicio, tiempo esperando (o en cama), síntoma si lo hay.
+  - **Puesto** (cubículo, ventanilla, consultorio, cama, ambulancia): a quién atiende, libre, o sin personal si supera la capacidad actual; ambulancia "regresando".
+  - **Área:** ocupados / capacidad y cola (triage, admisión, consultorios), espera por médico, camas, pasillo, ocupación de clínicas.
+- `src/render/hit.ts`: `hitTest(pb, punto, snap)` (paciente > puesto por la huella del mueble > área). `layout.unIso` (inversa de `iso`). `scene.ts`: `mountScene(parent, driver, onHover?)`.
+- `src/ui/tooltip.ts`: `describe(hit, snapshot, epsName, ambAway)` → título y líneas. Todo sale de `ed.snapshot()` (SPEC §4.5). En `?mock` no hay tooltips (no hay snapshot).
+- 65 pruebas pasan (4 nuevas en `tests/render/hit.test.ts`), `npm run build` compila.
+
+Limitación conocida: la detección de muebles usa el piso; sobre la cara superior de un mueble alto (tabiques, ambulancias) el punto cae un poco delante y puede mostrar el área en vez del puesto.
+
+Siguiente paso: T09 (personajes, Codex B) y T12 (ambulancia animada). Autor: T13 el martes 24 (`npm run build` + `npm run preview` sin wifi en el monitor de la feria).
+
+Preguntas para el autor: fecha exacta del final de corte.
