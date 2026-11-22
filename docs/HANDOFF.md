@@ -206,3 +206,19 @@ Pasaron las 87 pruebas, TypeScript y el build. Preview funcionó desde localhost
 A medias: publicación remota. La revisión automática rechazó tanto el envío de main como el de feat/T22-visuales y pidió autorización explícita para el destino. La implementación y las pruebas están completas. La vista interior opcional de las clínicas quedó fuera.
 Siguiente paso: T13, probar el portátil y el monitor físico de la feria a dos metros el 24 de noviembre.
 Preguntas para el autor: ninguna sobre T22.
+
+## 2026-11-22 · Codex · feat/T23-recorrido-feria
+Hecho: T23. El creador vincula las solicitudes FIFO con el id real de ARRIVAL. «Mi paciente» distingue espera, estado, triage y salida. El aviso de accidente separa hora, heridos, tiempo, diferencia media y recuperación según T17. En las tres tarjetas se puede entrar a la planta de camas y volver al mapa. Las plazas representan ocupación agregada; el mock indica expresamente que presenta la ocupación inicial.
+
+La remisión normal respeta la red de la EPS, la cama disponible y la ambulancia del motor. «Seguir ambulancia» usa ×60 y restituye la velocidad al recibir DEPARTURE por remisión. El ensayo controlado usa otra instancia de EmergencyDepartment, con semilla 2026, la apariencia y el nombre creados, la clínica elegida en la red de ensayo y un desenlace de remisión. Prepara la consulta mediante eventos. La cama se reserva antes del despacho. El motor regula el tiempo de viaje y la liberación posterior del vehículo. Al salir del ensayo vuelve el reloj original, incluida su pausa, velocidad y gemelo. «Repetir demostración» prepara una instancia nueva.
+
+«Gráficas en vivo» conserva la trayectoria exacta de N(t), identifica el accidente y su gemelo, y mantiene hasta 12 horas de muestras de colas, camas y ambulancias por motor. Señala puestos ocupados ahora, espera y cumplimiento acumulados, y falta de datos. El Worker de validación sigue siendo independiente.
+
+Zoom reproducido en Chrome con traza de setZoom: los botones del hospital alcanzaban 3 y 0,15, la rueda limitaba a 2,5 y 0,3. ScaleManager.refresh llamaba a fit al volver a la pestaña y restauraba el zoom general (0,535 en la prueba). La cámara usa límites comunes y conserva el encuadre manual frente a resize. Se ensayaron 20 impulsos alternados de rueda/botón en cada dirección, tras arrastrar, cambiar de pestaña y redimensionar, en ciudad y hospital a 1366×768, 1920×1080 y 800×780. La ciudad conserva el encuadre de las cuatro sedes al entrar.
+
+Verificación: 87 pruebas, TypeScript y build correctos. Dos visitantes seguidos, tres viajes con el segundo, reserva antes de partir, ocupación al llegar contrastada con snapshot, pausa, cancelación, repetición y restauración del snapshot de la corrida original. Tarjetas de las tres sedes, remisión normal del mock, demo automática con ?demo=5, cambio de modo, reinicio de indicadores y reapertura de gráficas. Preview en localhost con HTTP/HTTPS externos bloqueados: tres destinos, cero solicitudes externas, cero excepciones y validación 16/16 dentro del IC 95 %. En Chrome automatizado sobre Windows (i7-13620H, 1920×1080, ×600 con accidente) Phaser indicó 157 fps al terminar una muestra de seis segundos.
+
+Guion del stand: 1) «Crear mi paciente» y «Enviar al hospital». 2) Esperar la llegada y pulsar «Seguir a [nombre]». 3) Elegir «Destino del ensayo» y «Demostrar traslado con mi paciente». 4) Acompañar la ambulancia y, al llegar, pulsar «Entrar a la clínica». 5) Abrir «Gráficas en vivo»; «Volver a mi corrida» devuelve la sesión principal para mostrar el accidente con su gemelo.
+A medias: queda la comprobación física de legibilidad a dos metros en el monitor del stand (T13).
+Siguiente paso: repetir este guion en el monitor externo el 24. Trabajo local en su rama; la publicación pendiente de T22 se gestiona aparte.
+Preguntas para el autor: ninguna sobre T23.

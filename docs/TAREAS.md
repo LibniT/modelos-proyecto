@@ -60,4 +60,4 @@ Estados: `pendiente` · `en curso (agente, fecha)` · `hecha` · `bloqueada (por
 | T20 | Notebook SimPy de contraste (solo si el profesor lo pide) | Claude | `notebooks/` | pendiente |
 | T21 | Póster / informe: textos y figuras desde `docs/VALIDACION.md` y T14 | Autor + Claude | `docs/` | pendiente |
 | T22 | **Mejorar visuales**: arreglar el encuadre del mapa (hoy el autor solo ve 1 clínica), rediseñar mapa y escena del hospital (paredes, muebles, profundidad), personajes e interfaz. Instrucciones completas en `docs/PROMPT_VISUALES_GPT.md` | Codex (GPT) | `src/render`, `src/ui`, `src/main.ts`, `tools/` | hecha (Codex, 22 nov) |
-| T23 | Recorrido de feria con visitante, remisión controlada, interiores de clínicas, gráficas en vivo y límites de cámara | Codex | `src/render`, `src/ui`, `src/main.ts`, `tools/` | en curso (Codex, 2026-11-22) |
+| T23 | Recorrido de feria con visitante, remisión controlada, interiores de clínicas, gráficas en vivo y límites de cámara | Codex | `src/render`, `src/ui`, `src/main.ts`, `tools/` | hecha (Codex, 22 nov) |
