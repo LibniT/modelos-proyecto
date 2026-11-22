@@ -3,7 +3,6 @@
  * Todo cambio pasa por la API del motor (setCapacity / setArrivalRate); la escena se entera por PARAM_CHANGE.
  */
 import { Chart, LinearScale, LineController, LineElement, PointElement } from 'chart.js';
-import type { EmergencyDepartment } from '../model/ed';
 import type { Mode, Params } from '../model/params';
 import type { LiveDriver } from '../render/drivers';
 import { MAX } from '../render/layout';
@@ -37,13 +36,13 @@ const METRICS: { label: string; show: (m: Record<string, number>) => string }[] 
   { label: 'Utilización de ambulancias', show: (m) => pct(m['amb.rho']) },
 ];
 
-/** Ventana de la gráfica y paso de muestreo, en minutos simulados. */
+/** Ventana de la gráfica, en minutos simulados. */
 const WINDOW = 12 * 60;
-const SAMPLE = 5;
 
 const clock = (t: number) => `${String(Math.floor((t % 1440) / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 
-export function mountPanel(root: HTMLElement, driver: LiveDriver, makeEd: (mode: Mode) => EmergencyDepartment): void {
+/** `reload(mode)` carga en el driver un motor nuevo del modo pedido (y su gemelo, T17). */
+export function mountPanel(root: HTMLElement, driver: LiveDriver, reload: (mode: Mode) => void): void {
   root.innerHTML = `
 <style>
   .pnl { background: #16202b; border-radius: 8px; padding: 12px; font-size: 13px; }
@@ -69,13 +68,21 @@ export function mountPanel(root: HTMLElement, driver: LiveDriver, makeEd: (mode:
   <p class="note">Cada cambio de parámetros reinicia las métricas: miden solo la configuración actual (incluye su transitorio).</p>
   <h3>Pacientes en el sistema N(t)</h3>
   <div style="height: 150px"><canvas id="pn-chart"></canvas></div>
+  <p class="note" id="pn-twin-note" hidden>Línea gris punteada: el mismo hospital sin el accidente (misma semilla).</p>
   <p class="warn">EPS y clínicas ficticias · parámetros estimados con fines académicos.</p>
 </div>`;
 
   const $ = <T extends HTMLElement>(id: string) => root.querySelector<T>(`#${id}`)!;
   const chart = new Chart($<HTMLCanvasElement>('pn-chart'), {
     type: 'line',
-    data: { datasets: [{ data: [] as { x: number; y: number }[], borderColor: '#60a5fa', borderWidth: 1.5, pointRadius: 0, stepped: true }] },
+    data: {
+      datasets: [
+        // stepped 'after': el valor se mantiene hasta el instante del siguiente evento (trayectoria escalonada exacta)
+        { data: [] as { x: number; y: number }[], borderColor: '#60a5fa', borderWidth: 1.5, pointRadius: 0, stepped: 'after' },
+        // T17: el gemelo sin accidente (solo se llena después de un accidente)
+        { data: [] as { x: number; y: number }[], borderColor: '#94a3b8', borderWidth: 1.5, borderDash: [4, 3], pointRadius: 0, stepped: 'after' },
+      ],
+    },
     options: {
       animation: false,
       maintainAspectRatio: false,
@@ -87,7 +94,7 @@ export function mountPanel(root: HTMLElement, driver: LiveDriver, makeEd: (mode:
     },
   });
   const series = chart.data.datasets[0].data as { x: number; y: number }[];
-  let nextSample = 0;
+  const twinSeries = chart.data.datasets[1].data as { x: number; y: number }[];
 
   const restartStats = () => {
     driver.ed.resetStats();
@@ -116,9 +123,9 @@ export function mountPanel(root: HTMLElement, driver: LiveDriver, makeEd: (mode:
   }
 
   $<HTMLSelectElement>('pn-mode').onchange = (e) => {
-    driver.load(makeEd((e.target as HTMLSelectElement).value as Mode));
+    reload((e.target as HTMLSelectElement).value as Mode);
     series.length = 0;
-    nextSample = 0;
+    twinSeries.length = 0;
     syncInputs();
     restartStats();
   };
@@ -126,17 +133,17 @@ export function mountPanel(root: HTMLElement, driver: LiveDriver, makeEd: (mode:
   syncInputs();
   restartStats();
 
-  // 5 veces por segundo: métricas y muestra de N(t) leídas del motor.
+  // 5 veces por segundo: métricas del motor y N(t) desde su trayectoria exacta (no se muestrea).
   setInterval(() => {
     const ed = driver.ed;
     const m = ed.metrics();
     METRICS.forEach((x, i) => ($(`pn-m${i}`).textContent = x.show(m)));
-    if (ed.now >= nextSample) {
-      // Se grafica en el instante real de lectura (no en la marca teórica): N es exactamente el del motor en ese t.
-      series.push({ x: ed.now / 60, y: ed.snapshot().patients.length });
-      nextSample = ed.now + SAMPLE;
-      while (series.length && series[0].x < (ed.now - WINDOW) / 60) series.shift();
-      chart.update('none');
-    }
+    if (!driver.nLive) return;
+    const a = Math.max(ed.now - WINDOW, 0);
+    series.splice(0, series.length, ...driver.nLive.points(a, ed.now));
+    // El gemelo sin accidente se dibuja desde el accidente (antes es idéntico).
+    twinSeries.splice(0, twinSeries.length, ...(driver.accident && driver.nTwin ? driver.nTwin.points(Math.max(a, driver.accident.t0), ed.now) : []));
+    $('pn-twin-note').hidden = !driver.accident;
+    chart.update('none');
   }, 200);
 }

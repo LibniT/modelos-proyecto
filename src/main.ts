@@ -15,6 +15,7 @@ import type { Hit } from './render/hit';
 import type { SimEvent } from './engine/events';
 import { mountScene, TRIAGE_COLOR } from './render/scene';
 import { LiveDriver, MockDriver } from './render/drivers';
+import { recoveryTime } from './batch/recovery';
 
 const app = document.getElementById('app')!;
 app.innerHTML = `
@@ -46,7 +47,8 @@ app.innerHTML = `
   <div class="row" id="controls">
     <button id="pause">Pausa</button>
     <button data-speed="1">×1</button><button data-speed="60">×60</button><button data-speed="120">×120</button><button data-speed="600">×600</button>
-    <button id="mass">Accidente masivo (8)</button>
+    <label id="mass-wrap">Heridos <select id="mass-n" aria-label="Número de heridos del accidente"><option>5</option><option selected>8</option><option>15</option><option>25</option></select></label>
+    <button id="mass">Accidente masivo</button>
     <button id="create" style="background:#16a34a">Crear mi paciente</button>
     <button id="follow" style="background:#a16207">Seguir a mi paciente</button>
     <span id="clock"></span>
@@ -63,6 +65,7 @@ app.innerHTML = `
     <p class="row" id="legend"></p>
     <p id="toast" role="status" style="color:#facc15; min-height: 1em; margin: 4px 0"></p>
     <p id="following" class="row" style="margin: 0"></p>
+    <p id="recovery" role="status" style="margin: 4px 0; color: #fca5a5"></p>
     <p style="font-size: 12px; opacity: .75" id="source"></p>
   </section>
   <section id="tab-sim" hidden><pre id="state"></pre></section>
@@ -82,13 +85,20 @@ document.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach(
 );
 
 const mockMode = new URLSearchParams(location.search).has('mock');
-/** Motor nuevo en el modo pedido, arrancando a las 08:00 del día 1. */
-function makeEd(mode: Mode): EmergencyDepartment {
-  const ed = new EmergencyDepartment(mode === 'validacion' ? validationParams() : realisticParams(), { seed: Date.now() % 100000, recordEvents: true });
+/**
+ * Motor nuevo en el modo pedido, arrancando a las 08:00 del día 1, y su gemelo sin accidentes
+ * (misma semilla) para medir la recuperación tras un accidente masivo (T17).
+ */
+function makePair(mode: Mode): [EmergencyDepartment, EmergencyDepartment] {
+  const seed = Date.now() % 100000;
+  const params = () => (mode === 'validacion' ? validationParams() : realisticParams());
+  const ed = new EmergencyDepartment(params(), { seed, recordEvents: true });
+  const twin = new EmergencyDepartment(params(), { seed });
   ed.step(8 * 60);
-  return ed;
+  twin.step(8 * 60);
+  return [ed, twin];
 }
-const live = mockMode ? undefined : new LiveDriver(makeEd('realista'));
+const live = mockMode ? undefined : new LiveDriver(...makePair('realista'));
 const driver = live ?? new MockDriver();
 // T08: tooltips con el estado actual del motor (solo en vivo; el mock no tiene snapshot).
 const tip = $('tip');
@@ -109,7 +119,7 @@ const onHover = (hit: Hit | undefined, x: number, y: number) => {
 const scene = mountScene($('scene'), driver, live ? onHover : undefined);
 // Solo en desarrollo (npm run dev): inspeccionar el estado desde la consola. No existe en el build de la feria.
 if (import.meta.env.DEV) Object.assign(window, { __sim: { driver, live, scene } });
-if (live) mountPanel($('panel'), live, makeEd);
+if (live) mountPanel($('panel'), live, (mode) => live.load(...makePair(mode)));
 
 $('source').textContent = mockMode
   ? 'Modo mock: reproduce src/render/mock/events.json (3 h de eventos reales del motor, semilla 2026).'
@@ -132,12 +142,12 @@ $('pause').onclick = () => {
   driver.paused = !driver.paused;
   $('pause').textContent = driver.paused ? 'Continuar' : 'Pausa';
 };
-$('mass').hidden = mockMode;
+$('mass').hidden = $('mass-wrap').hidden = mockMode;
 $('create').hidden = mockMode;
 // T16: al crear un paciente, la cámara lo sigue en cuanto llega.
 let followNextVisitor = false;
 if (live)
-  mountCreator($('create') as HTMLButtonElement, () => live.ed, (msg) => {
+  mountCreator($('create') as HTMLButtonElement, () => ({ params: live.ed.params, injectVisitor: (i) => live.injectVisitor(i) }), (msg) => {
     $('toast').textContent = msg;
     followNextVisitor = true;
   });
@@ -158,7 +168,10 @@ function showCard(e: SimEvent): void {
   $('card').replaceChildren(b, ...c.lines.map((l) => Object.assign(document.createElement('div'), { textContent: l })), close);
   $('card').hidden = false;
 }
-$('mass').onclick = () => live?.ed.triggerMassCasualty(8);
+$('mass').onclick = () => live?.massCasualty(Number(($('mass-n') as HTMLSelectElement).value));
+/** T17: recuperación del último accidente (se calcula una vez que ocurre y queda fija). */
+let recovered: { t0: number; minutes: number } | undefined;
+let checked = { t0: NaN, until: 0 }; // hasta dónde ya se buscó la recuperación del accidente actual
 
 function fmtClock(t: number): string {
   const day = Math.floor(t / 1440) + 1;
@@ -185,6 +198,27 @@ setInterval(() => {
   $('following').textContent = f ? `Siguiendo a ${f.name} (anillo amarillo). Arrastra la escena o haz clic en el piso para soltar.` : 'Haz clic sobre un paciente para seguirlo con la cámara.';
   if (!live) return;
   const ed = live.ed;
+  // T17: recuperación en vivo contra el gemelo sin accidente (misma semilla).
+  const acc = live.accident;
+  if (!acc) $('recovery').textContent = '';
+  else {
+    if (recovered?.t0 !== acc.t0) {
+      if (checked.t0 !== acc.t0) checked = { t0: acc.t0, until: acc.t0 + 30 };
+      const r = recoveryTime(live.nLive!, live.nTwin!, acc.t0, ed.now, undefined, checked.until);
+      recovered = r === undefined ? undefined : { t0: acc.t0, minutes: r };
+      // Siguiente punto de la grilla t0 + 30 + k (paso de 1 min), la misma que usa el experimento.
+      checked.until = acc.t0 + 30 + Math.max(0, Math.floor(ed.now - acc.t0 - 30) + 1);
+    }
+    const w = Math.min(30, ed.now - acc.t0);
+    const extra = w > 0 ? live.nLive!.avg(ed.now - w, ed.now) - live.nTwin!.avg(ed.now - w, ed.now) : acc.n;
+    const dur = (m: number) => `${Math.floor(m / 60)} h ${String(Math.round(m % 60)).padStart(2, '0')} min`;
+    $('recovery').textContent =
+      `Accidente de ${acc.n} heridos a las ${fmtClock(acc.t0).slice(-5)}. ` +
+      (recovered
+        ? `Recuperado en ${dur(recovered.minutes)} (a las ${fmtClock(acc.t0 + recovered.minutes).slice(-5)}).`
+        : `Aún no se recupera (lleva ${dur(ed.now - acc.t0)}); ahora hay ${extra.toFixed(1)} pacientes de más.`) +
+      ' Se compara con el mismo hospital sin el accidente (misma semilla), dentro de ±10 % en promedio de 30 min.';
+  }
   // El motor rechaza el accidente masivo y los visitantes en validación (cambiarían el proceso de llegadas).
   ($('mass') as HTMLButtonElement).disabled = ($('create') as HTMLButtonElement).disabled = ed.params.mode === 'validacion';
   if ($('tab-sim').hidden) return;

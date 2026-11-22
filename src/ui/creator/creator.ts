@@ -20,8 +20,8 @@ const swatches = (name: string, colors: string[], label: string) =>
     .map((c, i) => `<label><input type="radio" name="${name}" value="${i}" ${i === 0 ? 'checked' : ''} aria-label="${label} ${i + 1}"><span style="background:${c}"></span></label>`)
     .join('')}</div>`;
 
-/** `getEd` devuelve el motor activo (cambia al cambiar de modo). `onSent` avisa a la página. */
-export function mountCreator(openButton: HTMLButtonElement, getEd: () => EmergencyDepartment, onSent: (msg: string) => void): void {
+/** `getEd` da el motor activo (cambia al cambiar de modo) o una fachada con su EPS y la inyección. `onSent` avisa a la página. */
+export function mountCreator(openButton: HTMLButtonElement, getEd: () => Pick<EmergencyDepartment, 'params' | 'injectVisitor'>, onSent: (msg: string) => void): void {
   const dlg = document.createElement('dialog');
   dlg.className = 'cr';
   dlg.innerHTML = `

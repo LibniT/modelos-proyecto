@@ -30,4 +30,4 @@ Preguntas para <otro agente / autor>: ...
 y actualiza el estado de la tarea en `docs/TAREAS.md`.
 
 ## Comandos
-- `npm install` · `npm run dev` (http://localhost:5173) · `npm test` · `npm run report` (genera `docs/VALIDACION.md`) · `npm run experiment` (T14: genera `docs/EXPERIMENTO_MEDICOS.md` y `docs/figuras/t14-medicos.svg`) · `npm run welch` (T15: genera `docs/WELCH.md` y `docs/figuras/t15-welch.svg`, ≈ 1 min) · `npm run mock` (regenera `src/render/mock/events.json`) · `npm run build` + `npm run preview` (versión para la feria, sin internet).
+- `npm install` · `npm run dev` (http://localhost:5173) · `npm test` · `npm run report` (genera `docs/VALIDACION.md`) · `npm run experiment` (T14: genera `docs/EXPERIMENTO_MEDICOS.md` y `docs/figuras/t14-medicos.svg`) · `npm run welch` (T15: genera `docs/WELCH.md` y `docs/figuras/t15-welch.svg`, ≈ 1 min) · `npm run accidente` (T17: genera `docs/ACCIDENTE.md` y `docs/figuras/t17-accidente.svg`) · `npm run mock` (regenera `src/render/mock/events.json`) · `npm run build` + `npm run preview` (versión para la feria, sin internet).

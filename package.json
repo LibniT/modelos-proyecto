@@ -13,7 +13,8 @@
     "report": "vite-node tools/validation-report.ts",
     "mock": "vite-node tools/export-mock-events.ts",
     "experiment": "vite-node tools/doctor-experiment.ts",
-    "welch": "vite-node tools/welch.ts"
+    "welch": "vite-node tools/welch.ts",
+    "accidente": "vite-node tools/mass-casualty.ts"
   },
   "author": "Libni Jahzeel Torres Castro",
   "license": "UNLICENSED",
