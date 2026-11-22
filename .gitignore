@@ -12,3 +12,8 @@ imagenes-guia/*.exe
 
 # Paquetes de transferencia
 *.tgz
+
+# Material de investigación local (no se sube, decisión del autor)
+docs/*.docx
+docs/PROMPT_GRILL_ME.md
+imagenes-guia/
