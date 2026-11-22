@@ -34,11 +34,13 @@ export class Playback {
   /** ambulancias que salieron (TRANSFER_START). El regreso no tiene evento: T06 lo lee de snapshot(). */
   readonly ambulancesAway = new Set<string>();
   /** T12: traslados en curso por ambulancia (TRANSFER_START → TRANSFER_END), con su duración del motor */
-  readonly transfers = new Map<string, { patientId: string; t0: number; dur: number; clinic: string }>();
+  readonly transfers = new Map<string, { patientId: string; t0: number; dur: number; clinic: string; clinicId: number }>();
+  /** T19: pacientes remitidos que llegaron a cada clínica (TRANSFER_END), por id de clínica */
+  readonly receivedByClinic = new Map<number, number>();
   /** T16: salidas aplicadas (DEPARTURE con su `journey`); la interfaz las va consumiendo */
   readonly departures: SimEvent[] = [];
-  /** T18: se llama con cada evento ANTES de aplicarlo (el paciente aún existe; para subtítulos) */
-  onApply?: (e: SimEvent) => void;
+  /** T18: oyentes de cada evento, llamados ANTES de aplicarlo (el paciente aún existe; para subtítulos) */
+  readonly listeners: ((e: SimEvent) => void)[] = [];
   /** reloj: instante del último avance */
   t: number;
   private readonly pending: SimEvent[] = [];
@@ -121,7 +123,7 @@ export class Playback {
   }
 
   private apply(e: SimEvent): void {
-    this.onApply?.(e);
+    for (const fn of this.listeners) fn(e);
     if (e.type === 'PARAM_CHANGE') {
       for (const [k, v] of Object.entries(e.data ?? {})) if (k in this.capacity && typeof v === 'number') this.capacity[k as keyof Capacity] = v;
       return;
@@ -177,12 +179,15 @@ export class Playback {
         f.hidden = true;
         if (e.resourceId) {
           this.ambulancesAway.add(e.resourceId);
-          this.transfers.set(e.resourceId, { patientId: f.id, t0: e.t, dur: e.duration ?? 0, clinic: String(e.data?.clinic ?? e.to) });
+          this.transfers.set(e.resourceId, { patientId: f.id, t0: e.t, dur: e.duration ?? 0, clinic: String(e.data?.clinic ?? e.to), clinicId: Number(String(e.to).split('_')[1]) });
         }
         break;
-      case 'TRANSFER_END':
+      case 'TRANSFER_END': {
+        const j = Number(String(e.to).split('_')[1]);
+        this.receivedByClinic.set(j, (this.receivedByClinic.get(j) ?? 0) + 1);
         if (e.resourceId) this.transfers.delete(e.resourceId);
         break;
+      }
       case 'DEPARTURE':
         this.departures.push(e);
         this.free(f);

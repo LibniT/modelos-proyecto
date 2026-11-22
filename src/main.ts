@@ -11,6 +11,8 @@ import { mountPanel } from './ui/panel';
 import { describe } from './ui/tooltip';
 import { mountCreator } from './ui/creator/creator';
 import { journeyCard } from './ui/journey';
+import { clinicCard } from './ui/clinic';
+import { distMean } from './engine/distributions';
 import type { Hit } from './render/hit';
 import type { SimEvent } from './engine/events';
 import { mountScene, TRIAGE_COLOR } from './render/scene';
@@ -54,6 +56,7 @@ app.innerHTML = `
     <button id="mass">Accidente masivo</button>
     <button id="create" style="background:#16a34a">Crear mi paciente</button>
     <button id="follow" style="background:#a16207">Seguir a mi paciente</button>
+    <button id="view" style="background:#0f766e">Ver ciudad</button>
     <span id="clock"></span>
   </div>
   <section id="tab-scene">
@@ -121,7 +124,19 @@ const onHover = (hit: Hit | undefined, x: number, y: number) => {
   tip.style.left = `${x + 16 + tip.offsetWidth > w ? x - 16 - tip.offsetWidth : x + 16}px`;
   tip.style.top = `${y + 12}px`;
 };
-const scene = mountScene($('scene'), driver, live ? onHover : undefined);
+// T19: mapa de la ciudad (segunda escena). Distancias ∝ tiempo medio de viaje; ocupación del snapshot del motor.
+const clinicParams = () => (live ? live.ed.params : realisticParams()).clinics;
+const { hospital: scene, city } = mountScene($('scene'), driver, live ? onHover : undefined, {
+  travelMeans: clinicParams().map((c) => distMean(c.travel)),
+  clinics: () => (live ? live.ed.snapshot().clinics : clinicParams().map((c) => ({ name: c.name, beds: c.beds, occupied: 0 }))),
+  onClinic: (j) => {
+    const p = live ? live.ed.params : realisticParams();
+    const occ = live ? live.ed.snapshot().clinics[j].occupied : 0;
+    const c = clinicCard(j, p, occ, driver.pb.receivedByClinic.get(j) ?? 0);
+    showInfoCard(c.title, '#e6edf3', c.lines);
+  },
+});
+$('view').onclick = () => (scene.inCity ? city?.goHospital() : scene.goCity());
 // Solo en desarrollo (npm run dev): inspeccionar el estado desde la consola. No existe en el build de la feria.
 if (import.meta.env.DEV) Object.assign(window, { __sim: { driver, live, scene } });
 if (live) mountPanel($('panel'), live, (mode) => live.load(...makePair(mode)));
@@ -152,7 +167,10 @@ new DemoMode({
   card: $('card'),
   epsName: (id) => live?.ed.params.eps.find((e) => e.id === id)?.name ?? id,
   idleSeconds: Number(new URLSearchParams(location.search).get('demo')) || 60,
-  onStart: () => document.querySelector<HTMLButtonElement>('[data-tab="scene"]')!.click(),
+  onStart: () => {
+    document.querySelector<HTMLButtonElement>('[data-tab="scene"]')!.click();
+    if (scene.inCity) city?.goHospital(); // la demo cuenta la historia dentro del hospital
+  },
 });
 $('pause').onclick = () => {
   driver.paused = !driver.paused;
@@ -176,12 +194,16 @@ $('follow').onclick = () => (scene.follow = newestVisitor()?.id);
 const watched = new Set<string>();
 function showCard(e: SimEvent): void {
   const c = journeyCard(e, live ? live.ed.metrics()['doorToDoctor'] : NaN);
+  showInfoCard(c.title, `#${TRIAGE_COLOR[c.level].toString(16).padStart(6, '0')}`, c.lines);
+}
+/** Tarjeta sobre la escena (recorrido de un paciente o clínica del mapa). Solo textContent. */
+function showInfoCard(title: string, color: string, lines: string[]): void {
   const b = document.createElement('b');
-  b.textContent = c.title;
-  b.style.color = `#${TRIAGE_COLOR[c.level].toString(16).padStart(6, '0')}`;
+  b.textContent = title;
+  b.style.color = color;
   const close = Object.assign(document.createElement('button'), { textContent: 'Cerrar' });
   close.onclick = () => ($('card').hidden = true);
-  $('card').replaceChildren(b, ...c.lines.map((l) => Object.assign(document.createElement('div'), { textContent: l })), close);
+  $('card').replaceChildren(b, ...lines.map((l) => Object.assign(document.createElement('div'), { textContent: l })), close);
   $('card').hidden = false;
 }
 $('mass').onclick = () => live?.massCasualty(Number(($('mass-n') as HTMLSelectElement).value));
@@ -199,6 +221,7 @@ function fmtClock(t: number): string {
 // Textos: 5 veces por segundo basta (la escena se dibuja en cada cuadro).
 setInterval(() => {
   markSpeed(); // la demo cambia y restaura la velocidad
+  $('view').textContent = scene.inCity ? 'Ver hospital' : 'Ver ciudad';
   $('pause').textContent = driver.paused ? 'Continuar' : 'Pausa';
   $('clock').textContent = `${fmtClock(driver.pb.t)} · ×${driver.speed}${driver.paused ? ' (pausa)' : ''} · pacientes: ${driver.pb.figures.size}`;
   // T16: seguir, vigilar y mostrar la tarjeta de recorrido.

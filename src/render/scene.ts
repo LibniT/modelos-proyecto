@@ -4,6 +4,8 @@
  */
 import Phaser from 'phaser';
 import { AREAS, GRID, MAX, ROAD, iso, slotPos, stationPos, type Vec } from './layout';
+import { box, boxAt, pts } from './draw';
+import { CityScene, type CityOptions } from './map/city';
 import type { Playback } from './playback';
 import type { Driver } from './drivers';
 import { hitTest, type Hit } from './hit';
@@ -23,19 +25,6 @@ export type HoverFn = (hit: Hit | undefined, x: number, y: number) => void;
 export const TRIAGE_COLOR = [0x9ca3af, 0xdc2626, 0xf97316, 0xeab308, 0x16a34a, 0x2563eb];
 const SNAP_SPEED = 120;
 
-const shade = (c: number, k: number) => (Math.round(((c >> 16) & 255) * k) << 16) | (Math.round(((c >> 8) & 255) * k) << 8) | Math.round((c & 255) * k);
-const pts = (ps: Vec[], lift = 0) => ps.map((p) => {
-  const q = iso(p);
-  return new Phaser.Math.Vector2(q.x, q.y - lift);
-});
-
-/** Caja isométrica sobre el rectángulo [x0, x1] × [y0, y1] con altura h px. */
-function box(g: Phaser.GameObjects.Graphics, x0: number, y0: number, x1: number, y1: number, h: number, color: number): void {
-  g.fillStyle(shade(color, 0.78)).fillPoints(pts([{ x: x0, y: y1 }, { x: x1, y: y1 }]).concat(pts([{ x: x1, y: y1 }, { x: x0, y: y1 }], h)), true);
-  g.fillStyle(shade(color, 0.62)).fillPoints(pts([{ x: x1, y: y0 }, { x: x1, y: y1 }]).concat(pts([{ x: x1, y: y1 }, { x: x1, y: y0 }], h)), true);
-  g.fillStyle(color).fillPoints(pts([{ x: x0, y: y0 }, { x: x1, y: y0 }, { x: x1, y: y1 }, { x: x0, y: y1 }], h), true);
-}
-const boxAt = (g: Phaser.GameObjects.Graphics, c: Vec, w: number, d: number, h: number, color: number) => box(g, c.x - w / 2, c.y - d / 2, c.x + w / 2, c.y + d / 2, h, color);
 
 const pathLength = (ps: Vec[]) => ps.slice(1).reduce((d, p, i) => d + Math.hypot(p.x - ps[i].x, p.y - ps[i].y), 0);
 
@@ -84,6 +73,7 @@ export class HospitalScene extends Phaser.Scene {
     fit();
     this.fitCamera = fit;
     this.scale.on('resize', fit);
+    this.events.on('wake', () => cam.fadeIn(300)); // al volver del mapa de la ciudad
     // Cámara: arrastrar para mover, rueda para acercar.
     this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
       if (!p.isDown) return;
@@ -235,6 +225,21 @@ export class HospitalScene extends Phaser.Scene {
       }
   }
 
+  /** T19: pasa al mapa de la ciudad con un fundido de 0,3 s (el motor sigue en esa vista). */
+  goCity(): void {
+    if (!this.scene.manager.getScene('city')) return;
+    this.follow = undefined;
+    this.onHover?.(undefined, 0, 0);
+    const cam = this.cameras.main;
+    cam.fadeOut(300, 15, 23, 32);
+    cam.once('camerafadeoutcomplete', () => this.scene.switch('city'));
+  }
+
+  /** ¿Está visible el mapa de la ciudad en vez del hospital? */
+  get inCity(): boolean {
+    return this.scene?.isSleeping('hospital') ?? false; // antes de que Phaser arranque no hay administrador de escenas
+  }
+
   /** Vuelve a la vista general del hospital. */
   resetCamera(): void {
     this.fitCamera();
@@ -302,15 +307,17 @@ export class HospitalScene extends Phaser.Scene {
 }
 
 /** Crea el juego de Phaser dentro de `parent` (debe tener alto definido). */
-export function mountScene(parent: HTMLElement, driver: Driver, onHover?: HoverFn): HospitalScene {
-  const scene = new HospitalScene(driver, onHover);
+export function mountScene(parent: HTMLElement, driver: Driver, onHover?: HoverFn, city?: CityOptions): { hospital: HospitalScene; city?: CityScene } {
+  const hospital = new HospitalScene(driver, onHover);
+  // T19: el mapa de la ciudad es una segunda escena del mismo juego; empieza dormida.
+  const cityScene = city ? new CityScene(driver, city) : undefined;
   new Phaser.Game({
     type: Phaser.AUTO,
     parent,
     backgroundColor: '#0f1720',
     scale: { mode: Phaser.Scale.RESIZE },
-    scene,
+    scene: cityScene ? [hospital, cityScene] : hospital,
     banner: false,
   });
-  return scene;
+  return { hospital, city: cityScene };
 }

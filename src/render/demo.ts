@@ -99,7 +99,7 @@ export class DemoMode {
     if (driver.pb !== this.pb) {
       // El Playback cambia al cambiar de modo: se vuelve a enganchar.
       this.pb = driver.pb;
-      this.pb.onApply = (e) => this.onEvent(e);
+      this.pb.listeners.push((e) => this.onEvent(e));
     }
     const now = performance.now();
     if (!this.active) {
