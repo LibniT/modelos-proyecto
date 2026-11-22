@@ -4,7 +4,8 @@
  */
 import Phaser from 'phaser';
 import { AREAS, GRID, MAX, ROAD, iso, slotPos, stationPos, type Vec } from './layout';
-import { box, boxAt, pts } from './draw';
+import { ambulance, rect, slab, stamp } from './art';
+import { floorPlan, furniture, type Furniture } from './interior';
 import { CityScene, type CityOptions } from './map/city';
 import type { Playback } from './playback';
 import type { Driver } from './drivers';
@@ -15,8 +16,8 @@ import { H, SKIN, STAFF, appearanceFor, characterPixels, paint, type Pose, type 
 
 /** Dirección isométrica del personaje: SE y NE se dibujan; SW y NW son su reflejo. */
 type Dir = 'SE' | 'SW' | 'NE' | 'NW';
-const ADULT = 1.6;
-const CHILD = 1.25;
+const ADULT = 1.9;
+const CHILD = 1.48;
 const hex = (c: string) => Phaser.Display.Color.HexStringToColor(c).color;
 
 /** Lo que hay bajo el puntero y dónde está el puntero (px del lienzo); undefined = nada o fuera. */
@@ -25,17 +26,18 @@ export type HoverFn = (hit: Hit | undefined, x: number, y: number) => void;
 export const TRIAGE_COLOR = [0x9ca3af, 0xdc2626, 0xf97316, 0xeab308, 0x16a34a, 0x2563eb];
 const SNAP_SPEED = 120;
 
-
 const pathLength = (ps: Vec[]) => ps.slice(1).reduce((d, p, i) => d + Math.hypot(p.x - ps[i].x, p.y - ps[i].y), 0);
 
 export class HospitalScene extends Phaser.Scene {
-  private floor!: Phaser.GameObjects.Graphics;
+  private parked: Phaser.GameObjects.Image[] = [];
+  private moving: Phaser.GameObjects.Image[] = [];
   private people!: Phaser.GameObjects.Graphics;
   /** burbujas de triage y marca de visitante (encima de los personajes) */
   private marks!: Phaser.GameObjects.Graphics;
   private readonly sprites = new Map<string, Phaser.GameObjects.Image>();
   private readonly lastDir = new Map<string, Dir>();
-  private staffImgs: Phaser.GameObjects.Image[] = [];
+  private readonly looks = new WeakMap<Figure, AppearanceSpec>();
+  private fittings: Phaser.GameObjects.Image[] = [];
   private staticKey = '';
   private pointerOver = false;
   /** T16: paciente que sigue la cámara (clic sobre él o botón "Seguir a mi paciente") */
@@ -50,24 +52,48 @@ export class HospitalScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.floor = this.add.graphics().setDepth(0);
+    const base = stamp(this, 'planta-hospital', 1472, 868, 580, 156, floorPlan);
+    this.add.image(-580, -156, base).setOrigin(0);
+    for (let i = 0; i < MAX.amb; i++) {
+      const key = stamp(this, 'ambulancia-hospital', 140, 100, 70, 65, (g) => ambulance(g, { x: -1, y: 0 }));
+      const p = iso(stationPos('amb-' + i)!);
+      this.parked.push(
+        this.add
+          .image(p.x, p.y, key)
+          .setOrigin(0.5, 0.65)
+          .setDepth(1000 + p.y),
+      );
+      this.moving.push(this.add.image(0, 0, key).setOrigin(0.5, 0.65).setVisible(false));
+    }
     this.people = this.add.graphics().setDepth(1);
-    this.marks = this.add.graphics().setDepth(2.5);
+    this.marks = this.add.graphics().setDepth(2900);
     for (const a of AREAS) {
       if (!a.label) continue;
       const q = iso(a.label);
+      q.y += a.label.y < 1 ? -64 : 23;
       this.add
-        .text(q.x, q.y, a.name, { fontFamily: 'system-ui, sans-serif', fontSize: '18px', color: '#111827', fontStyle: 'bold', backgroundColor: 'rgba(255,255,255,0.75)', padding: { x: 6, y: 2 } })
+        .text(q.x, q.y, a.name, {
+          fontFamily: 'system-ui, sans-serif',
+          fontSize: '19px',
+          color: '#fff7e4',
+          fontStyle: 'bold',
+          backgroundColor: '#2e5455',
+          padding: { x: 6, y: 2 },
+        })
         .setOrigin(0.5)
-        .setDepth(2);
+        .setDepth(2800);
     }
     const rq = iso({ x: ROAD.x0 - 0.6, y: (ROAD.y0 + ROAD.y1) / 2 }); // al final de la vía, fuera de los carriles
-    this.add.text(rq.x, rq.y, 'Hacia las clínicas', { fontFamily: 'system-ui, sans-serif', fontSize: '14px', color: '#f8fafc' }).setOrigin(0.5).setDepth(2);
+    this.add
+      .text(rq.x, rq.y, 'Hacia las clínicas', { fontFamily: 'system-ui, sans-serif', fontSize: '16px', color: '#294e50', fontStyle: 'bold' })
+      .setOrigin(0.5)
+      .setDepth(2800);
     const cam = this.cameras.main;
     const fit = () => {
       // Edificio + vía de las clínicas (que sube por la izquierda).
       const c = iso({ x: GRID.w / 2, y: GRID.h / 2 });
-      cam.setZoom(Math.min(this.scale.width / 1400, this.scale.height / 840));
+      if (cam.width < 2 || cam.height < 2) return;
+      cam.setZoom(Math.min(cam.width / 1460, cam.height / 864));
       cam.centerOn(c.x, c.y - 50);
     };
     fit();
@@ -93,13 +119,15 @@ export class HospitalScene extends Phaser.Scene {
       this.pointerOver = false;
       this.onHover?.(undefined, 0, 0);
     });
-    this.input.on('wheel', (_p: unknown, _o: unknown, _dx: number, dy: number) => cam.setZoom(Phaser.Math.Clamp(cam.zoom * (dy > 0 ? 0.9 : 1.1), 0.3, 2.5)));
+    this.input.on('wheel', (_p: unknown, _o: unknown, _dx: number, dy: number) =>
+      cam.setZoom(Phaser.Math.Clamp(cam.zoom * (dy > 0 ? 0.9 : 1.1), 0.3, 2.5)),
+    );
   }
 
   update(_time: number, delta: number): void {
     this.driver.tick(delta / 1000);
     const pb = this.driver.pb;
-    const key = JSON.stringify(pb.capacity) + [...pb.ambulancesAway].join();
+    const key = JSON.stringify(pb.capacity);
     if (key !== this.staticKey) {
       this.staticKey = key;
       this.drawStatic(pb);
@@ -116,65 +144,62 @@ export class HospitalScene extends Phaser.Scene {
   }
 
   private drawStatic(pb: Playback): void {
-    const g = this.floor.clear();
     const cap = pb.capacity;
-    this.staffImgs.forEach((i) => i.destroy());
-    this.staffImgs = [];
-    // Vía a las clínicas (T12), con un carril por ambulancia.
-    g.fillStyle(0x374151).fillPoints(pts([{ x: ROAD.x0, y: ROAD.y0 }, { x: ROAD.x1, y: ROAD.y0 }, { x: ROAD.x1, y: ROAD.y1 }, { x: ROAD.x0, y: ROAD.y1 }]), true);
-    g.lineStyle(2, 0xfacc15, 0.8);
-    for (let i = 0; i < MAX.amb - 1; i++) {
-      const y = (stationPos(`amb-${i}`)!.y + stationPos(`amb-${i + 1}`)!.y) / 2;
-      for (let x = ROAD.x0; x < ROAD.x1; x += 1) g.strokePoints(pts([{ x, y }, { x: x + 0.5, y }]));
-    }
-    for (const a of AREAS) {
-      g.fillStyle(a.color).fillPoints(pts([{ x: a.x0, y: a.y0 }, { x: a.x1, y: a.y0 }, { x: a.x1, y: a.y1 }, { x: a.x0, y: a.y1 }]), true);
-      g.lineStyle(1, 0x000000, 0.08);
-      for (let x = a.x0; x <= a.x1; x++) g.strokePoints(pts([{ x, y: a.y0 }, { x, y: a.y1 }]));
-      for (let y = a.y0; y <= a.y1; y++) g.strokePoints(pts([{ x: a.x0, y }, { x: a.x1, y }]));
-    }
-    // Muro del fondo (bordes y = 0 y x = 0).
-    g.fillStyle(0xcbd5e1).fillPoints(pts([{ x: 3, y: 0 }, { x: GRID.w, y: 0 }]).concat(pts([{ x: GRID.w, y: 0 }, { x: 3, y: 0 }], 40)), true);
-    g.fillStyle(0xb6c2d1).fillPoints(pts([{ x: 0, y: 9 }, { x: 0, y: GRID.h }]).concat(pts([{ x: 0, y: GRID.h }, { x: 0, y: 9 }], 40)), true);
-
-    const off = 0x9ca3af; // puesto dibujado pero sin personal (capacidad menor)
-    for (let i = 0; i < MAX.triage; i++) {
-      const s = stationPos(`triage-${i}`)!;
-      boxAt(g, { x: s.x + 0.7, y: s.y }, 0.5, 1.2, 14, i < cap.triage ? 0xf87171 : off);
-      if (i < cap.triage) this.placeStaff(STAFF.triage, { x: s.x + 1.2, y: s.y });
-    }
-    for (let i = 0; i < MAX.admission; i++) {
-      const s = stationPos(`admission-${i}`)!;
-      boxAt(g, { x: s.x + 0.7, y: s.y }, 0.4, 1.4, 18, i < cap.admission ? 0xfbbf24 : off);
-      if (i < cap.admission) this.placeStaff(STAFF.admission, { x: s.x + 1.2, y: s.y });
+    this.fittings.forEach((img) => img.destroy());
+    this.fittings = [];
+    const put = (kind: Furniture, p: Vec, active = true, depthOffset = 0) => {
+      const at = iso(p);
+      const key = 'mueble-' + kind + '-' + active;
+      if (!this.textures.exists(key)) stamp(this, key, 128, 112, 64, 78, (g) => furniture(g, kind, active));
+      this.fittings.push(
+        this.add
+          .image(at.x, at.y, key)
+          .setOrigin(0.5, 78 / 112)
+          .setDepth(1000 + at.y + depthOffset),
+      );
+    };
+    for (const group of ['triage', 'admission'] as const) {
+      for (let i = 0; i < MAX[group]; i++) {
+        const s = stationPos(group + '-' + i)!;
+        put('mesa', { x: s.x + 0.7, y: s.y }, i < cap[group]);
+        if (i < cap[group]) this.placeStaff(STAFF[group], { x: s.x + 1.2, y: s.y });
+      }
     }
     for (let i = 0; i < MAX.doctor; i++) {
-      const s = stationPos(`doctor-${i}`)!;
-      box(g, s.x + 0.9, 0.2, s.x + 1, 4.3, 30, 0x93c5fd); // tabique entre consultorios
-      boxAt(g, { x: s.x, y: s.y - 1.3 }, 1.3, 0.6, 10, i < cap.doctors ? 0xffffff : off); // camilla de examen
-      boxAt(g, { x: s.x - 0.3, y: s.y + 0.9 }, 0.8, 0.5, 14, i < cap.doctors ? 0x60a5fa : off); // escritorio
+      const s = stationPos('doctor-' + i)!;
+      // Tramos cortos para que un personaje pueda pasar por delante o por detrás del tabique.
+      for (let k = 0; k < 4; k++) put('tabique', { x: s.x + 0.94, y: 0.7 + k });
+      put('consulta', { x: s.x, y: s.y - 1.3 }, i < cap.doctors);
+      put('mesa', { x: s.x - 0.3, y: s.y + 0.83 }, i < cap.doctors);
       if (i < cap.doctors) this.placeStaff(STAFF.doctor, { x: s.x - 0.3, y: s.y + 1.5 });
     }
-    for (let i = 0; i < 20; i++) boxAt(g, slotPos('waiting_room', i), 0.6, 0.6, 8, 0x34d399);
-    for (let i = 0; i < 12; i++) boxAt(g, slotPos('hallway', i), 0.6, 1.2, 8, 0xc4b5fd);
-    for (let i = 0; i < MAX.bed; i++) boxAt(g, stationPos(`bed-${i}`)!, 1, 2, 10, i < cap.obsBeds ? 0xffffff : off);
-    for (let i = 0; i < MAX.amb; i++) {
-      if (i >= cap.ambulances || pb.ambulancesAway.has(`amb-${i}`)) continue;
-      const s = stationPos(`amb-${i}`)!;
-      boxAt(g, s, 2.2, 1.2, 26, 0xf8fafc);
-      boxAt(g, { x: s.x - 0.6, y: s.y }, 0.4, 1.21, 27, 0xdc2626);
+    for (let i = 0; i < 20; i++) put('silla', slotPos('waiting_room', i), true, -1);
+    for (let i = 0; i < 12; i++) put('camilla', slotPos('hallway', i), true, -1);
+    for (let i = 0; i < MAX.bed; i++) {
+      const p = stationPos('bed-' + i)!;
+      put('cama', p, i < cap.obsBeds, -1);
+      if (i % 5 !== 4) put('cortina', { x: p.x + 0.69, y: p.y - 0.66 });
     }
+    for (const p of [
+      { x: 11.6, y: 15.3 },
+      { x: 16.5, y: 15.1 },
+      { x: 19.5, y: 4.5 },
+    ])
+      put('planta', p);
   }
 
   private drawPeople(pb: Playback): void {
     const g = this.people.clear();
-    // T12: ambulancias en traslado (posición ∝ tiempo de viaje del motor). Sobre ×120 saltan al destino: fuera de la escena.
-    if (this.driver.speed <= SNAP_SPEED)
-      for (const id of pb.transfers.keys()) {
-        const p = pb.ambulancePosition(id, pb.t)!;
-        boxAt(g, p, 2.2, 1.2, 26, 0xf8fafc);
-        boxAt(g, { x: p.x - 0.6, y: p.y }, 0.4, 1.21, 27, 0xdc2626);
+    this.parked.forEach((img, i) => {
+      const id = 'amb-' + i;
+      img.setVisible(i < pb.capacity.ambulances && !pb.ambulancesAway.has(id));
+      const p = this.driver.speed <= SNAP_SPEED && pb.transfers.has(id) ? pb.ambulancePosition(id, pb.t) : undefined;
+      const moving = this.moving[i].setVisible(!!p);
+      if (p) {
+        const q = iso(p);
+        moving.setPosition(q.x, q.y).setDepth(1000 + q.y);
       }
+    });
     const snap = this.driver.speed > SNAP_SPEED;
     const m = this.marks.clear();
     const seen = new Set<string>();
@@ -185,37 +210,58 @@ export class HospitalScene extends Phaser.Scene {
       const w = f.walk;
       const walking = !snap && w !== undefined && pb.t < w.t0 + w.dur;
       const lying = f.resourceId?.startsWith('bed-') || (f.zone === 'hallway' && !walking);
-      const app = f.appearance ?? appearanceFor(f.id, f.ageRange ?? '18-39');
+      let app = f.appearance ?? this.looks.get(f);
+      if (!app) {
+        app = appearanceFor(f.id, f.ageRange ?? '18-39');
+        this.looks.set(f, app);
+      }
       const scale = f.ageRange === '0-17' ? CHILD : ADULT;
       let top: number; // altura de la cabeza en px de mundo (para la burbuja)
+      seen.add(f.id);
+      let img = this.sprites.get(f.id);
+      if (!img) this.sprites.set(f.id, (img = this.add.image(0, 0, '__WHITE')));
       if (lying) {
-        // Acostado en cama o camilla: cobija y cabeza hacia la cabecera (−y).
-        const h = iso({ x: p.x, y: p.y - 0.6 });
-        g.fillStyle(0xe0f2fe).fillEllipse(q.x, q.y - 12, 28, 14).lineStyle(1, 0x1f2937).strokeEllipse(q.x, q.y - 12, 28, 14);
-        g.fillStyle(hex(app.hairColor)).fillCircle(h.x, h.y - 15, 6);
-        g.fillStyle(hex(SKIN[app.skin] ?? SKIN[0])).fillCircle(h.x + 2, h.y - 14, 4.5);
-        top = h.y - 22;
+        const key = 'reposo-' + app.skin + '-' + app.hairColor;
+        if (!this.textures.exists(key))
+          stamp(this, key, 84, 66, 42, 42, (bed) => {
+            slab(bed, -0.19, -0.35, 0.4, 0.8, 15, 5, 0xb2d3c7);
+            rect(bed, -0.19, -0.22, 0.4, 0.1, 20, 0xebedda);
+            bed.fillStyle(hex(app.hairColor)).fillEllipse(15, -24, 13, 14);
+            bed.fillStyle(hex(SKIN[app.skin] ?? SKIN[0])).fillEllipse(12, -23, 10, 10);
+            bed.fillStyle(0x463f39).fillRect(11, -24, 3, 1);
+          });
+        img
+          .setTexture(key)
+          .setOrigin(0.5, 42 / 66)
+          .setFlipX(false)
+          .setScale(1)
+          .setPosition(q.x, q.y);
+        top = q.y - 30;
       } else {
-        seen.add(f.id);
         const dir = this.dirOf(f, pb, p, walking);
         const pose: Pose = walking ? 'walk' : f.zone === 'waiting_room' ? 'sit' : 'idle';
         // Cuadro de caminata según la distancia recorrida en el MOVE (4 cuadros por baldosa): sin MOVE no hay paso.
         const frame = walking ? Math.floor((((pb.t - w!.t0) / w!.dur) * pathLength(w!.path) * 4) % 4) : 0;
-        let img = this.sprites.get(f.id);
-        if (!img) this.sprites.set(f.id, (img = this.add.image(0, 0, this.texture(app, 'SE', 'idle', 0)).setOrigin(0.5, 1)));
         img
+          .setOrigin(0.5, 1)
           .setTexture(this.texture(app, dir[0] === 'S' ? 'SE' : 'NE', pose, frame))
           .setFlipX(dir[1] === 'W')
           .setPosition(q.x, q.y)
-          .setScale(scale)
-          .setDepth(1 + (p.x + p.y) / 1000);
+          .setScale(scale);
         g.fillStyle(0x000000, 0.25).fillEllipse(q.x, q.y, 16, 7);
         top = q.y - (H - 1) * scale;
       }
+      if (img.depth !== 1000 + q.y) img.setDepth(1000 + q.y);
       if (f.id === this.follow) m.lineStyle(2.5, 0xfacc15).strokeEllipse(q.x, q.y, 30, 14); // anillo del paciente seguido
       // Burbuja con el color del triage (gris antes de clasificar); los visitantes llevan además una flecha amarilla.
-      m.fillStyle(TRIAGE_COLOR[f.triage ?? 0]).fillCircle(q.x, top - 6, 5).lineStyle(1.5, 0x1f2937).strokeCircle(q.x, top - 6, 5);
-      if (f.isVisitor) m.fillStyle(0xfacc15).fillTriangle(q.x - 6, top - 22, q.x + 6, top - 22, q.x, top - 13).strokeTriangle(q.x - 6, top - 22, q.x + 6, top - 22, q.x, top - 13);
+      m.fillStyle(TRIAGE_COLOR[f.triage ?? 0])
+        .fillCircle(q.x, top - 5, 7)
+        .lineStyle(2, 0xfff7e4)
+        .strokeCircle(q.x, top - 5, 7);
+      if (f.isVisitor)
+        m.fillStyle(0xfacc15)
+          .fillTriangle(q.x - 6, top - 22, q.x + 6, top - 22, q.x, top - 13)
+          .strokeTriangle(q.x - 6, top - 22, q.x + 6, top - 22, q.x, top - 13);
     }
     for (const [id, img] of this.sprites)
       if (!seen.has(id)) {
@@ -245,6 +291,11 @@ export class HospitalScene extends Phaser.Scene {
     this.fitCamera();
   }
 
+  zoomBy(factor: number): void {
+    const cam = this.cameras.main;
+    cam.setZoom(Phaser.Math.Clamp(cam.zoom * factor, 0.15, 3));
+  }
+
   /** T18: acerca la cámara para la demo (solo presentación; el seguimiento la centra en el paciente). */
   demoZoom(): void {
     this.fitCamera();
@@ -264,7 +315,8 @@ export class HospitalScene extends Phaser.Scene {
     const q = iso(p);
     const cam = this.cameras.main;
     // Suavizado solo de la cámara (no es un objeto del modelo); salta si el objetivo está lejos.
-    const cx = cam.midPoint.x, cy = cam.midPoint.y;
+    const cx = cam.midPoint.x,
+      cy = cam.midPoint.y;
     const k = Math.hypot(q.x - cx, q.y - cy) > 400 ? 1 : 0.15;
     cam.centerOn(cx + (q.x - cx) * k, cy + (q.y - 20 - cy) * k);
   }
@@ -301,21 +353,32 @@ export class HospitalScene extends Phaser.Scene {
   /** Personal fijo de un puesto activo (es el recurso: no se mueve). Mira hacia el visitante (SW). */
   private placeStaff(app: AppearanceSpec, p: Vec): void {
     const q = iso(p);
-    this.floor.fillStyle(0x000000, 0.2).fillEllipse(q.x, q.y, 16, 7);
-    this.staffImgs.push(this.add.image(q.x, q.y, this.texture(app, 'SE', 'idle', 0)).setOrigin(0.5, 1).setScale(ADULT).setFlipX(true).setDepth(1 + (p.x + p.y) / 1000));
+    this.fittings.push(
+      this.add
+        .image(q.x, q.y, this.texture(app, 'SE', 'idle', 0))
+        .setOrigin(0.5, 1)
+        .setScale(ADULT)
+        .setFlipX(true)
+        .setDepth(1000 + q.y),
+    );
   }
 }
 
 /** Crea el juego de Phaser dentro de `parent` (debe tener alto definido). */
-export function mountScene(parent: HTMLElement, driver: Driver, onHover?: HoverFn, city?: CityOptions): { hospital: HospitalScene; city?: CityScene } {
+export function mountScene(
+  parent: HTMLElement,
+  driver: Driver,
+  onHover?: HoverFn,
+  city?: CityOptions,
+): { hospital: HospitalScene; city?: CityScene } {
   const hospital = new HospitalScene(driver, onHover);
   // T19: el mapa de la ciudad es una segunda escena del mismo juego; empieza dormida.
   const cityScene = city ? new CityScene(driver, city) : undefined;
   new Phaser.Game({
     type: Phaser.AUTO,
     parent,
-    backgroundColor: '#0f1720',
-    scale: { mode: Phaser.Scale.RESIZE },
+    transparent: true,
+    scale: { mode: Phaser.Scale.RESIZE, parent },
     scene: cityScene ? [hospital, cityScene] : hospital,
     banner: false,
   });

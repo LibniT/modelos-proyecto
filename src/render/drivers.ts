@@ -93,6 +93,7 @@ export class LiveDriver implements Driver {
 
 /** Reproduce src/render/mock/events.json en bucle (desarrollo sin motor). */
 export class MockDriver implements Driver {
+  readonly initialClinics = mock.initial.clinics;
   pb!: Playback;
   speed = 60;
   paused = false;

@@ -7,7 +7,7 @@ import type { Playback } from './playback';
 export type Hit = { kind: 'patient'; id: string } | { kind: 'station'; id: string } | { kind: 'area'; name: string };
 
 /** cuerpo del personaje: centro a `dy` px sobre los pies y radio de acierto (px de mundo) */
-export const BODY = { dy: 26, r: 16 };
+export const BODY = { dy: 30, r: 18 };
 /** huella de cada puesto respecto a su posición (baldosas): cubre el mueble dibujado en scene.ts */
 const FOOTPRINT = {
   triage: [-0.5, 1.5, -0.9, 0.9],

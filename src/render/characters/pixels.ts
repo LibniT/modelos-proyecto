@@ -53,12 +53,32 @@ export const STAFF: Record<'doctor' | 'triage' | 'admission', AppearanceSpec> = 
   admission: { skin: 0, hairStyle: 1, hairColor: HAIR_COLORS[3], topStyle: 1, topColor: '#f59e0b', bottomColor: '#374151' },
 };
 
+/** Luces y sombras derivadas de los colores del vestidor. */
+function tone(color: string, amount: number): string {
+  const rgb = parseInt(color.slice(1), 16);
+  return (
+    '#' +
+    [16, 8, 0]
+      .map((shift) => {
+        const c = (rgb >> shift) & 255;
+        return Math.round(amount < 0 ? c * (1 + amount) : c + (255 - c) * amount)
+          .toString(16)
+          .padStart(2, '0');
+      })
+      .join('')
+  );
+}
+
 export function characterPixels(a: AppearanceSpec, view: View, pose: Pose, frame = 0): Pixels {
   const g: Pixels = Array.from({ length: H }, () => Array<string | null>(W).fill(null));
   const rect = (x: number, y: number, w: number, h: number, c: string) => {
     for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) if (j >= 0 && j < H && i >= 0 && i < W) g[j][i] = c;
   };
   const skin = SKIN[a.skin] ?? SKIN[0];
+  const shadow = tone(a.topColor, -0.26),
+    light = tone(a.topColor, 0.22);
+  const skinShade = tone(skin, -0.19),
+    denim = tone(a.bottomColor, -0.26);
   const back = view === 'NE';
   const sit = pose === 'sit';
   const dy = sit ? 4 : 0; // sentado: el cuerpo baja
@@ -69,33 +89,61 @@ export function characterPixels(a: AppearanceSpec, view: View, pose: Pose, frame
   if (sit) {
     rect(9, 26, 9, 3, a.bottomColor); // muslos hacia adelante
     rect(15, 29, 3, 2, a.bottomColor);
-    rect(15, 31, 4, 1, SHOES);
+    rect(15, 30, 5, 1, SHOES);
+    rect(10, 29, 3, 2, denim);
+    rect(10, 30, 4, 1, SHOES);
   } else {
-    const lx = 9 - step, rx = 13 + step;
+    const lx = 9 - step,
+      rx = 13 + step;
     rect(lx, 22, 3, 7 - Math.max(0, step), a.bottomColor);
     rect(rx, 22, 3, 7 - Math.max(0, -step), a.bottomColor);
-    rect(lx, 29 - Math.max(0, step), 3, 2, SHOES);
-    rect(rx, 29 - Math.max(0, -step), 3, 2, SHOES);
+    rect(lx, 22, 2, 7 - Math.max(0, step), denim);
+    rect(lx, 29 - Math.max(0, step), 4, 2, SHOES);
+    rect(rx, 29 - Math.max(0, -step), 5, 2, SHOES);
+    rect(rx + 2, 29 - Math.max(0, -step), 2, 1, '#56616b');
   }
 
   // Torso y brazos
-  rect(8, 13 + dy, 9, 9, a.topColor);
+  rect(9, 13 + dy, 7, 1, light);
+  rect(8, 14 + dy, 10, 3, a.topColor);
+  rect(9, 17 + dy, 8, 5, a.topColor);
+  rect(8, 14 + dy, 2, 7, shadow);
+  rect(9, 21 + dy, 8, 1, shadow);
+  rect(11, 13 + dy, 4, 1, light);
+  rect(14, 14 + dy, 2, 1, light);
+  if (!back && a.topStyle === 1) {
+    rect(14, 15 + dy, 1, 6, light);
+    rect(15, 17 + dy, 2, 1, shadow);
+  }
   const sleeve = (x: number, y: number) => {
     if (a.topStyle === 1) rect(x, y, 2, 7, a.topColor);
     else if (a.topStyle === 0) {
       rect(x, y, 2, 3, a.topColor);
       rect(x, y + 3, 2, 4, skin);
     } else rect(x, y, 2, 7, skin);
-    rect(x, y + 7, 2, 1, skin); // mano
+    rect(x, y + 7, 2, 2, skinShade);
+    rect(x + 1, y + 7, 2, 1, skin); // pulgar
   };
-  sleeve(6, 13 + dy + step);
-  sleeve(17, 13 + dy - step);
+  sleeve(7 - step, 14 + dy + step);
+  sleeve(16 + step, 13 + dy - step);
+  if (!back && a.topColor === STAFF.doctor.topColor) {
+    rect(12, 14 + dy, 3, 2, '#6899a3'); // cuello de la bata y credencial
+    rect(15, 17 + dy, 2, 2, '#83adbb');
+    rect(9, 21 + dy, 7, 2, a.topColor);
+    rect(13, 18 + dy, 1, 5, '#c9d8d4');
+  }
 
   // Cabeza
   const hx = back ? 8 : 9;
-  rect(hx, 4 + dy, 8, 8, skin);
+  rect(hx + 1, 3 + dy, 6, 1, skin);
+  rect(hx, 4 + dy, 8, 6, skin);
+  rect(hx + 1, 10 + dy, 7, 2, skin);
   rect(11, 12 + dy, 3, 1, skin); // cuello
+  rect(hx, 6 + dy, 2, 5, skinShade);
   if (!back) {
+    rect(16, 9 + dy, 2, 1, skin);
+    rect(14, 11 + dy, 2, 1, skinShade);
+    rect(9, 9 + dy, 2, 2, skin);
     rect(12, 8 + dy, 1, 1, EYE);
     rect(15, 8 + dy, 1, 1, EYE);
   }
@@ -113,7 +161,8 @@ export function characterPixels(a: AppearanceSpec, view: View, pose: Pose, frame
       rect(hx - 1, 5 + dy, back ? 10 : 3, back ? 9 : 9, hc);
       break;
     case 2: // rizado
-      rect(hx - 1, 1 + dy, 10, 4, hc);
+      rect(hx, 1 + dy, 7, 2, hc);
+      rect(hx - 1, 3 + dy, 10, 2, hc);
       rect(hx - 1, 5 + dy, back ? 10 : 2, back ? 5 : 4, hc);
       break;
     case 3: // rapado
@@ -125,9 +174,21 @@ export function characterPixels(a: AppearanceSpec, view: View, pose: Pose, frame
       rect(hx - 2, 3 + dy, 3, 3, hc);
   }
 
+  const glint = tone(hc, 0.24);
+  if (a.hairStyle === 2) {
+    rect(hx - 2, 3 + dy, 2, 2, hc);
+    rect(hx + 6, 1 + dy, 2, 2, glint);
+    rect(hx + 2, 2 + dy, 2, 1, glint);
+  } else if (a.hairStyle !== 3) {
+    rect(hx + 1, 3 + dy, 4, 1, glint);
+    if (a.hairStyle === 1) rect(hx - 1, 6 + dy, 1, 5, glint);
+    if (back) rect(hx + 1, 6 + dy, 5, 2, hc);
+  }
+
   // Accesorios (de frente; la gorra también de espaldas)
   if (a.accessory === 'cap') {
     rect(hx - 1, 2 + dy, 10, 3, '#dc2626');
+    rect(hx + 1, 2 + dy, 5, 1, '#f17f65');
     if (!back) rect(hx + 6, 4 + dy, 4, 1, '#dc2626');
   } else if (!back && a.accessory === 'glasses') {
     rect(11, 8 + dy, 3, 1, '#0f172a');
@@ -142,12 +203,24 @@ export function characterPixels(a: AppearanceSpec, view: View, pose: Pose, frame
   const out: Pixels = g.map((r) => [...r]);
   for (let y = 0; y < H; y++)
     for (let x = 0; x < W; x++)
-      if (!g[y][x] && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([u, v]) => g[y + v]?.[x + u])) out[y][x] = OUTLINE;
+      if (
+        !g[y][x] &&
+        [
+          [1, 0],
+          [-1, 0],
+          [0, 1],
+          [0, -1],
+        ].some(([u, v]) => g[y + v]?.[x + u])
+      )
+        out[y][x] = OUTLINE;
   return out;
 }
 
 /** Pinta la matriz en un canvas 2D (en (0,0), 1 px por celda). */
-export function paint(ctx: { fillStyle: string | CanvasGradient | CanvasPattern; fillRect(x: number, y: number, w: number, h: number): void }, px: Pixels): void {
+export function paint(
+  ctx: { fillStyle: string | CanvasGradient | CanvasPattern; fillRect(x: number, y: number, w: number, h: number): void },
+  px: Pixels,
+): void {
   px.forEach((row, y) =>
     row.forEach((c, x) => {
       if (!c) return;
