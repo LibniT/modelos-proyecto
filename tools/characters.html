@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hoja de personajes (T09)</title>
+    <style>
+      body { font-family: system-ui, sans-serif; background: #e5e7eb; margin: 16px; }
+      canvas { image-rendering: pixelated; background: #cbd5e1; margin: 2px; }
+      h2 { font-size: 14px; margin: 12px 0 4px; }
+    </style>
+  </head>
+  <body>
+    <h1 style="font-size: 18px">Personajes generados por código (24×32 px, ×3) — solo desarrollo: <code>npm run dev</code> → /tools/characters.html</h1>
+    <div id="out"></div>
+    <script type="module">
+      import { characterPixels, paint, appearanceFor, STAFF, W, H } from '../src/render/characters/pixels.ts';
+      const out = document.getElementById('out');
+      function sprite(app, view, pose, frame, flip) {
+        const c = document.createElement('canvas');
+        c.width = W; c.height = H; c.style.width = `${W * 3}px`; c.style.height = `${H * 3}px`;
+        const ctx = c.getContext('2d');
+        if (flip) { ctx.translate(W, 0); ctx.scale(-1, 1); }
+        paint(ctx, characterPixels(app, view, pose, frame));
+        return c;
+      }
+      function row(title, app) {
+        const h = document.createElement('h2'); h.textContent = title; out.append(h);
+        const d = document.createElement('div');
+        for (const [view, flip, name] of [['SE', false, 'SE'], ['SE', true, 'SW'], ['NE', false, 'NE'], ['NE', true, 'NW']]) {
+          for (let f = 0; f < 4; f++) d.append(sprite(app, view, 'walk', f, flip));
+          d.append(sprite(app, view, 'sit', 0, flip));
+        }
+        out.append(d);
+      }
+      row('Médico', STAFF.doctor);
+      row('Enfermera de triage', STAFF.triage);
+      row('Auxiliar de admisión', STAFF.admission);
+      for (let i = 1; i <= 8; i++) row(`Paciente p${i}`, appearanceFor(`p${i}`, i === 3 ? '65+' : '18-39'));
+    </script>
+  </body>
+</html>

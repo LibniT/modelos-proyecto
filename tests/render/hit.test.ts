@@ -1,7 +1,7 @@
 import { EmergencyDepartment } from '../../src/model/ed';
 import { realisticParams } from '../../src/model/params';
 import { LiveDriver } from '../../src/render/drivers';
-import { hitTest } from '../../src/render/hit';
+import { BODY, hitTest } from '../../src/render/hit';
 import { iso, stationPos, unIso } from '../../src/render/layout';
 import { describe as tipFor } from '../../src/ui/tooltip';
 
@@ -26,7 +26,7 @@ describe('Tooltips (T08)', () => {
     const d = live(11);
     const f = [...d.pb.figures.values()].find((x) => !x.hidden)!;
     const q = iso(d.pb.position(f, d.pb.t));
-    const hit = hitTest(d.pb, { x: q.x, y: q.y - 9 }, false);
+    const hit = hitTest(d.pb, { x: q.x, y: q.y - BODY.dy }, false);
     expect(hit).toEqual({ kind: 'patient', id: f.id });
     const tip = tipFor(hit!, d.ed.snapshot(), eps, d.pb.ambulancesAway)!;
     const p = d.ed.snapshot().patients.find((x) => x.id === f.id)!;

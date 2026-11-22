@@ -3,7 +3,7 @@
  * dónde está y su último MOVE, y responde la posición en cualquier instante del reloj del render.
  * Regla: ninguna posición cambia si no es por un evento aplicado aquí.
  */
-import type { SimEvent, TriageLevel, Zone } from '../engine/events';
+import type { AppearanceSpec, PatientInfo, SimEvent, TriageLevel, Zone } from '../engine/events';
 import type { Snapshot } from '../model/ed';
 import { along, ambulanceRoute, isSlotZone, route, slotPos, stationPos, zoneAnchor, type SlotZone, type Vec } from './layout';
 
@@ -20,6 +20,10 @@ export interface Figure {
   walk?: { path: Vec[]; t0: number; dur: number };
   /** va en ambulancia hacia una clínica */
   hidden: boolean;
+  /** T09: datos para el personaje (vienen en ARRIVAL.data.info o en el snapshot) */
+  ageRange?: PatientInfo['ageRange'];
+  isVisitor?: boolean;
+  appearance?: AppearanceSpec;
 }
 
 export type Capacity = { triage: number; admission: number; doctors: number; obsBeds: number; ambulances: number };
@@ -46,7 +50,7 @@ export class Playback {
       ambulances: initial.ambulances.capacity,
     };
     for (const p of initial.patients) {
-      const f: Figure = { id: p.id, name: p.name, triage: p.triage, zone: p.zone, resourceId: p.resourceId, hidden: p.state === 'en traslado' };
+      const f: Figure = { id: p.id, name: p.name, triage: p.triage, zone: p.zone, resourceId: p.resourceId, hidden: p.state === 'en traslado', ageRange: p.ageRange, isVisitor: p.isVisitor };
       if (f.hidden && p.resourceId) this.ambulancesAway.add(p.resourceId);
       if (!f.resourceId && isSlotZone(p.zone)) f.slot = this.take(p.zone);
       this.figures.set(p.id, f);
@@ -119,8 +123,17 @@ export class Playback {
     }
     if (!e.patientId) return;
     if (e.type === 'ARRIVAL') {
-      const info = (e.data?.info ?? {}) as { name?: string; triage?: TriageLevel };
-      this.figures.set(e.patientId, { id: e.patientId, name: info.name ?? e.patientId, triage: info.triage, zone: e.to ?? 'entrance', hidden: false });
+      const info = (e.data?.info ?? {}) as Partial<PatientInfo>;
+      this.figures.set(e.patientId, {
+        id: e.patientId,
+        name: info.name ?? e.patientId,
+        triage: info.triage,
+        zone: e.to ?? 'entrance',
+        hidden: false,
+        ageRange: info.ageRange,
+        isVisitor: info.isVisitor,
+        appearance: info.appearance,
+      });
       return;
     }
     const f = this.figures.get(e.patientId);

@@ -6,8 +6,8 @@ import type { Playback } from './playback';
 
 export type Hit = { kind: 'patient'; id: string } | { kind: 'station'; id: string } | { kind: 'area'; name: string };
 
-/** radio de acierto sobre el cuerpo del paciente (px de mundo) */
-const PATIENT_R = 12;
+/** cuerpo del personaje: centro a `dy` px sobre los pies y radio de acierto (px de mundo) */
+export const BODY = { dy: 26, r: 16 };
 /** huella de cada puesto respecto a su posición (baldosas): cubre el mueble dibujado en scene.ts */
 const FOOTPRINT = {
   triage: [-0.5, 1.5, -0.9, 0.9],
@@ -28,11 +28,12 @@ const STATIONS = (Object.keys(FOOTPRINT) as (keyof typeof FOOTPRINT)[]).flatMap(
 
 export function hitTest(pb: Playback, world: Vec, snap: boolean): Hit | undefined {
   let best: Hit | undefined;
-  let bestD = PATIENT_R;
+  let bestD = BODY.r;
   for (const f of pb.figures.values()) {
     if (f.hidden) continue;
     const q = iso(pb.position(f, pb.t, snap));
-    const d = Math.hypot(world.x - q.x, world.y - (q.y - 9)); // centro del cuerpo dibujado
+    // De pie (centro del cuerpo) o acostado (a ras de la cama): vale el más cercano.
+    const d = Math.min(Math.hypot(world.x - q.x, world.y - (q.y - BODY.dy)), Math.hypot(world.x - q.x, world.y - (q.y - 12)));
     if (d < bestD) [best, bestD] = [{ kind: 'patient', id: f.id }, d];
   }
   if (best) return best;
