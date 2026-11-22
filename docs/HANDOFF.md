@@ -108,3 +108,16 @@ Hecho:
 A medias: repetir la prueba el martes 24 en el monitor externo de la feria (resolución distinta).
 
 Preguntas para el autor: fecha exacta del final de corte.
+
+## 2026-11-22 · Claude · main (ramas feat/T15-welch y feat/T12-remision, ya fusionadas)
+Hecho:
+- T15 (Welch). `src/validation/welch.ts` (media móvil de Welch + criterio reproducible de banda ±5 %), `src/batch/welch.ts` (series por periodo con `resetStats()` al inicio de cada periodo = promedio temporal exacto del periodo), `npm run welch` → `docs/WELCH.md` + `docs/figuras/t15-welch.svg`. 1000 réplicas.
+  - Validación (por hora, w = 12): L se estabiliza en 18 h y la cola del médico en 16 h, con nivel 2,251 contra 2,216 de Erlang C. Se usan 48 h, con margen.
+  - Realista (NHPP): Welch sobre **promedios diarios** (el proceso es periódico). El criterio estricto marca 2 días porque la media móvil arrastra el día 1 (15 % bajo); el sesgo que deja 1 día de calentamiento en 7 días medidos es −0,24 % (2 días: −0,05 %). Se mantiene 1 día.
+  - No se usa la espera media por periodo: es un cociente con sesgo (≈ 9,0 contra 11,08 min). Se usa Lq (promedio temporal).
+- T12. `Playback.transfers` (TRANSFER_START → TRANSFER_END) y `ambulancePosition(amb, t)`: la ambulancia recorre una vía fija (`layout.ROAD`, `ambulanceRoute`) en exactamente la duración del traslado del motor; al llegar desaparece y reaparece en la bahía cuando el recurso queda libre (regreso sin evento, se lee del recurso). Por encima de ×120 no se dibuja (salta al destino). Tooltip: "Trasladando a X a Clínica Y".
+- 69 pruebas pasan, `npm run build` compila.
+
+Siguiente paso: T09 (personajes) y T10 (creador) siguen asignadas a Codex B. Claude: T21 (textos y figuras del póster desde VALIDACION.md, EXPERIMENTO_MEDICOS.md y WELCH.md).
+
+Preguntas para el autor: fecha exacta del final de corte. ¿T09/T10 los hace Codex o Claude?
