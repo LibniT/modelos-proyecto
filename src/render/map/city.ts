@@ -1,161 +1,170 @@
-/**
- * T19 — Mapa de la ciudad (SPEC D1–D2): hospital + clínicas con ocupación en vivo y ambulancias con paciente
- * que avanzan por su vía en proporción a la duración del traslado del motor. Dibujado por código.
- * El motor sigue simulando en esta vista: el update llama `driver.tick` igual que la escena del hospital.
- */
 import Phaser from 'phaser';
-import { along, iso, unIso, type Vec } from '../layout';
-import { box, boxAt, pts } from '../draw';
+import { along, iso, type Vec } from '../layout';
+import { ambulance, stamp } from '../art';
 import type { Driver } from '../drivers';
 import { cityLayout, type CityLayout } from './layout';
+import { neighborhood, facility } from './neighborhood';
 
-export interface ClinicView {
-  name: string;
-  beds: number;
-  occupied: number;
-}
-
+export interface ClinicView { name: string; beds: number; occupied: number }
 export interface CityOptions {
-  /** tiempo medio de viaje a cada clínica (min): define las distancias del mapa */
   travelMeans: number[];
-  /** ocupación actual de las clínicas (del snapshot del motor) */
   clinics: () => ClinicView[];
   onClinic?: (j: number) => void;
-  /** se llama al pasar al hospital (clic en el edificio o botón) */
   onHospital?: () => void;
 }
 
-const CLINIC_COLORS = [0xbae6fd, 0xfde68a, 0xddd6fe];
-const occColor = (r: number) => (r < 0.7 ? 0x16a34a : r < 0.9 ? 0xf59e0b : 0xdc2626);
+const occColor = (r: number) => r < .7 ? 0x328366 : r < .9 ? 0xc18224 : 0xc95542;
+const badgeW=208, badgeH=56;
+interface Landmark {
+  j:number;
+  image:Phaser.GameObjects.Image;
+  outline:Phaser.GameObjects.Graphics;
+  panel:Phaser.GameObjects.Container;
+  value:Phaser.GameObjects.Text;
+  bar:Phaser.GameObjects.Graphics;
+  footprint:Phaser.Geom.Polygon;
+}
 
 export class CityScene extends Phaser.Scene {
-  private dyn!: Phaser.GameObjects.Graphics;
-  private occText: Phaser.GameObjects.Text[] = [];
-  private hospText!: Phaser.GameObjects.Text;
-  private L!: CityLayout;
-  private lastText = 0;
+  private L!:CityLayout;
+  private roads:Vec[][]=[];
+  private places:Landmark[]=[];
+  private fleet=new Map<string,Phaser.GameObjects.Image>();
+  private lastRead=-Infinity;
+  private overview=1;
+  private hover?:Landmark;
 
-  constructor(
-    private readonly driver: Driver,
-    private readonly o: CityOptions,
-  ) {
-    super({ key: 'city', active: false });
-  }
+  constructor(private readonly driver:Driver,private readonly o:CityOptions){ super({key:'city',active:false}); }
 
-  /** Ruta de la ambulancia hacia la clínica j: del borde del hospital al de la clínica. */
-  private route(j: number): Vec[] {
-    const a = this.L.hospital, b = this.L.clinics[j];
-    const d = Math.hypot(b.x - a.x, b.y - a.y);
-    const u = { x: (b.x - a.x) / d, y: (b.y - a.y) / d };
-    return [{ x: a.x + u.x * 2, y: a.y + u.y * 2 }, { x: b.x - u.x * 1.4, y: b.y - u.y * 1.4 }];
-  }
-
-  create(): void {
-    this.L = cityLayout(this.o.travelMeans);
-    const { w, h, hospital, clinics } = this.L;
-    const g = this.add.graphics().setDepth(0);
-    const label = (p: Vec, text: string, size = 16) =>
-      this.add.text(iso(p).x, iso(p).y, text, { fontFamily: 'system-ui, sans-serif', fontSize: `${size}px`, color: '#111827', fontStyle: 'bold', backgroundColor: 'rgba(255,255,255,0.8)', padding: { x: 6, y: 2 } }).setOrigin(0.5).setDepth(3);
-
-    // Suelo, río y vías.
-    g.fillStyle(0xd9f99d).fillPoints(pts([{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w, y: h }, { x: 0, y: h }]), true);
-    g.fillStyle(0x7dd3fc).fillPoints(pts([{ x: 0, y: h - 1.6 }, { x: w, y: h - 2.6 }, { x: w, y: h - 1.6 }, { x: 0, y: h - 0.6 }]), true);
-    label({ x: w * 0.7, y: h - 1.4 }, 'Río', 12);
-    clinics.forEach((_, j) => {
-      const [a, b] = this.route(j);
-      const d = Math.hypot(b.x - a.x, b.y - a.y);
-      const n = { x: -(b.y - a.y) / d * 0.45, y: (b.x - a.x) / d * 0.45 };
-      g.fillStyle(0x4b5563).fillPoints(pts([{ x: a.x + n.x, y: a.y + n.y }, { x: b.x + n.x, y: b.y + n.y }, { x: b.x - n.x, y: b.y - n.y }, { x: a.x - n.x, y: a.y - n.y }]), true);
-      g.lineStyle(2, 0xfacc15, 0.8);
-      for (let k = 0.05; k < 1; k += 0.1) g.strokePoints(pts([along([a, b], k), along([a, b], k + 0.05)]));
-      // Casas fijas a los lados de cada vía (decorado estático, no se mueve).
-      for (let k = 0.25; k < 0.9; k += 0.3) {
-        const c = along([a, b], k);
-        boxAt(g, { x: c.x + n.x * 3.2, y: c.y + n.y * 3.2 }, 1, 1, 18, 0xfca5a5);
-        boxAt(g, { x: c.x - n.x * 3.2, y: c.y - n.y * 3.2 }, 1, 1, 14, 0xfed7aa);
+  create():void {
+    this.L=cityLayout(this.o.travelMeans);
+    const {hospital,clinics,w,h}=this.L;
+    this.roads=clinics.map(c=>{
+      const dx=c.x-hospital.x,dy=c.y-hospital.y,d=Math.hypot(dx,dy)||1;
+      return [{x:hospital.x+dx/d*1.8,y:hospital.y+dy/d*1.8},{x:c.x-dx/d*1.3,y:c.y-dy/d*1.3}];
+    });
+    const left=h*32+25;
+    const ground=stamp(this,'barrio', (w+h)*32+50,(w+h)*16+100,left,48,g=>neighborhood(g,this.L));
+    this.add.image(-left,-48,ground).setOrigin(0);
+    const state=this.o.clinics();
+    [hospital,...clinics].forEach((at,index)=>{
+      const j=index-1, p=iso(at);
+      const key=stamp(this,'edificio-'+j,256,196,128,130,g=>facility(g,j));
+      const img=this.add.image(p.x,p.y,key).setOrigin(.5,130/196).setDepth(1000+p.y);
+      const radius=j<0?90:j===1?53:70, half=radius/2, roof=j<0?66:j===1?90:54;
+      const footprint=new Phaser.Geom.Polygon([p.x-radius,p.y-roof,p.x,p.y-half-roof,p.x+radius,p.y-roof,p.x+radius,p.y,p.x,p.y+half,p.x-radius,p.y]);
+      const outline=this.add.graphics().setDepth(999+p.y).setVisible(false);
+      outline.lineStyle(5,0xf9c457).strokePoints(footprint.points,true);
+      const bg=this.add.graphics();
+      bg.fillStyle(0x294a46,.17).fillRoundedRect(-badgeW/2+2,3,badgeW,badgeH,8);
+      bg.fillStyle(j<0?0x234e51:0xfffaea).fillRoundedRect(-badgeW/2,0,badgeW,badgeH,8);
+      const style={fontFamily:'Segoe UI, sans-serif',fontSize:'20px',fontStyle:'bold',color:j<0?'#fff5de':'#193f40'};
+      const name=this.add.text(0,2,j<0?'Hospital · Urgencias':state[j]?.name??'Clínica',style).setOrigin(.5,0);
+      const value=this.add.text(0,27,'',{...style,fontSize:'16px',fontStyle:'normal',color:j<0?'#d7eadf':'#345354'}).setOrigin(.5,0);
+      const bar=this.add.graphics();
+      const panel=this.add.container(p.x,p.y+half+5,[bg,name,value,bar]).setDepth(3000);
+      this.places.push({j,image:img,outline,panel,value,bar,footprint});
+    });
+    this.fit();
+    this.scale.on('resize',this.fit,this);
+    this.events.on('wake',()=>{this.fit();this.cameras.main.fadeIn(220);this.lastRead=-Infinity;});
+    this.input.on('pointermove',(p:Phaser.Input.Pointer)=>{
+      const cam=this.cameras.main;
+      if(p.isDown){
+        cam.scrollX-=(p.x-p.prevPosition.x)/cam.zoom;
+        cam.scrollY-=(p.y-p.prevPosition.y)/cam.zoom;
       }
+      this.highlight(p.isDown?undefined:this.pick(p));
     });
-
-    // Hospital (con cruz roja en el techo) y clínicas.
-    box(g, hospital.x - 1.5, hospital.y - 1.5, hospital.x + 1.5, hospital.y + 1.5, 48, 0xf8fafc);
-    g.fillStyle(0xdc2626).fillPoints(pts([{ x: hospital.x - 0.25, y: hospital.y - 0.9 }, { x: hospital.x + 0.25, y: hospital.y - 0.9 }, { x: hospital.x + 0.25, y: hospital.y + 0.9 }, { x: hospital.x - 0.25, y: hospital.y + 0.9 }], 48), true);
-    g.fillPoints(pts([{ x: hospital.x - 0.9, y: hospital.y - 0.25 }, { x: hospital.x + 0.9, y: hospital.y - 0.25 }, { x: hospital.x + 0.9, y: hospital.y + 0.25 }, { x: hospital.x - 0.9, y: hospital.y + 0.25 }], 48), true);
-    // Rótulo hacia el oeste (−x, +y): ahí no pasa ninguna vía, así no tapa las ambulancias.
-    label({ x: hospital.x - 1.2, y: hospital.y + 3.2 }, 'Hospital · urgencias (clic para entrar)', 15);
-    this.hospText = label({ x: hospital.x - 1.9, y: hospital.y - 1.9 }, '', 13);
-    clinics.forEach((c, j) => {
-      boxAt(g, c, 2.2, 2.2, 34, CLINIC_COLORS[j % CLINIC_COLORS.length]);
-      label({ x: c.x + 1.5, y: c.y + 1.5 }, this.o.clinics()[j]?.name ?? `Clínica ${j + 1}`, 14);
-      this.occText.push(label({ x: c.x - 1.6, y: c.y - 1.6 }, '', 12));
+    this.input.on('gameout',()=>this.highlight(undefined));
+    this.input.on('wheel',(_p:unknown,_o:unknown,_dx:number,dy:number)=>this.zoomBy(dy>0?.88:1.14));
+    this.input.on('pointerup',(p:Phaser.Input.Pointer)=>{
+      if(Phaser.Math.Distance.Between(p.downX,p.downY,p.upX,p.upY)>6)return;
+      const place=this.pick(p);
+      if(place?.j===-1)this.goHospital();
+      else if(place)this.o.onClinic?.(place.j);
     });
+    this.cameras.main.fadeIn(220);
+  }
 
-    this.dyn = this.add.graphics().setDepth(2);
-
-    // Cámara que encuadra el mapa; clic en edificios.
-    const cam = this.cameras.main;
-    const fit = () => {
-      const c = iso({ x: w / 2, y: h / 2 });
-      cam.setZoom(Math.min(this.scale.width / ((w + h) * 34), this.scale.height / ((w + h) * 18)));
-      cam.centerOn(c.x, c.y - 20);
-    };
-    fit();
-    this.scale.on('resize', fit);
-    this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
-      if (Phaser.Math.Distance.Between(p.downX, p.downY, p.upX, p.upY) > 6) return;
-      p.updateWorldPoint(cam);
-      const q = unIso({ x: p.worldX, y: p.worldY + 30 }); // +30: los edificios son altos, se apunta al techo
-      if (Math.abs(q.x - hospital.x) < 2.2 && Math.abs(q.y - hospital.y) < 2.2) this.goHospital();
-      else {
-        const j = clinics.findIndex((c) => Math.abs(q.x - c.x) < 1.8 && Math.abs(q.y - c.y) < 1.8);
-        if (j >= 0) this.o.onClinic?.(j);
+  /** Encuadra la silueta y la placa completa de cada edificio dentro del lienzo actual. */
+  fit():void {
+    if(!this.places.length)return;
+    const cam=this.cameras.main;
+    const width=cam.width,height=cam.height;
+    if(width<2||height<2)return;
+    let z=Math.min(width/940,height/575);
+    let x0=0,y0=0,x1=0,y1=0;
+    for(let i=0;i<6;i++){
+      x0=y0=Infinity;x1=y1=-Infinity;
+      for(const {panel,footprint} of this.places){
+        panel.setScale(Math.max(1,.68/z));
+        const radius=badgeW*panel.scaleX/2;
+        x0=Math.min(x0,panel.x-radius);x1=Math.max(x1,panel.x+radius);y1=Math.max(y1,panel.y+badgeH*panel.scaleY);
+        for(const p of footprint.points){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y);}
       }
-    });
-    this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
-      if (!p.isDown) return;
-      cam.scrollX -= (p.x - p.prevPosition.x) / cam.zoom;
-      cam.scrollY -= (p.y - p.prevPosition.y) / cam.zoom;
-    });
-    this.events.on('wake', () => cam.fadeIn(300));
-    cam.fadeIn(300);
+      z=Math.min((width-24)/(x1-x0),(height-32)/(y1-y0),1.65)*.97;
+    }
+    this.overview=z;
+    cam.setZoom(z).centerOn((x0+x1)/2,(y0+y1)/2);
   }
 
-  update(_time: number, delta: number): void {
-    this.driver.tick(delta / 1000); // el motor sigue en esta vista (SPEC D2)
-    const pb = this.driver.pb;
-    const g = this.dyn.clear();
-    // Ambulancias con paciente: posición ∝ tiempo de viaje del motor (TRANSFER_START.duration).
-    for (const tr of pb.transfers.values()) {
-      if (!this.L.clinics[tr.clinicId]) continue;
-      const p = along(this.route(tr.clinicId), tr.dur > 0 ? (pb.t - tr.t0) / tr.dur : 1);
-      boxAt(g, p, 0.9, 0.6, 16, 0xffffff);
-      boxAt(g, { x: p.x - 0.25, y: p.y }, 0.2, 0.61, 17, 0xdc2626);
+  zoomBy(factor:number):void {
+    const cam=this.cameras.main;
+    cam.setZoom(Phaser.Math.Clamp(cam.zoom*factor,this.overview*.75,this.overview*3));
+  }
+
+  private pick(pointer:Phaser.Input.Pointer):Landmark|undefined {
+    pointer.updateWorldPoint(this.cameras.main);
+    const {worldX:x,worldY:y}=pointer;
+    return this.places.find(({panel})=>Math.abs(x-panel.x)<=badgeW*panel.scaleX/2 && y>=panel.y && y<=panel.y+badgeH*panel.scaleY)??
+      this.places.find(p=>Phaser.Geom.Polygon.Contains(p.footprint,x,y));
+  }
+
+  private highlight(place?:Landmark):void {
+    if(this.hover===place)return;
+    this.hover?.outline.setVisible(false);
+    this.hover=place;
+    place?.outline.setVisible(true);
+    this.input.setDefaultCursor(place?'pointer':'default');
+  }
+
+  update(time:number,delta:number):void {
+    this.driver.tick(delta/1000);
+    const pb=this.driver.pb;
+    for(const [id,img] of this.fleet)if(!pb.transfers.has(id)){img.setVisible(false);}
+    for(const [id,tr] of pb.transfers){
+      const route=this.roads[tr.clinicId];
+      if(!route)continue;
+      const key='ambulancia-ciudad-'+tr.clinicId;
+      if(!this.textures.exists(key))stamp(this,key,140,100,70,65,g=>ambulance(g,{x:route[1].x-route[0].x,y:route[1].y-route[0].y}));
+      let img=this.fleet.get(id);
+      if(!img){img=this.add.image(0,0,key).setOrigin(.5,.65).setScale(.54);this.fleet.set(id,img);}
+      const p=iso(along(route,tr.dur>0?(pb.t-tr.t0)/tr.dur:1));
+      img.setTexture(key).setPosition(p.x,p.y).setDepth(1000+p.y).setVisible(true);
     }
-    // Barras de ocupación (4 veces por segundo basta).
-    const clinics = this.o.clinics();
-    clinics.forEach((c, j) => {
-      const at = this.L.clinics[j];
-      if (!at) return;
-      const q = iso(at);
-      const r = c.beds > 0 ? c.occupied / c.beds : 0;
-      g.fillStyle(0x111827, 0.8).fillRect(q.x - 32, q.y - 62, 64, 8);
-      g.fillStyle(occColor(r)).fillRect(q.x - 31, q.y - 61, 62 * Math.min(1, r), 6);
-    });
-    const now = performance.now();
-    if (now - this.lastText > 250) {
-      this.lastText = now;
-      clinics.forEach((c, j) => this.occText[j]?.setText(`${c.occupied}/${c.beds} camas (${Math.round((100 * c.occupied) / Math.max(1, c.beds))} %)`));
-      const beds = [...pb.figures.values()].filter((f) => f.resourceId?.startsWith('bed-')).length;
-      this.hospText.setText(`${pb.figures.size} pacientes · observación ${beds}/${pb.capacity.obsBeds} · ambulancias en camino: ${pb.transfers.size}`);
+    if(time-this.lastRead<250)return;
+    this.lastRead=time;
+    const clinics=this.o.clinics();
+    for(const {j,value,bar} of this.places){
+      if(j<0){
+        const beds=Array.from(pb.figures.values()).filter(f=>f.resourceId?.startsWith('bed-')).length;
+        value.setText(`${pb.figures.size} pac. · ${beds}/${pb.capacity.obsBeds} obs. · ${pb.transfers.size} en viaje`);
+        continue;
+      }
+      const c=clinics[j];if(!c)continue;
+      const ratio=c.occupied/Math.max(1,c.beds);
+      value.setText(`${c.occupied} / ${c.beds} camas · ${Math.round(ratio*100)} %`);
+      bar.clear().fillStyle(0xd7ddd1).fillRect(-92,50,184,4)
+        .fillStyle(occColor(ratio)).fillRect(-92,50,184*Math.min(1,ratio),4);
     }
   }
 
-  /** Pasa a la escena del hospital con un fundido de 0,3 s (SPEC D1). */
-  goHospital(): void {
-    const cam = this.cameras.main;
-    cam.fadeOut(300, 15, 23, 32);
-    cam.once('camerafadeoutcomplete', () => {
-      this.scene.switch('hospital');
-      this.o.onHospital?.();
-    });
+  goHospital():void {
+    this.highlight(undefined);
+    const cam=this.cameras.main;
+    if(cam.fadeEffect.isRunning)return;
+    cam.fadeOut(220,22,53,54);
+    cam.once('camerafadeoutcomplete',()=>{this.scene.switch('hospital');this.o.onHospital?.();});
   }
 }
