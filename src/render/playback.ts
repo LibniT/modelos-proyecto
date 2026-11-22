@@ -37,6 +37,8 @@ export class Playback {
   readonly transfers = new Map<string, { patientId: string; t0: number; dur: number; clinic: string }>();
   /** T16: salidas aplicadas (DEPARTURE con su `journey`); la interfaz las va consumiendo */
   readonly departures: SimEvent[] = [];
+  /** T18: se llama con cada evento ANTES de aplicarlo (el paciente aún existe; para subtítulos) */
+  onApply?: (e: SimEvent) => void;
   /** reloj: instante del último avance */
   t: number;
   private readonly pending: SimEvent[] = [];
@@ -119,6 +121,7 @@ export class Playback {
   }
 
   private apply(e: SimEvent): void {
+    this.onApply?.(e);
     if (e.type === 'PARAM_CHANGE') {
       for (const [k, v] of Object.entries(e.data ?? {})) if (k in this.capacity && typeof v === 'number') this.capacity[k as keyof Capacity] = v;
       return;

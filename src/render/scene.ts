@@ -51,6 +51,7 @@ export class HospitalScene extends Phaser.Scene {
   private pointerOver = false;
   /** T16: paciente que sigue la cámara (clic sobre él o botón "Seguir a mi paciente") */
   follow: string | undefined;
+  private fitCamera = () => {};
 
   constructor(
     private readonly driver: Driver,
@@ -81,6 +82,7 @@ export class HospitalScene extends Phaser.Scene {
       cam.centerOn(c.x, c.y - 50);
     };
     fit();
+    this.fitCamera = fit;
     this.scale.on('resize', fit);
     // Cámara: arrastrar para mover, rueda para acercar.
     this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
@@ -231,6 +233,17 @@ export class HospitalScene extends Phaser.Scene {
         this.sprites.delete(id);
         if (!pb.figures.has(id)) this.lastDir.delete(id);
       }
+  }
+
+  /** Vuelve a la vista general del hospital. */
+  resetCamera(): void {
+    this.fitCamera();
+  }
+
+  /** T18: acerca la cámara para la demo (solo presentación; el seguimiento la centra en el paciente). */
+  demoZoom(): void {
+    this.fitCamera();
+    this.cameras.main.zoomTo(this.cameras.main.zoom * 1.8, 1200);
   }
 
   /** La cámara acompaña al paciente seguido (o a su ambulancia); si ya salió, deja de seguir. */

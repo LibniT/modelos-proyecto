@@ -55,7 +55,7 @@ Estados: `pendiente` · `en curso (agente, fecha)` · `hecha` · `bloqueada (por
 | T15 | Gráfica de Welch para justificar el calentamiento | Claude | `tools/`, `docs/` | hecha (Claude, 22 nov) |
 | T16 | Seguir a mi personaje + tarjeta de recorrido (`DEPARTURE.data.journey`) | Claude | `src/render`, `src/ui` | hecha (Claude, 22 nov) |
 | T17 | Botón accidente masivo en la UI + tiempo de recuperación | Claude | `src/ui`, `src/batch`, `tools/` | hecha (Claude, 22 nov) |
-| T18 | Modo demo automático (60 s sin uso → recorrido de cámara + subtítulos por eventos) | Codex A | `src/render` | pendiente |
+| T18 | Modo demo automático (60 s sin uso → recorrido de cámara + subtítulos por eventos) | Claude | `src/render` | hecha (Claude, 22 nov) |
 | T19 | Mapa de la ciudad con hospital y 3 clínicas (ocupación en vivo, ambulancias) | Codex B | `src/render/map` | pendiente |
 | T20 | Notebook SimPy de contraste (solo si el profesor lo pide) | Claude | `notebooks/` | pendiente |
 | T21 | Póster / informe: textos y figuras desde `docs/VALIDACION.md` y T14 | Autor + Claude | `docs/` | pendiente |

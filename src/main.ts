@@ -16,6 +16,7 @@ import type { SimEvent } from './engine/events';
 import { mountScene, TRIAGE_COLOR } from './render/scene';
 import { LiveDriver, MockDriver } from './render/drivers';
 import { recoveryTime } from './batch/recovery';
+import { DemoMode } from './render/demo';
 
 const app = document.getElementById('app')!;
 app.innerHTML = `
@@ -31,6 +32,8 @@ app.innerHTML = `
   button:disabled { opacity: .4; cursor: not-allowed; }
   #tip { position: absolute; pointer-events: none; background: rgba(15, 23, 32, .94); border: 1px solid #334155; border-radius: 6px; padding: 6px 10px; font-size: 12px; line-height: 1.45; max-width: 280px; z-index: 5; }
   #tip b { display: block; font-size: 13px; margin-bottom: 2px; }
+  #subs { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 7; max-width: 92%; background: rgba(0, 0, 0, .78); color: #fff; font-size: 18px; line-height: 1.4; text-align: center; white-space: pre-line; padding: 8px 14px; border-radius: 8px; pointer-events: none; }
+  #demo-banner { position: absolute; top: 8px; right: 8px; z-index: 7; background: #a16207; color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 13px; pointer-events: none; }
   #card { position: absolute; top: 8px; left: 8px; z-index: 6; max-width: 360px; background: rgba(15, 23, 32, .96); border: 1px solid #334155; border-radius: 8px; padding: 10px 12px; font-size: 13px; line-height: 1.5; }
   #card b { display: block; font-size: 14px; margin-bottom: 4px; }
   #card button { margin-top: 8px; padding: 4px 10px; }
@@ -59,6 +62,8 @@ app.innerHTML = `
         <div id="scene" style="height: 680px; border-radius: 8px; overflow: hidden"></div>
         <div id="tip" hidden></div>
         <div id="card" role="dialog" aria-label="Recorrido del paciente" hidden></div>
+        <div id="subs" aria-live="polite" hidden></div>
+        <div id="demo-banner" hidden>Modo demostración · toca la pantalla o mueve el mouse para usar el simulador</div>
       </div>
       <aside id="panel"></aside>
     </div>
@@ -138,6 +143,17 @@ speedButtons.forEach(
     }),
 );
 markSpeed();
+// T18: modo demo tras 60 s sin uso (?demo=10 lo adelanta, para probar).
+new DemoMode({
+  scene,
+  driver,
+  subtitle: $('subs'),
+  banner: $('demo-banner'),
+  card: $('card'),
+  epsName: (id) => live?.ed.params.eps.find((e) => e.id === id)?.name ?? id,
+  idleSeconds: Number(new URLSearchParams(location.search).get('demo')) || 60,
+  onStart: () => document.querySelector<HTMLButtonElement>('[data-tab="scene"]')!.click(),
+});
 $('pause').onclick = () => {
   driver.paused = !driver.paused;
   $('pause').textContent = driver.paused ? 'Continuar' : 'Pausa';
@@ -182,6 +198,8 @@ function fmtClock(t: number): string {
 
 // Textos: 5 veces por segundo basta (la escena se dibuja en cada cuadro).
 setInterval(() => {
+  markSpeed(); // la demo cambia y restaura la velocidad
+  $('pause').textContent = driver.paused ? 'Continuar' : 'Pausa';
   $('clock').textContent = `${fmtClock(driver.pb.t)} · ×${driver.speed}${driver.paused ? ' (pausa)' : ''} · pacientes: ${driver.pb.figures.size}`;
   // T16: seguir, vigilar y mostrar la tarjeta de recorrido.
   if (followNextVisitor && newestVisitor()) {
