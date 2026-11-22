@@ -43,6 +43,9 @@ export class HospitalScene extends Phaser.Scene {
   /** T16: paciente que sigue la cámara (clic sobre él o botón "Seguir a mi paciente") */
   follow: string | undefined;
   private fitCamera = () => {};
+  private manualCamera = false;
+  readonly minZoom = 0.15;
+  readonly maxZoom = 3;
 
   constructor(
     private readonly driver: Driver,
@@ -93,16 +96,19 @@ export class HospitalScene extends Phaser.Scene {
       // Edificio + vía de las clínicas (que sube por la izquierda).
       const c = iso({ x: GRID.w / 2, y: GRID.h / 2 });
       if (cam.width < 2 || cam.height < 2) return;
+      this.manualCamera = false;
+      cam.zoomEffect.reset();
       cam.setZoom(Math.min(cam.width / 1460, cam.height / 864));
       cam.centerOn(c.x, c.y - 50);
     };
     fit();
     this.fitCamera = fit;
-    this.scale.on('resize', fit);
+    this.scale.on('resize', () => { if (!this.manualCamera && !this.follow) fit(); });
     this.events.on('wake', () => cam.fadeIn(300)); // al volver del mapa de la ciudad
     // Cámara: arrastrar para mover, rueda para acercar.
     this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
       if (!p.isDown) return;
+      this.manualCamera = true;
       if (Phaser.Math.Distance.Between(p.downX, p.downY, p.x, p.y) > 6) this.follow = undefined; // arrastrar = tomar la cámara
       cam.scrollX -= (p.x - p.prevPosition.x) / cam.zoom;
       cam.scrollY -= (p.y - p.prevPosition.y) / cam.zoom;
@@ -119,9 +125,7 @@ export class HospitalScene extends Phaser.Scene {
       this.pointerOver = false;
       this.onHover?.(undefined, 0, 0);
     });
-    this.input.on('wheel', (_p: unknown, _o: unknown, _dx: number, dy: number) =>
-      cam.setZoom(Phaser.Math.Clamp(cam.zoom * (dy > 0 ? 0.9 : 1.1), 0.3, 2.5)),
-    );
+    this.input.on('wheel', (_p: unknown, _o: unknown, _dx: number, dy: number) => this.zoomBy(dy > 0 ? .8 : 1.25));
   }
 
   update(_time: number, delta: number): void {
@@ -273,7 +277,7 @@ export class HospitalScene extends Phaser.Scene {
 
   /** T19: pasa al mapa de la ciudad con un fundido de 0,3 s (el motor sigue en esa vista). */
   goCity(): void {
-    if (!this.scene.manager.getScene('city')) return;
+    if (!this.scene.manager.getScene('city') || this.inCity || this.cameras.main.fadeEffect.isRunning) return;
     this.follow = undefined;
     this.onHover?.(undefined, 0, 0);
     const cam = this.cameras.main;
@@ -293,7 +297,9 @@ export class HospitalScene extends Phaser.Scene {
 
   zoomBy(factor: number): void {
     const cam = this.cameras.main;
-    cam.setZoom(Phaser.Math.Clamp(cam.zoom * factor, 0.15, 3));
+    this.manualCamera = true;
+    cam.zoomEffect.reset();
+    cam.setZoom(Phaser.Math.Clamp(cam.zoom * factor, this.minZoom, this.maxZoom));
   }
 
   /** T18: acerca la cámara para la demo (solo presentación; el seguimiento la centra en el paciente). */

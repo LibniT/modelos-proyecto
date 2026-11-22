@@ -37,6 +37,10 @@ export class CityScene extends Phaser.Scene {
   private fleet = new Map<string, Phaser.GameObjects.Image>();
   private lastRead = -Infinity;
   private overview = 1;
+  private manualCamera = false;
+  followedAmbulance?: string;
+  get minZoom(): number { return this.overview * .75; }
+  get maxZoom(): number { return this.overview * 3; }
   private hover?: Landmark;
 
   constructor(
@@ -105,7 +109,7 @@ export class CityScene extends Phaser.Scene {
       this.places.push({ j, image: img, outline, panel, value, bar, footprint });
     });
     this.fit();
-    this.scale.on('resize', this.fit, this);
+    this.scale.on('resize', () => { if (!this.manualCamera && !this.followedAmbulance) this.fit(); });
     this.events.on('wake', () => {
       this.fit();
       this.cameras.main.fadeIn(220);
@@ -114,13 +118,15 @@ export class CityScene extends Phaser.Scene {
     this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
       const cam = this.cameras.main;
       if (p.isDown) {
+        this.manualCamera = true;
+        this.followedAmbulance = undefined;
         cam.scrollX -= (p.x - p.prevPosition.x) / cam.zoom;
         cam.scrollY -= (p.y - p.prevPosition.y) / cam.zoom;
       }
       this.highlight(p.isDown ? undefined : this.pick(p));
     });
     this.input.on('gameout', () => this.highlight(undefined));
-    this.input.on('wheel', (_p: unknown, _o: unknown, _dx: number, dy: number) => this.zoomBy(dy > 0 ? 0.88 : 1.14));
+    this.input.on('wheel', (_p: unknown, _o: unknown, _dx: number, dy: number) => this.zoomBy(dy > 0 ? .8 : 1.25));
     this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
       if (Phaser.Math.Distance.Between(p.downX, p.downY, p.upX, p.upY) > 6) return;
       const place = this.pick(p);
@@ -167,12 +173,14 @@ export class CityScene extends Phaser.Scene {
       z = Math.min((width - 24) / (x1 - x0), (height - 32) / (y1 - y0), 1.65) * 0.97;
     }
     this.overview = z;
+    this.manualCamera = false;
     cam.setZoom(z).centerOn((x0 + x1) / 2, (y0 + y1) / 2);
   }
 
   zoomBy(factor: number): void {
     const cam = this.cameras.main;
-    cam.setZoom(Phaser.Math.Clamp(cam.zoom * factor, this.overview * 0.75, this.overview * 3));
+    this.manualCamera = true;
+    cam.setZoom(Phaser.Math.Clamp(cam.zoom * factor, this.minZoom, this.maxZoom));
   }
 
   private pick(pointer: Phaser.Input.Pointer): Landmark | undefined {
@@ -212,6 +220,7 @@ export class CityScene extends Phaser.Scene {
         this.fleet.set(id, img);
       }
       const p = iso(along(route, tr.dur > 0 ? (pb.t - tr.t0) / tr.dur : 1));
+      if (id === this.followedAmbulance) this.cameras.main.centerOn(p.x, p.y - 15);
       img
         .setTexture(key)
         .setPosition(p.x, p.y)
