@@ -137,3 +137,15 @@ Probado en el navegador: el creador inyecta a "Visitante Expo", llega a los ~6 m
 Siguiente paso: T16 (seguir a mi personaje + tarjeta de recorrido con `DEPARTURE.data.journey`) encaja con el creador. Luego T17–T19 (Meta B) y T21 (póster).
 
 Preguntas para el autor: fecha exacta del final de corte. Revisar en el monitor de la feria que los personajes se lean bien a esa distancia (escala ADULT = 1,6 en scene.ts).
+
+## 2026-11-22 · Claude · main (rama feat/T16-seguir, ya fusionada)
+Hecho:
+- T16 (la tomó Claude por decisión del autor).
+  - **Seguir:** clic (sin arrastrar) sobre un paciente → la cámara lo sigue, con un anillo amarillo bajo sus pies; si va en ambulancia, sigue a la ambulancia. Clic en el piso o arrastrar suelta la cámara. Botón "Seguir a mi paciente" (sigue al visitante más reciente) y **seguimiento automático** del paciente recién creado en cuanto llega. `HospitalScene.follow` (mountScene devuelve ahora la escena).
+  - **Tarjeta de recorrido** (`src/ui/journey.ts`, `journeyCard`): se arma solo con `DEPARTURE.data.journey` cuando sale un paciente seguido o cualquier visitante. Llegada/salida, esperas de triage y admisión, **del triage al médico con veredicto de la Res. 5596** para el Triage II, puerta–médico contra el promedio de la corrida, pasillo, observación y desenlace (alta, hospitalizado, remitido a la clínica X, abandono).
+  - `Playback.departures`: cola de salidas que la interfaz consume.
+- 78 pruebas pasan, `npm run build` compila. Probado en el navegador: crear → seguir automáticamente → tarjeta al salir ("del triage al médico 6 min: cumplió"); clic para seguir y soltar.
+
+Siguiente paso: Meta B restante: T17 (botón de accidente masivo + tiempo de recuperación), T18 (modo demo), T19 (mapa de la ciudad), T21 (póster).
+
+Preguntas para el autor: fecha exacta del final de corte.
