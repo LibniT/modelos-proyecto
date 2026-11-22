@@ -1,0 +1,780 @@
+import { Simulator, type Handle } from '../engine/sim';
+import { RngFactory, type Rng } from '../engine/rng';
+import { sample, type Dist } from '../engine/distributions';
+import { Resource } from '../engine/resource';
+import { TimeAverage, Tally } from '../engine/stats';
+import type { PatientInfo, SimEvent, SimEventType, TriageLevel, Zone } from '../engine/events';
+import { NAMES } from './catalog';
+import type { Params } from './params';
+
+/**
+ * MODELO DEL SERVICIO DE URGENCIAS (docs/SPEC.md §2).
+ *
+ *   llegada → triage (FIFO) → admisión EPS (FIFO; Triage I la salta)
+ *           → médico (prioridad I..V sin interrupción, FIFO por nivel)
+ *           → alta | hospitalización | observación (K camas) | remisión
+ *   sin cama o remisión → pasillo → clínica de la red EPS en ambulancia
+ *
+ * La verificación de derechos (admisión) va DESPUÉS del triage: Res. 5596/2015, art. 6.
+ * Unidades de tiempo: minutos.
+ */
+
+export type PatientState =
+  | 'llegando'
+  | 'caminando'
+  | 'esperando triage'
+  | 'en triage'
+  | 'esperando admisión'
+  | 'en admisión'
+  | 'esperando médico'
+  | 'en consulta'
+  | 'en observación'
+  | 'en pasillo'
+  | 'en traslado'
+  | 'salió';
+
+export type Outcome = 'alta' | 'hospitalizacion' | 'remitido' | 'abandono';
+
+export interface Journey {
+  arrival: number;
+  departure?: number;
+  triageWait?: number;
+  admissionWait?: number;
+  doctorWait?: number;
+  doorToDoctor?: number;
+  observationTime?: number;
+  hallwayWait?: number;
+  clinic?: string;
+  outcome?: Outcome;
+}
+
+interface Patient {
+  info: PatientInfo;
+  /** nivel real (se revela en el triage) */
+  level: TriageLevel;
+  state: PatientState;
+  zone: Zone;
+  resourceId?: string;
+  waitingSince: number;
+  journey: Journey;
+  triageEnd?: number;
+  renege?: Handle;
+  hallwayReason?: 'capacidad' | 'complejidad';
+  hallwaySince?: number;
+  reservedClinic?: number;
+  massCasualty?: boolean;
+}
+
+interface Clinic {
+  occupied: number;
+  occ: TimeAverage;
+  bgArrivals: number;
+  bgBlocked: number;
+}
+
+export interface PatientSnapshot {
+  id: string;
+  name: string;
+  eps: string;
+  ageRange: PatientInfo['ageRange'];
+  /** visible solo después del triage */
+  triage?: TriageLevel;
+  state: PatientState;
+  zone: Zone;
+  resourceId?: string;
+  waitingSince: number;
+  arrival: number;
+  isVisitor: boolean;
+  symptom?: string;
+}
+
+export interface ResourceSnapshot {
+  capacity: number;
+  busy: number;
+  queue: number;
+}
+
+export interface Snapshot {
+  t: number;
+  patients: PatientSnapshot[];
+  triage: ResourceSnapshot;
+  admission: ResourceSnapshot;
+  doctors: ResourceSnapshot;
+  ambulances: ResourceSnapshot;
+  obsBeds: { capacity: number; occupied: number };
+  hallway: number;
+  clinics: { id: number; name: string; beds: number; occupied: number }[];
+}
+
+export interface EdOptions {
+  seed: number;
+  /** guardar el registro de eventos (escena). Apagado en el modo batch. */
+  recordEvents?: boolean;
+  /** aplicar el calentamiento (reinicio de estadísticas en params.warmup). */
+  useWarmup?: boolean;
+}
+
+const LEVELS: TriageLevel[] = [1, 2, 3, 4, 5];
+
+export class EmergencyDepartment {
+  readonly sim = new Simulator();
+  readonly params: Params;
+  private readonly rngs: RngFactory;
+  private readonly r: Record<string, Rng>;
+
+  readonly triage: Resource<Patient>;
+  readonly admission: Resource<Patient>;
+  readonly doctors: Resource<Patient>;
+  readonly ambulances: Resource<Patient>;
+
+  private readonly patients = new Map<string, Patient>();
+  private readonly hallway: Patient[] = [];
+  private readonly obsFree: number[] = [];
+  private obsCapacity: number;
+  private obsOccupied = 0;
+  private readonly clinics: Clinic[];
+  private nextId = 1;
+  private readonly visitorQueue: PatientInfo[] = [];
+
+  private readonly record: boolean;
+  private events: SimEvent[] = [];
+  private evSeq = 0;
+  private readonly listeners: ((e: SimEvent) => void)[] = [];
+
+  // ---------- estadísticas (se reinician al terminar el calentamiento) ----------
+  private statsStart = 0;
+  private arrivals = 0;
+  private arrivalsAdmission = 0;
+  private arrivalsByLevel = [0, 0, 0, 0, 0];
+  private readonly inSystem: TimeAverage;
+  private readonly sojourn = new Tally();
+  private readonly doctorWaitByLevel = LEVELS.map(() => new Tally());
+  private readonly doorToDoctor = new Tally();
+  private triageIIOnTime = 0;
+  private triageIICount = 0;
+  private obsRequests = 0;
+  private obsBlocked = 0;
+  private readonly obsOcc: TimeAverage;
+  private remitComplexity = 0;
+  private remitCapacity = 0;
+  private transfers = 0;
+  private readonly hallwayWait = new Tally();
+  private readonly hallwayN: TimeAverage;
+  private reneges = 0;
+  private renegeEligible = 0;
+  private departures = 0;
+
+  constructor(params: Params, opts: EdOptions) {
+    this.params = structuredClone(params);
+    this.rngs = new RngFactory(opts.seed);
+    this.record = opts.recordEvents ?? false;
+    const names = ['arrivals', 'mix', 'triage', 'admission', 'doctor', 'routing', 'patience', 'observation', 'ambulance', 'eps', 'names', 'clinicChoice', 'mass'];
+    this.r = Object.fromEntries(names.map((n) => [n, this.rngs.stream(n)]));
+
+    const c = this.params.capacity;
+    this.triage = new Resource(this.sim, 'triage', c.triage, 'fifo');
+    this.admission = new Resource(this.sim, 'admission', c.admission, 'fifo');
+    this.doctors = new Resource(this.sim, 'doctor', c.doctors, 'priority');
+    this.ambulances = new Resource(this.sim, 'amb', c.ambulances, 'fifo');
+    this.obsCapacity = c.obsBeds;
+    for (let i = c.obsBeds - 1; i >= 0; i--) this.obsFree.push(i);
+
+    this.inSystem = new TimeAverage(0, 0);
+    this.obsOcc = new TimeAverage(0, 0);
+    this.hallwayN = new TimeAverage(0, 0);
+
+    this.clinics = this.params.clinics.map(() => ({ occupied: 0, occ: new TimeAverage(0, 0), bgArrivals: 0, bgBlocked: 0 }));
+    this.params.clinics.forEach((cl, j) => this.scheduleClinicBackground(j, cl.backgroundRatePerHour));
+
+    this.scheduleNextArrival();
+    if (opts.useWarmup && this.params.warmup > 0) this.sim.scheduleAt(this.params.warmup, () => this.resetStats());
+  }
+
+  // =====================================================================
+  // API pública
+  // =====================================================================
+
+  /** Avanza la simulación hasta `t` (minutos). */
+  step(t: number): void {
+    this.sim.runUntil(t);
+  }
+
+  get now(): number {
+    return this.sim.now;
+  }
+
+  onEvent(fn: (e: SimEvent) => void): void {
+    this.listeners.push(fn);
+  }
+
+  /** Devuelve y vacía los eventos registrados desde la última llamada. */
+  drainEvents(): SimEvent[] {
+    const out = this.events;
+    this.events = [];
+    return out;
+  }
+
+  /**
+   * Inyecta un paciente creado por un visitante. REEMPLAZA a la siguiente
+   * llegada Poisson (no se suma): el proceso de llegadas sigue siendo Poisson.
+   * Desactivado en modo validación.
+   */
+  injectVisitor(info: Omit<PatientInfo, 'id' | 'isVisitor'>): boolean {
+    if (this.params.mode === 'validacion') return false;
+    this.visitorQueue.push({ ...info, id: '', isVisitor: true });
+    return true;
+  }
+
+  /** Accidente masivo: n pacientes Triage I–III llegan a la vez (solo realista). */
+  triggerMassCasualty(n: number): boolean {
+    if (this.params.mode === 'validacion') return false;
+    this.emit('MASS_CASUALTY', { data: { n } });
+    for (let i = 0; i < n; i++) {
+      const level = (this.r.mass.weighted([0.25, 0.45, 0.3]) + 1) as TriageLevel;
+      this.arrive(undefined, level, true);
+    }
+    return true;
+  }
+
+  setCapacity(kind: keyof Params['capacity'], n: number): void {
+    n = Math.max(0, Math.floor(n));
+    this.params.capacity[kind] = n;
+    if (kind === 'triage') this.triage.setCapacity(n);
+    else if (kind === 'admission') this.admission.setCapacity(n);
+    else if (kind === 'doctors') this.doctors.setCapacity(n);
+    else if (kind === 'ambulances') this.ambulances.setCapacity(n);
+    else if (kind === 'obsBeds') this.setObsBeds(n);
+    this.emit('PARAM_CHANGE', { data: { [kind]: n } });
+  }
+
+  setArrivalRate(perHour: number): void {
+    this.params.arrivalRatePerHour = Math.max(0, perHour);
+    this.emit('PARAM_CHANGE', { data: { arrivalRatePerHour: this.params.arrivalRatePerHour } });
+  }
+
+  snapshot(): Snapshot {
+    const res = (r: Resource<Patient>): ResourceSnapshot => ({ capacity: r.capacity, busy: r.inService, queue: r.queueLength });
+    return {
+      t: this.sim.now,
+      patients: [...this.patients.values()].map((p) => ({
+        id: p.info.id,
+        name: p.info.name,
+        eps: p.info.eps,
+        ageRange: p.info.ageRange,
+        triage: p.info.triage,
+        state: p.state,
+        zone: p.zone,
+        resourceId: p.resourceId,
+        waitingSince: p.waitingSince,
+        arrival: p.journey.arrival,
+        isVisitor: p.info.isVisitor,
+        symptom: p.info.symptom,
+      })),
+      triage: res(this.triage),
+      admission: res(this.admission),
+      doctors: res(this.doctors),
+      ambulances: res(this.ambulances),
+      obsBeds: { capacity: this.obsCapacity, occupied: this.obsOccupied },
+      hallway: this.hallway.length,
+      clinics: this.params.clinics.map((cl, j) => ({ id: cl.id, name: cl.name, beds: cl.beds, occupied: this.clinics[j].occupied })),
+    };
+  }
+
+  /**
+   * Métricas desde el último reinicio de estadísticas. Tiempos en minutos.
+   * Claves estables: se usan en el batch, la UI y las pruebas de validación.
+   */
+  metrics(): Record<string, number> {
+    const t = this.sim.now;
+    const T = t - this.statsStart;
+    const m: Record<string, number> = {};
+    m['T'] = T;
+    m['lambda'] = T > 0 ? this.arrivals / T : NaN;
+    m['L'] = this.inSystem.mean(t);
+    m['W'] = this.sojourn.mean;
+    for (const [key, r] of [
+      ['triage', this.triage],
+      ['admission', this.admission],
+      ['doctor', this.doctors],
+    ] as const) {
+      m[`${key}.Wq`] = r.wait.mean;
+      m[`${key}.Lq`] = r.qLen.mean(t);
+      m[`${key}.rho`] = r.capacity > 0 ? r.busy.mean(t) / r.capacity : NaN;
+    }
+    m['admission.lambda'] = T > 0 ? this.arrivalsAdmission / T : NaN;
+    LEVELS.forEach((lv, i) => {
+      m[`doctor.Wq.L${lv}`] = this.doctorWaitByLevel[i].mean;
+      m[`share.L${lv}`] = this.arrivals > 0 ? this.arrivalsByLevel[i] / this.arrivals : NaN;
+    });
+    m['triageII.compliance'] = this.triageIICount > 0 ? this.triageIIOnTime / this.triageIICount : NaN;
+    m['doorToDoctor'] = this.doorToDoctor.mean;
+    m['obs.blockProb'] = this.obsRequests > 0 ? this.obsBlocked / this.obsRequests : NaN;
+    m['obs.occupancy'] = this.obsOcc.mean(t);
+    m['remit.complexity'] = this.arrivals > 0 ? this.remitComplexity / this.arrivals : NaN;
+    m['remit.capacity'] = this.arrivals > 0 ? this.remitCapacity / this.arrivals : NaN;
+    m['hallway.wait'] = this.hallwayWait.mean;
+    m['hallway.L'] = this.hallwayN.mean(t);
+    m['hallway.max'] = this.hallwayN.max;
+    m['renege.frac'] = this.renegeEligible > 0 ? this.reneges / this.renegeEligible : NaN;
+    m['amb.rho'] = this.ambulances.capacity > 0 ? this.ambulances.busy.mean(t) / this.ambulances.capacity : NaN;
+    m['transfers'] = this.transfers;
+    m['departures'] = this.departures;
+    this.clinics.forEach((c, j) => {
+      m[`clinic${j}.bgBlockProb`] = c.bgArrivals > 0 ? c.bgBlocked / c.bgArrivals : NaN;
+      m[`clinic${j}.occupancy`] = c.occ.mean(t);
+    });
+    return m;
+  }
+
+  /** Reinicia todas las estadísticas (fin del calentamiento). El estado del sistema no cambia. */
+  resetStats(): void {
+    const t = this.sim.now;
+    this.statsStart = t;
+    this.arrivals = 0;
+    this.arrivalsAdmission = 0;
+    this.arrivalsByLevel = [0, 0, 0, 0, 0];
+    this.inSystem.reset(t);
+    this.sojourn.reset();
+    this.doctorWaitByLevel.forEach((x) => x.reset());
+    this.doorToDoctor.reset();
+    this.triageIIOnTime = 0;
+    this.triageIICount = 0;
+    this.obsRequests = 0;
+    this.obsBlocked = 0;
+    this.obsOcc.reset(t);
+    this.remitComplexity = 0;
+    this.remitCapacity = 0;
+    this.transfers = 0;
+    this.hallwayWait.reset();
+    this.hallwayN.reset(t);
+    this.reneges = 0;
+    this.renegeEligible = 0;
+    this.departures = 0;
+    this.triage.resetStats();
+    this.admission.resetStats();
+    this.doctors.resetStats();
+    this.ambulances.resetStats();
+    this.clinics.forEach((c) => {
+      c.occ.reset(t);
+      c.bgArrivals = 0;
+      c.bgBlocked = 0;
+    });
+  }
+
+  // =====================================================================
+  // Proceso de llegadas
+  // =====================================================================
+
+  private arrivalRateAt(tMin: number): number {
+    const base = this.params.arrivalRatePerHour / 60;
+    const prof = this.params.arrivalProfile;
+    if (!prof) return base;
+    const hour = Math.floor((tMin / 60) % 24);
+    return base * prof[hour];
+  }
+
+  private scheduleNextArrival(): void {
+    const prof = this.params.arrivalProfile;
+    const rng = this.r.arrivals;
+    if (!prof) {
+      const lam = this.params.arrivalRatePerHour / 60;
+      if (lam <= 0) {
+        // Sin llegadas: reintentar más tarde por si el usuario sube λ.
+        this.sim.schedule(1, () => this.scheduleNextArrival());
+        return;
+      }
+      this.sim.schedule(-Math.log(rng.next()) / lam, () => this.onArrivalEvent());
+      return;
+    }
+    // Proceso de Poisson no homogéneo por adelgazamiento (Lewis-Shedler).
+    const lamMax = (this.params.arrivalRatePerHour / 60) * Math.max(...prof);
+    if (lamMax <= 0) {
+      this.sim.schedule(1, () => this.scheduleNextArrival());
+      return;
+    }
+    let t = this.sim.now;
+    for (;;) {
+      t += -Math.log(rng.next()) / lamMax;
+      if (rng.next() <= this.arrivalRateAt(t) / lamMax) break;
+    }
+    this.sim.scheduleAt(t, () => this.onArrivalEvent());
+  }
+
+  private onArrivalEvent(): void {
+    const visitor = this.visitorQueue.shift();
+    // El nivel se sortea SIEMPRE (consume el mismo número aleatorio con o sin visitante → CRN).
+    const drawn = (this.r.mix.weighted(this.params.triageMix) + 1) as TriageLevel;
+    const level = visitor?.triage ?? drawn;
+    this.arrive(visitor, level, false);
+    this.scheduleNextArrival();
+  }
+
+  private makeInfo(): PatientInfo {
+    const rn = this.r.names;
+    const ages: PatientInfo['ageRange'][] = ['0-17', '18-39', '40-64', '65+'];
+    return {
+      id: '',
+      name: `${rn.pick(NAMES.FIRST)} ${rn.pick(NAMES.LAST)}`,
+      ageRange: ages[rn.weighted([0.2, 0.38, 0.27, 0.15])],
+      eps: this.params.eps[this.r.eps.weighted(this.params.eps.map((e) => e.share))].id,
+      isVisitor: false,
+    };
+  }
+
+  private arrive(visitor: PatientInfo | undefined, level: TriageLevel, mass: boolean): void {
+    const info: PatientInfo = visitor ? { ...visitor } : this.makeInfo();
+    info.id = `p${this.nextId++}`;
+    info.triage = undefined; // se revela en el triage
+    const p: Patient = {
+      info,
+      level,
+      state: 'llegando',
+      zone: mass ? 'ambulance_bay' : 'entrance',
+      waitingSince: this.sim.now,
+      journey: { arrival: this.sim.now },
+      massCasualty: mass,
+    };
+    this.patients.set(info.id, p);
+    this.arrivals++;
+    this.arrivalsByLevel[level - 1]++;
+    this.inSystem.add(this.sim.now, 1);
+    this.emit('ARRIVAL', { p, to: p.zone, data: { info: { ...info }, massCasualty: mass } });
+    this.move(p, 'triage_queue', () => this.joinTriage(p));
+  }
+
+  // =====================================================================
+  // Estaciones
+  // =====================================================================
+
+  private joinTriage(p: Patient): void {
+    this.setWaiting(p, 'esperando triage');
+    this.emit('QUEUE_JOIN', { p, to: 'triage_queue' });
+    this.triage.request(p, 0, (sid) => {
+      p.journey.triageWait = this.sim.now - p.waitingSince;
+      this.serve(p, 'triage', sid, 'en triage', this.params.service.triage, this.r.triage, () => {
+        this.triage.release(sid);
+        p.triageEnd = this.sim.now;
+        p.info.triage = p.level;
+        this.emit('TRIAGE_ASSIGNED', { p, data: { level: p.level } });
+        if (p.level === 1) {
+          // Triage I: atención inmediata, la admisión se hace después.
+          this.move(p, 'waiting_room', () => this.joinDoctor(p));
+        } else {
+          this.move(p, 'admission_queue', () => this.joinAdmission(p));
+        }
+      });
+    });
+  }
+
+  private joinAdmission(p: Patient): void {
+    this.arrivalsAdmission++;
+    this.setWaiting(p, 'esperando admisión');
+    this.emit('QUEUE_JOIN', { p, to: 'admission_queue' });
+    this.admission.request(p, 0, (sid) => {
+      p.journey.admissionWait = this.sim.now - p.waitingSince;
+      this.serve(p, 'admission', sid, 'en admisión', this.params.service.admission, this.r.admission, () => {
+        this.admission.release(sid);
+        this.move(p, 'waiting_room', () => this.joinDoctor(p));
+      });
+    });
+  }
+
+  private joinDoctor(p: Patient): void {
+    this.setWaiting(p, 'esperando médico');
+    this.emit('QUEUE_JOIN', { p, to: 'waiting_room', data: { level: p.level } });
+    const ab = this.params.abandonment;
+    const eligible = ab.enabled && ab.levels.includes(p.level);
+    if (ab.levels.includes(p.level)) this.renegeEligible++;
+    if (eligible) {
+      const patience = sample(ab.patience, this.r.patience);
+      p.renege = this.sim.schedule(patience, () => {
+        if (this.doctors.cancel(p)) {
+          this.reneges++;
+          this.emit('RENEGE', { p, from: 'waiting_room' });
+          this.move(p, 'exit', () => this.depart(p, 'abandono'));
+        }
+      });
+    }
+    this.doctors.request(p, p.level, (sid) => {
+      p.renege?.cancel();
+      const wait = this.sim.now - (p.triageEnd ?? p.waitingSince);
+      const queueWait = this.sim.now - p.waitingSince;
+      this.doctorWaitByLevel[p.level - 1].add(queueWait);
+      this.doorToDoctor.add(this.sim.now - p.journey.arrival);
+      if (p.level === 2) {
+        this.triageIICount++;
+        if (wait <= 30) this.triageIIOnTime++;
+      }
+      p.journey.doctorWait = wait;
+      p.journey.doorToDoctor = this.sim.now - p.journey.arrival;
+      const dist: Dist = this.params.service.doctorByLevel?.[p.level] ?? this.params.service.doctor;
+      p.zone = 'doctor_box';
+      this.serve(p, 'doctor', sid, 'en consulta', dist, this.r.doctor, () => {
+        this.doctors.release(sid);
+        this.routeAfterDoctor(p);
+      });
+    });
+  }
+
+  private routeAfterDoctor(p: Patient): void {
+    const o = this.params.outcomes;
+    const k = this.r.routing.weighted([o.alta, o.observacion, o.hospitalizacion, o.remision]);
+    const route = (['alta', 'observacion', 'hospitalizacion', 'remision'] as const)[k];
+    this.emit('ROUTED', { p, data: { route } });
+    if (route === 'alta') this.move(p, 'exit', () => this.depart(p, 'alta'));
+    else if (route === 'hospitalizacion') this.move(p, 'exit', () => this.depart(p, 'hospitalizacion'));
+    else if (route === 'observacion') this.requestObservation(p);
+    else {
+      this.remitComplexity++;
+      this.move(p, 'hallway', () => this.enterHallway(p, 'complejidad'));
+    }
+  }
+
+  // ---------- observación: sistema de pérdida con K camas ----------
+
+  private requestObservation(p: Patient): void {
+    this.obsRequests++;
+    if (this.obsFree.length > 0) {
+      // La cama se reserva YA (en el instante de la decisión), no al llegar.
+      this.reserveBed(p);
+      this.move(p, 'observation_bed', () => this.occupyBed(p));
+    } else {
+      this.obsBlocked++;
+      this.remitCapacity++;
+      this.move(p, 'hallway', () => this.enterHallway(p, 'capacidad'));
+    }
+  }
+
+  private reserveBed(p: Patient): void {
+    this.obsFree.sort((a, b) => b - a);
+    const bed = this.obsFree.pop()!;
+    p.resourceId = `bed-${bed}`;
+    this.obsOccupied++;
+    this.obsOcc.set(this.sim.now, this.obsOccupied);
+  }
+
+  private occupyBed(p: Patient): void {
+    const los = sample(this.params.service.observation, this.r.observation);
+    p.state = 'en observación';
+    p.zone = 'observation_bed';
+    p.waitingSince = this.sim.now;
+    this.emit('BED_ASSIGNED', { p, resourceId: p.resourceId, duration: los });
+    const start = this.sim.now;
+    this.sim.schedule(los, () => {
+      p.journey.observationTime = this.sim.now - start;
+      const bedId = p.resourceId!;
+      this.releaseBed(bedId);
+      this.emit('BED_RELEASED', { p, resourceId: bedId });
+      p.resourceId = undefined;
+      const a = this.params.afterObservation;
+      const out: Outcome = this.r.routing.weighted([a.alta, a.hospitalizacion]) === 0 ? 'alta' : 'hospitalizacion';
+      this.move(p, 'exit', () => this.depart(p, out));
+    });
+  }
+
+  private releaseBed(bedId: string): void {
+    const bed = Number(bedId.slice(4));
+    this.obsOccupied--;
+    this.obsOcc.set(this.sim.now, this.obsOccupied);
+    if (bed < this.obsCapacity) this.obsFree.push(bed);
+    // Modo realista: un paciente del pasillo que esperaba cama la toma.
+    if (this.params.observationRetry && this.obsFree.length > 0) {
+      const i = this.hallway.findIndex((h) => h.hallwayReason === 'capacidad' && h.reservedClinic === undefined);
+      if (i >= 0) {
+        const h = this.hallway.splice(i, 1)[0];
+        this.leaveHallway(h);
+        this.remitCapacity--; // ya no será remitido por capacidad
+        this.reserveBed(h);
+        this.move(h, 'observation_bed', () => this.occupyBed(h));
+      }
+    }
+  }
+
+  private setObsBeds(n: number): void {
+    // Camas nuevas libres; si se reduce, las camas de id ≥ n desaparecen al liberarse.
+    for (let b = this.obsCapacity; b < n; b++) this.obsFree.push(b);
+    for (let i = this.obsFree.length - 1; i >= 0; i--) if (this.obsFree[i] >= n) this.obsFree.splice(i, 1);
+    this.obsCapacity = n;
+  }
+
+  // ---------- pasillo, remisión y ambulancias ----------
+
+  private enterHallway(p: Patient, reason: 'capacidad' | 'complejidad'): void {
+    p.hallwayReason = reason;
+    p.hallwaySince = this.sim.now;
+    this.setWaiting(p, 'en pasillo');
+    p.zone = 'hallway';
+    this.hallway.push(p);
+    this.hallwayN.set(this.sim.now, this.hallway.length);
+    this.emit('HALLWAY_WAIT', { p, data: { reason } });
+    this.tryDispatchHallway();
+  }
+
+  private leaveHallway(p: Patient): void {
+    this.hallwayN.set(this.sim.now, this.hallway.length);
+    if (p.hallwaySince !== undefined) {
+      const w = this.sim.now - p.hallwaySince;
+      this.hallwayWait.add(w);
+      p.journey.hallwayWait = w;
+    }
+  }
+
+  /** Asigna clínica (red EPS, cama libre, menor tiempo de traslado) a quienes esperan, en orden FIFO. */
+  private tryDispatchHallway(): void {
+    // Copia: startTransfer puede sacar pacientes del pasillo durante el recorrido.
+    for (const p of [...this.hallway]) {
+      if (p.reservedClinic !== undefined) continue;
+      const eps = this.params.eps.find((e) => e.id === p.info.eps);
+      const network = eps ? eps.network : this.params.clinics.map((c) => c.id);
+      let best = -1;
+      for (const j of network) {
+        const cl = this.params.clinics[j];
+        if (!cl || this.clinics[j].occupied >= cl.beds) continue;
+        if (best < 0) {
+          best = j;
+          continue;
+        }
+        const tb = sampleMean(this.params.clinics[best].travel);
+        const tj = sampleMean(cl.travel);
+        const occB = this.clinics[best].occupied / this.params.clinics[best].beds;
+        const occJ = this.clinics[j].occupied / cl.beds;
+        if (tj < tb || (tj === tb && occJ < occB)) best = j;
+      }
+      if (best < 0) continue;
+      p.reservedClinic = best;
+      this.clinicOccupy(best);
+      this.ambulances.request(p, 0, (aid) => this.startTransfer(p, aid));
+    }
+  }
+
+  private startTransfer(p: Patient, ambId: number): void {
+    const j = p.reservedClinic!;
+    const idx = this.hallway.indexOf(p);
+    if (idx >= 0) this.hallway.splice(idx, 1);
+    this.leaveHallway(p);
+    const cl = this.params.clinics[j];
+    const trip = sample(cl.travel, this.r.ambulance);
+    p.state = 'en traslado';
+    p.resourceId = `amb-${ambId}`;
+    p.journey.clinic = cl.name;
+    this.emit('TRANSFER_START', { p, resourceId: p.resourceId, from: 'ambulance_bay', to: `clinic_${j}`, duration: trip, data: { clinic: cl.name } });
+    p.zone = 'ambulance_bay';
+    this.sim.schedule(trip, () => {
+      this.transfers++;
+      this.emit('TRANSFER_END', { p, resourceId: `amb-${ambId}`, to: `clinic_${j}` });
+      p.zone = `clinic_${j}`;
+      this.depart(p, 'remitido');
+      // Estancia en la clínica (fuera del hospital, pero ocupa su cama).
+      this.sim.schedule(sample(cl.los, this.r.observation), () => this.clinicRelease(j));
+      // Regreso de la ambulancia vacía.
+      const back = sample(cl.travel, this.r.ambulance);
+      this.sim.schedule(back, () => this.ambulances.release(ambId));
+    });
+  }
+
+  private clinicOccupy(j: number): void {
+    const c = this.clinics[j];
+    c.occupied++;
+    c.occ.set(this.sim.now, c.occupied);
+  }
+
+  private clinicRelease(j: number): void {
+    const c = this.clinics[j];
+    c.occupied--;
+    c.occ.set(this.sim.now, c.occupied);
+    this.tryDispatchHallway();
+  }
+
+  /** Demanda propia de cada clínica: Poisson; si está llena, se pierde (pérdida pura, Erlang B). */
+  private scheduleClinicBackground(j: number, perHour: number): void {
+    if (perHour <= 0) return;
+    const rng = this.rngs.stream(`clinic${j}`);
+    const lam = perHour / 60;
+    this.sim.schedule(-Math.log(rng.next()) / lam, () => {
+      const c = this.clinics[j];
+      const cl = this.params.clinics[j];
+      c.bgArrivals++;
+      if (c.occupied < cl.beds) {
+        this.clinicOccupy(j);
+        this.sim.schedule(sample(cl.los, rng), () => this.clinicRelease(j));
+      } else {
+        c.bgBlocked++;
+      }
+      this.scheduleClinicBackground(j, this.params.clinics[j].backgroundRatePerHour);
+    });
+  }
+
+  // =====================================================================
+  // Utilidades
+  // =====================================================================
+
+  private serve(p: Patient, station: 'triage' | 'admission' | 'doctor', sid: number, state: PatientState, dist: Dist, rng: Rng, done: () => void): void {
+    const d = sample(dist, rng);
+    p.state = state;
+    p.resourceId = `${station}-${sid}`;
+    if (station === 'triage') p.zone = 'triage';
+    if (station === 'admission') p.zone = 'admission';
+    if (station === 'doctor') p.zone = 'doctor_box';
+    this.emit('SERVICE_START', { p, resourceId: p.resourceId, duration: d, data: { station } });
+    this.sim.schedule(d, () => {
+      this.emit('SERVICE_END', { p, resourceId: p.resourceId, data: { station } });
+      p.resourceId = undefined;
+      done();
+    });
+  }
+
+  private setWaiting(p: Patient, state: PatientState): void {
+    p.state = state;
+    p.waitingSince = this.sim.now;
+  }
+
+  /** Traslado interno determinista (retardo sin cola → no altera esperas en cola). */
+  private move(p: Patient, to: Zone, then: () => void): void {
+    const d = this.params.transit;
+    const from = p.zone;
+    if (p.state !== 'en traslado') p.state = 'caminando';
+    this.emit('MOVE', { p, from, to, duration: d });
+    const arriveFn = () => {
+      p.zone = to;
+      then();
+    };
+    if (d > 0) this.sim.schedule(d, arriveFn);
+    else arriveFn();
+  }
+
+  private depart(p: Patient, outcome: Outcome): void {
+    p.state = 'salió';
+    p.journey.outcome = outcome;
+    p.journey.departure = this.sim.now;
+    this.patients.delete(p.info.id);
+    this.inSystem.add(this.sim.now, -1);
+    this.sojourn.add(this.sim.now - p.journey.arrival);
+    this.departures++;
+    this.emit('DEPARTURE', { p, data: { outcome, journey: { ...p.journey }, level: p.level, name: p.info.name, isVisitor: p.info.isVisitor } });
+  }
+
+  private emit(type: SimEventType, o: { p?: Patient; resourceId?: string; from?: Zone; to?: Zone; duration?: number; data?: Record<string, unknown> }): void {
+    if (!this.record && this.listeners.length === 0) return;
+    const e: SimEvent = { t: this.sim.now, seq: this.evSeq++, type };
+    if (o.p) e.patientId = o.p.info.id;
+    if (o.resourceId !== undefined) e.resourceId = o.resourceId;
+    if (o.from !== undefined) e.from = o.from;
+    if (o.to !== undefined) e.to = o.to;
+    if (o.duration !== undefined) e.duration = o.duration;
+    if (o.data !== undefined) e.data = o.data;
+    if (this.record) this.events.push(e);
+    for (const fn of this.listeners) fn(e);
+  }
+}
+
+/** Media de una distribución sin muestrear (para elegir clínica por tiempo esperado). */
+function sampleMean(d: Dist): number {
+  switch (d.kind) {
+    case 'triangular':
+      return (d.min + d.mode + d.max) / 3;
+    case 'const':
+      return d.value;
+    default:
+      return d.mean;
+  }
+}

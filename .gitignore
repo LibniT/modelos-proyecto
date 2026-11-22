@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+*.log
+.DS_Store
+Thumbs.db
+# Packs comprados: su licencia prohíbe redistribuirlos
+assets/vendor/*
+!assets/vendor/.gitkeep
+# Documentos pesados de investigación (opcional subirlos)
+imagenes-guia/*.exe
+
+# Paquetes de transferencia
+*.tgz

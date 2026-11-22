@@ -1,0 +1,9137 @@
+{
+ "description": "Modo realista, semilla 2026, de 08:00 a 11:00 (t en minutos desde 00:00 del día 1).",
+ "initial": {
+  "t": 480,
+  "patients": [
+   {
+    "id": "p4",
+    "name": "María Fuentes",
+    "eps": "sierra",
+    "ageRange": "0-17",
+    "triage": 4,
+    "state": "en observación",
+    "zone": "observation_bed",
+    "resourceId": "bed-0",
+    "waitingSince": 68.46916618561701,
+    "arrival": 38.61367937447774,
+    "isVisitor": false
+   },
+   {
+    "id": "p17",
+    "name": "Andrés Araújo",
+    "eps": "sierra",
+    "ageRange": "18-39",
+    "triage": 4,
+    "state": "en observación",
+    "zone": "observation_bed",
+    "resourceId": "bed-4",
+    "waitingSince": 207.60695232266545,
+    "arrival": 153.13330724833997,
+    "isVisitor": false
+   },
+   {
+    "id": "p22",
+    "name": "Diana Zuleta",
+    "eps": "sierra",
+    "ageRange": "18-39",
+    "triage": 5,
+    "state": "en observación",
+    "zone": "observation_bed",
+    "resourceId": "bed-5",
+    "waitingSince": 232.87845736413038,
+    "arrival": 204.03523375288725,
+    "isVisitor": false
+   },
+   {
+    "id": "p36",
+    "name": "Alfredo Daza",
+    "eps": "vallenata",
+    "ageRange": "18-39",
+    "triage": 3,
+    "state": "en observación",
+    "zone": "observation_bed",
+    "resourceId": "bed-3",
+    "waitingSince": 382.1637214237447,
+    "arrival": 364.6320629929508,
+    "isVisitor": false
+   },
+   {
+    "id": "p44",
+    "name": "José Romero",
+    "eps": "vallenata",
+    "ageRange": "65+",
+    "triage": 3,
+    "state": "en observación",
+    "zone": "observation_bed",
+    "resourceId": "bed-2",
+    "waitingSince": 417.94377513366237,
+    "arrival": 397.66411609063664,
+    "isVisitor": false
+   },
+   {
+    "id": "p50",
+    "name": "Luz Durán",
+    "eps": "vallenata",
+    "ageRange": "0-17",
+    "triage": 4,
+    "state": "en observación",
+    "zone": "observation_bed",
+    "resourceId": "bed-1",
+    "waitingSince": 463.1723100836786,
+    "arrival": 438.6971090723183,
+    "isVisitor": false
+   },
+   {
+    "id": "p52",
+    "name": "Andrés Castro",
+    "eps": "sierra",
+    "ageRange": "18-39",
+    "triage": 4,
+    "state": "en consulta",
+    "zone": "doctor_box",
+    "resourceId": "doctor-3",
+    "waitingSince": 457.43872071213,
+    "arrival": 442.21917496563344,
+    "isVisitor": false
+   },
+   {
+    "id": "p54",
+    "name": "Daniela Arias",
+    "eps": "otra",
+    "ageRange": "65+",
+    "triage": 3,
+    "state": "en consulta",
+    "zone": "doctor_box",
+    "resourceId": "doctor-0",
+    "waitingSince": 472.2876136333748,
+    "arrival": 462.47358635654865,
+    "isVisitor": false
+   },
+   {
+    "id": "p55",
+    "name": "Alfredo Oñate",
+    "eps": "sierra",
+    "ageRange": "40-64",
+    "triage": 2,
+    "state": "en admisión",
+    "zone": "admission",
+    "resourceId": "admission-0",
+    "waitingSince": 475.65355319331553,
+    "arrival": 468.57723569127234,
+    "isVisitor": false
+   }
+  ],
+  "triage": {
+   "capacity": 2,
+   "busy": 0,
+   "queue": 0
+  },
+  "admission": {
+   "capacity": 2,
+   "busy": 1,
+   "queue": 0
+  },
+  "doctors": {
+   "capacity": 6,
+   "busy": 2,
+   "queue": 0
+  },
+  "ambulances": {
+   "capacity": 2,
+   "busy": 0,
+   "queue": 0
+  },
+  "obsBeds": {
+   "capacity": 18,
+   "occupied": 6
+  },
+  "hallway": 0,
+  "clinics": [
+   {
+    "id": 0,
+    "name": "Clínica Río Claro",
+    "beds": 30,
+    "occupied": 4
+   },
+   {
+    "id": 1,
+    "name": "Clínica La Pilonera",
+    "beds": 40,
+    "occupied": 4
+   },
+   {
+    "id": 2,
+    "name": "Clínica Valle Verde",
+    "beds": 50,
+    "occupied": 1
+   }
+  ]
+ },
+ "events": [
+  {
+   "t": 480.07004213407697,
+   "seq": 932,
+   "type": "ARRIVAL",
+   "patientId": "p56",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p56",
+     "name": "Luz Romero",
+     "ageRange": "18-39",
+     "eps": "vallenata",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 480.07004213407697,
+   "seq": 933,
+   "type": "MOVE",
+   "patientId": "p56",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 480.57004213407697,
+   "seq": 934,
+   "type": "QUEUE_JOIN",
+   "patientId": "p56",
+   "to": "triage_queue"
+  },
+  {
+   "t": 480.57004213407697,
+   "seq": 935,
+   "type": "SERVICE_START",
+   "patientId": "p56",
+   "resourceId": "triage-0",
+   "duration": 9.90490613186124,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 483.1575752468431,
+   "seq": 936,
+   "type": "SERVICE_END",
+   "patientId": "p55",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 483.1575752468431,
+   "seq": 937,
+   "type": "MOVE",
+   "patientId": "p55",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 483.6575752468431,
+   "seq": 938,
+   "type": "QUEUE_JOIN",
+   "patientId": "p55",
+   "to": "waiting_room",
+   "data": {
+    "level": 2
+   }
+  },
+  {
+   "t": 483.6575752468431,
+   "seq": 939,
+   "type": "SERVICE_START",
+   "patientId": "p55",
+   "resourceId": "doctor-1",
+   "duration": 11.568963145395935,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 483.9327213610179,
+   "seq": 940,
+   "type": "SERVICE_END",
+   "patientId": "p52",
+   "resourceId": "doctor-3",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 483.9327213610179,
+   "seq": 941,
+   "type": "ROUTED",
+   "patientId": "p52",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 483.9327213610179,
+   "seq": 942,
+   "type": "MOVE",
+   "patientId": "p52",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 484.1821165503687,
+   "seq": 943,
+   "type": "ARRIVAL",
+   "patientId": "p57",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p57",
+     "name": "Alfredo Pumarejo",
+     "ageRange": "65+",
+     "eps": "sierra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 484.1821165503687,
+   "seq": 944,
+   "type": "MOVE",
+   "patientId": "p57",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 484.4327213610179,
+   "seq": 945,
+   "type": "DEPARTURE",
+   "patientId": "p52",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 442.21917496563344,
+     "triageWait": 0,
+     "admissionWait": 3.6704571207413323,
+     "doctorWait": 12.432381017199134,
+     "doorToDoctor": 15.219545746496578,
+     "outcome": "alta",
+     "departure": 484.4327213610179
+    },
+    "level": 4,
+    "name": "Andrés Castro",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 484.6821165503687,
+   "seq": 946,
+   "type": "QUEUE_JOIN",
+   "patientId": "p57",
+   "to": "triage_queue"
+  },
+  {
+   "t": 484.6821165503687,
+   "seq": 947,
+   "type": "SERVICE_START",
+   "patientId": "p57",
+   "resourceId": "triage-1",
+   "duration": 7.47805324417081,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 486.62767960127695,
+   "seq": 948,
+   "type": "SERVICE_END",
+   "patientId": "p54",
+   "resourceId": "doctor-0",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 486.62767960127695,
+   "seq": 949,
+   "type": "ROUTED",
+   "patientId": "p54",
+   "data": {
+    "route": "observacion"
+   }
+  },
+  {
+   "t": 486.62767960127695,
+   "seq": 950,
+   "type": "MOVE",
+   "patientId": "p54",
+   "from": "doctor_box",
+   "to": "observation_bed",
+   "duration": 0.5
+  },
+  {
+   "t": 487.12767960127695,
+   "seq": 951,
+   "type": "BED_ASSIGNED",
+   "patientId": "p54",
+   "resourceId": "bed-6",
+   "duration": 231.29339655263357
+  },
+  {
+   "t": 489.0627245895768,
+   "seq": 952,
+   "type": "ARRIVAL",
+   "patientId": "p58",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p58",
+     "name": "Rosa Mendoza",
+     "ageRange": "18-39",
+     "eps": "vallenata",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 489.0627245895768,
+   "seq": 953,
+   "type": "MOVE",
+   "patientId": "p58",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 489.5627245895768,
+   "seq": 954,
+   "type": "QUEUE_JOIN",
+   "patientId": "p58",
+   "to": "triage_queue"
+  },
+  {
+   "t": 490.4749482659382,
+   "seq": 955,
+   "type": "SERVICE_END",
+   "patientId": "p56",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 490.4749482659382,
+   "seq": 956,
+   "type": "SERVICE_START",
+   "patientId": "p58",
+   "resourceId": "triage-0",
+   "duration": 5.417859482540983,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 490.4749482659382,
+   "seq": 957,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p56",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 490.4749482659382,
+   "seq": 958,
+   "type": "MOVE",
+   "patientId": "p56",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 490.9749482659382,
+   "seq": 959,
+   "type": "QUEUE_JOIN",
+   "patientId": "p56",
+   "to": "admission_queue"
+  },
+  {
+   "t": 490.9749482659382,
+   "seq": 960,
+   "type": "SERVICE_START",
+   "patientId": "p56",
+   "resourceId": "admission-0",
+   "duration": 6.501951442575273,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 491.7515837377608,
+   "seq": 961,
+   "type": "ARRIVAL",
+   "patientId": "p59",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p59",
+     "name": "Karen Zuleta",
+     "ageRange": "18-39",
+     "eps": "cesarvida",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 491.7515837377608,
+   "seq": 962,
+   "type": "MOVE",
+   "patientId": "p59",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 492.1601697945395,
+   "seq": 963,
+   "type": "SERVICE_END",
+   "patientId": "p57",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 492.1601697945395,
+   "seq": 964,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p57",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 492.1601697945395,
+   "seq": 965,
+   "type": "MOVE",
+   "patientId": "p57",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 492.2515837377608,
+   "seq": 966,
+   "type": "QUEUE_JOIN",
+   "patientId": "p59",
+   "to": "triage_queue"
+  },
+  {
+   "t": 492.2515837377608,
+   "seq": 967,
+   "type": "SERVICE_START",
+   "patientId": "p59",
+   "resourceId": "triage-1",
+   "duration": 4.140893915794426,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 492.6601697945395,
+   "seq": 968,
+   "type": "QUEUE_JOIN",
+   "patientId": "p57",
+   "to": "admission_queue"
+  },
+  {
+   "t": 492.6601697945395,
+   "seq": 969,
+   "type": "SERVICE_START",
+   "patientId": "p57",
+   "resourceId": "admission-1",
+   "duration": 7.961545482455037,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 493.65214997068443,
+   "seq": 970,
+   "type": "ARRIVAL",
+   "patientId": "p60",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p60",
+     "name": "Diomedes Quintero",
+     "ageRange": "18-39",
+     "eps": "sierra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 493.65214997068443,
+   "seq": 971,
+   "type": "MOVE",
+   "patientId": "p60",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 494.15214997068443,
+   "seq": 972,
+   "type": "QUEUE_JOIN",
+   "patientId": "p60",
+   "to": "triage_queue"
+  },
+  {
+   "t": 495.22653839223904,
+   "seq": 973,
+   "type": "SERVICE_END",
+   "patientId": "p55",
+   "resourceId": "doctor-1",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 495.22653839223904,
+   "seq": 974,
+   "type": "ROUTED",
+   "patientId": "p55",
+   "data": {
+    "route": "observacion"
+   }
+  },
+  {
+   "t": 495.22653839223904,
+   "seq": 975,
+   "type": "MOVE",
+   "patientId": "p55",
+   "from": "doctor_box",
+   "to": "observation_bed",
+   "duration": 0.5
+  },
+  {
+   "t": 495.72653839223904,
+   "seq": 976,
+   "type": "BED_ASSIGNED",
+   "patientId": "p55",
+   "resourceId": "bed-7",
+   "duration": 302.59982996179485
+  },
+  {
+   "t": 495.8928077484792,
+   "seq": 977,
+   "type": "SERVICE_END",
+   "patientId": "p58",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 495.8928077484792,
+   "seq": 978,
+   "type": "SERVICE_START",
+   "patientId": "p60",
+   "resourceId": "triage-0",
+   "duration": 3.412667512897878,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 495.8928077484792,
+   "seq": 979,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p58",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 495.8928077484792,
+   "seq": 980,
+   "type": "MOVE",
+   "patientId": "p58",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 495.93395946359647,
+   "seq": 981,
+   "type": "ARRIVAL",
+   "patientId": "p61",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p61",
+     "name": "Luis Daza",
+     "ageRange": "65+",
+     "eps": "vallenata",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 495.93395946359647,
+   "seq": 982,
+   "type": "MOVE",
+   "patientId": "p61",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 496.39247765355526,
+   "seq": 983,
+   "type": "SERVICE_END",
+   "patientId": "p59",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 496.39247765355526,
+   "seq": 984,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p59",
+   "data": {
+    "level": 2
+   }
+  },
+  {
+   "t": 496.39247765355526,
+   "seq": 985,
+   "type": "MOVE",
+   "patientId": "p59",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 496.3928077484792,
+   "seq": 986,
+   "type": "QUEUE_JOIN",
+   "patientId": "p58",
+   "to": "admission_queue"
+  },
+  {
+   "t": 496.43395946359647,
+   "seq": 987,
+   "type": "QUEUE_JOIN",
+   "patientId": "p61",
+   "to": "triage_queue"
+  },
+  {
+   "t": 496.43395946359647,
+   "seq": 988,
+   "type": "SERVICE_START",
+   "patientId": "p61",
+   "resourceId": "triage-1",
+   "duration": 2.145691373183171,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 496.89247765355526,
+   "seq": 989,
+   "type": "QUEUE_JOIN",
+   "patientId": "p59",
+   "to": "admission_queue"
+  },
+  {
+   "t": 497.4768997085135,
+   "seq": 990,
+   "type": "SERVICE_END",
+   "patientId": "p56",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 497.4768997085135,
+   "seq": 991,
+   "type": "SERVICE_START",
+   "patientId": "p58",
+   "resourceId": "admission-0",
+   "duration": 9.262719025661633,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 497.4768997085135,
+   "seq": 992,
+   "type": "MOVE",
+   "patientId": "p56",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 497.9768997085135,
+   "seq": 993,
+   "type": "QUEUE_JOIN",
+   "patientId": "p56",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 497.9768997085135,
+   "seq": 994,
+   "type": "SERVICE_START",
+   "patientId": "p56",
+   "resourceId": "doctor-0",
+   "duration": 16.20490819939484,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 498.57965083677965,
+   "seq": 995,
+   "type": "SERVICE_END",
+   "patientId": "p61",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 498.57965083677965,
+   "seq": 996,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p61",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 498.57965083677965,
+   "seq": 997,
+   "type": "MOVE",
+   "patientId": "p61",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 499.07965083677965,
+   "seq": 998,
+   "type": "QUEUE_JOIN",
+   "patientId": "p61",
+   "to": "admission_queue"
+  },
+  {
+   "t": 499.30547526137707,
+   "seq": 999,
+   "type": "SERVICE_END",
+   "patientId": "p60",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 499.30547526137707,
+   "seq": 1000,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p60",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 499.30547526137707,
+   "seq": 1001,
+   "type": "MOVE",
+   "patientId": "p60",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 499.80547526137707,
+   "seq": 1002,
+   "type": "QUEUE_JOIN",
+   "patientId": "p60",
+   "to": "admission_queue"
+  },
+  {
+   "t": 500.62171527699456,
+   "seq": 1003,
+   "type": "SERVICE_END",
+   "patientId": "p57",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 500.62171527699456,
+   "seq": 1004,
+   "type": "SERVICE_START",
+   "patientId": "p59",
+   "resourceId": "admission-1",
+   "duration": 6.529177538238546,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 500.62171527699456,
+   "seq": 1005,
+   "type": "MOVE",
+   "patientId": "p57",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 501.12171527699456,
+   "seq": 1006,
+   "type": "QUEUE_JOIN",
+   "patientId": "p57",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 501.12171527699456,
+   "seq": 1007,
+   "type": "SERVICE_START",
+   "patientId": "p57",
+   "resourceId": "doctor-1",
+   "duration": 13.033018677749121,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 506.7396187341751,
+   "seq": 1008,
+   "type": "SERVICE_END",
+   "patientId": "p58",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 506.7396187341751,
+   "seq": 1009,
+   "type": "SERVICE_START",
+   "patientId": "p61",
+   "resourceId": "admission-0",
+   "duration": 4.608844177873238,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 506.7396187341751,
+   "seq": 1010,
+   "type": "MOVE",
+   "patientId": "p58",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 507.15089281523314,
+   "seq": 1011,
+   "type": "SERVICE_END",
+   "patientId": "p59",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 507.15089281523314,
+   "seq": 1012,
+   "type": "SERVICE_START",
+   "patientId": "p60",
+   "resourceId": "admission-1",
+   "duration": 3.5908521960853337,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 507.15089281523314,
+   "seq": 1013,
+   "type": "MOVE",
+   "patientId": "p59",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 507.2396187341751,
+   "seq": 1014,
+   "type": "QUEUE_JOIN",
+   "patientId": "p58",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 507.2396187341751,
+   "seq": 1015,
+   "type": "SERVICE_START",
+   "patientId": "p58",
+   "resourceId": "doctor-2",
+   "duration": 11.651744662263804,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 507.65089281523314,
+   "seq": 1016,
+   "type": "QUEUE_JOIN",
+   "patientId": "p59",
+   "to": "waiting_room",
+   "data": {
+    "level": 2
+   }
+  },
+  {
+   "t": 507.65089281523314,
+   "seq": 1017,
+   "type": "SERVICE_START",
+   "patientId": "p59",
+   "resourceId": "doctor-3",
+   "duration": 25.949004439720746,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 510.1945454815747,
+   "seq": 1018,
+   "type": "ARRIVAL",
+   "patientId": "p62",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p62",
+     "name": "María Mendoza",
+     "ageRange": "18-39",
+     "eps": "vallenata",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 510.1945454815747,
+   "seq": 1019,
+   "type": "MOVE",
+   "patientId": "p62",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 510.6945454815747,
+   "seq": 1020,
+   "type": "QUEUE_JOIN",
+   "patientId": "p62",
+   "to": "triage_queue"
+  },
+  {
+   "t": 510.6945454815747,
+   "seq": 1021,
+   "type": "SERVICE_START",
+   "patientId": "p62",
+   "resourceId": "triage-0",
+   "duration": 2.7558311574972008,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 510.74174501131847,
+   "seq": 1022,
+   "type": "SERVICE_END",
+   "patientId": "p60",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 510.74174501131847,
+   "seq": 1023,
+   "type": "MOVE",
+   "patientId": "p60",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 511.24174501131847,
+   "seq": 1024,
+   "type": "QUEUE_JOIN",
+   "patientId": "p60",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 511.24174501131847,
+   "seq": 1025,
+   "type": "SERVICE_START",
+   "patientId": "p60",
+   "resourceId": "doctor-4",
+   "duration": 7.970374710862981,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 511.3484629120484,
+   "seq": 1026,
+   "type": "SERVICE_END",
+   "patientId": "p61",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 511.3484629120484,
+   "seq": 1027,
+   "type": "MOVE",
+   "patientId": "p61",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 511.8484629120484,
+   "seq": 1028,
+   "type": "QUEUE_JOIN",
+   "patientId": "p61",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 511.8484629120484,
+   "seq": 1029,
+   "type": "SERVICE_START",
+   "patientId": "p61",
+   "resourceId": "doctor-5",
+   "duration": 26.381234211465046,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 513.4503766390719,
+   "seq": 1030,
+   "type": "SERVICE_END",
+   "patientId": "p62",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 513.4503766390719,
+   "seq": 1031,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p62",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 513.4503766390719,
+   "seq": 1032,
+   "type": "MOVE",
+   "patientId": "p62",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 513.9503766390719,
+   "seq": 1033,
+   "type": "QUEUE_JOIN",
+   "patientId": "p62",
+   "to": "admission_queue"
+  },
+  {
+   "t": 513.9503766390719,
+   "seq": 1034,
+   "type": "SERVICE_START",
+   "patientId": "p62",
+   "resourceId": "admission-0",
+   "duration": 5.200625497165111,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 514.1547339547437,
+   "seq": 1035,
+   "type": "SERVICE_END",
+   "patientId": "p57",
+   "resourceId": "doctor-1",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 514.1547339547437,
+   "seq": 1036,
+   "type": "ROUTED",
+   "patientId": "p57",
+   "data": {
+    "route": "observacion"
+   }
+  },
+  {
+   "t": 514.1547339547437,
+   "seq": 1037,
+   "type": "MOVE",
+   "patientId": "p57",
+   "from": "doctor_box",
+   "to": "observation_bed",
+   "duration": 0.5
+  },
+  {
+   "t": 514.1651346093626,
+   "seq": 1038,
+   "type": "ARRIVAL",
+   "patientId": "p63",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p63",
+     "name": "Marta Quintero",
+     "ageRange": "18-39",
+     "eps": "cesarvida",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 514.1651346093626,
+   "seq": 1039,
+   "type": "MOVE",
+   "patientId": "p63",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 514.1818079079084,
+   "seq": 1040,
+   "type": "SERVICE_END",
+   "patientId": "p56",
+   "resourceId": "doctor-0",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 514.1818079079084,
+   "seq": 1041,
+   "type": "ROUTED",
+   "patientId": "p56",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 514.1818079079084,
+   "seq": 1042,
+   "type": "MOVE",
+   "patientId": "p56",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 514.6547339547437,
+   "seq": 1043,
+   "type": "BED_ASSIGNED",
+   "patientId": "p57",
+   "resourceId": "bed-8",
+   "duration": 316.42194294230814
+  },
+  {
+   "t": 514.6651346093626,
+   "seq": 1044,
+   "type": "QUEUE_JOIN",
+   "patientId": "p63",
+   "to": "triage_queue"
+  },
+  {
+   "t": 514.6651346093626,
+   "seq": 1045,
+   "type": "SERVICE_START",
+   "patientId": "p63",
+   "resourceId": "triage-0",
+   "duration": 3.127815785814953,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 514.6818079079084,
+   "seq": 1046,
+   "type": "DEPARTURE",
+   "patientId": "p56",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 480.07004213407697,
+     "triageWait": 0,
+     "admissionWait": 0,
+     "doctorWait": 7.501951442575262,
+     "doorToDoctor": 17.906857574436515,
+     "outcome": "alta",
+     "departure": 514.6818079079084
+    },
+    "level": 3,
+    "name": "Luz Romero",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 516.0291130722168,
+   "seq": 1047,
+   "type": "ARRIVAL",
+   "patientId": "p64",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p64",
+     "name": "María Molina",
+     "ageRange": "40-64",
+     "eps": "guatapuri",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 516.0291130722168,
+   "seq": 1048,
+   "type": "MOVE",
+   "patientId": "p64",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 516.5291130722168,
+   "seq": 1049,
+   "type": "QUEUE_JOIN",
+   "patientId": "p64",
+   "to": "triage_queue"
+  },
+  {
+   "t": 516.5291130722168,
+   "seq": 1050,
+   "type": "SERVICE_START",
+   "patientId": "p64",
+   "resourceId": "triage-1",
+   "duration": 7.75008498904373,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 517.7031312222749,
+   "seq": 1051,
+   "type": "ARRIVAL",
+   "patientId": "p65",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p65",
+     "name": "Leidy Gutiérrez",
+     "ageRange": "18-39",
+     "eps": "sierra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 517.7031312222749,
+   "seq": 1052,
+   "type": "MOVE",
+   "patientId": "p65",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 517.7929503951775,
+   "seq": 1053,
+   "type": "SERVICE_END",
+   "patientId": "p63",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 517.7929503951775,
+   "seq": 1054,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p63",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 517.7929503951775,
+   "seq": 1055,
+   "type": "MOVE",
+   "patientId": "p63",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 518.2031312222749,
+   "seq": 1056,
+   "type": "QUEUE_JOIN",
+   "patientId": "p65",
+   "to": "triage_queue"
+  },
+  {
+   "t": 518.2031312222749,
+   "seq": 1057,
+   "type": "SERVICE_START",
+   "patientId": "p65",
+   "resourceId": "triage-0",
+   "duration": 3.6813856531345803,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 518.2929503951775,
+   "seq": 1058,
+   "type": "QUEUE_JOIN",
+   "patientId": "p63",
+   "to": "admission_queue"
+  },
+  {
+   "t": 518.2929503951775,
+   "seq": 1059,
+   "type": "SERVICE_START",
+   "patientId": "p63",
+   "resourceId": "admission-1",
+   "duration": 7.979783859840893,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 518.8913633964389,
+   "seq": 1060,
+   "type": "SERVICE_END",
+   "patientId": "p58",
+   "resourceId": "doctor-2",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 518.8913633964389,
+   "seq": 1061,
+   "type": "ROUTED",
+   "patientId": "p58",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 518.8913633964389,
+   "seq": 1062,
+   "type": "MOVE",
+   "patientId": "p58",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 519.151002136237,
+   "seq": 1063,
+   "type": "SERVICE_END",
+   "patientId": "p62",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 519.151002136237,
+   "seq": 1064,
+   "type": "MOVE",
+   "patientId": "p62",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 519.2121197221815,
+   "seq": 1065,
+   "type": "SERVICE_END",
+   "patientId": "p60",
+   "resourceId": "doctor-4",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 519.2121197221815,
+   "seq": 1066,
+   "type": "ROUTED",
+   "patientId": "p60",
+   "data": {
+    "route": "observacion"
+   }
+  },
+  {
+   "t": 519.2121197221815,
+   "seq": 1067,
+   "type": "MOVE",
+   "patientId": "p60",
+   "from": "doctor_box",
+   "to": "observation_bed",
+   "duration": 0.5
+  },
+  {
+   "t": 519.3913633964389,
+   "seq": 1068,
+   "type": "DEPARTURE",
+   "patientId": "p58",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 489.0627245895768,
+     "triageWait": 0.9122236763614069,
+     "admissionWait": 1.0840919600343,
+     "doctorWait": 11.346810985695925,
+     "doorToDoctor": 18.176894144598293,
+     "outcome": "alta",
+     "departure": 519.3913633964389
+    },
+    "level": 3,
+    "name": "Rosa Mendoza",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 519.651002136237,
+   "seq": 1069,
+   "type": "QUEUE_JOIN",
+   "patientId": "p62",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 519.651002136237,
+   "seq": 1070,
+   "type": "SERVICE_START",
+   "patientId": "p62",
+   "resourceId": "doctor-0",
+   "duration": 20.570472987545248,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 519.6619837852955,
+   "seq": 1071,
+   "type": "ARRIVAL",
+   "patientId": "p66",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p66",
+     "name": "Luz Gutiérrez",
+     "ageRange": "0-17",
+     "eps": "sierra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 519.6619837852955,
+   "seq": 1072,
+   "type": "MOVE",
+   "patientId": "p66",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 519.7121197221815,
+   "seq": 1073,
+   "type": "BED_ASSIGNED",
+   "patientId": "p60",
+   "resourceId": "bed-9",
+   "duration": 349.23305902477716
+  },
+  {
+   "t": 520.1619837852955,
+   "seq": 1074,
+   "type": "QUEUE_JOIN",
+   "patientId": "p66",
+   "to": "triage_queue"
+  },
+  {
+   "t": 521.8845168754095,
+   "seq": 1075,
+   "type": "SERVICE_END",
+   "patientId": "p65",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 521.8845168754095,
+   "seq": 1076,
+   "type": "SERVICE_START",
+   "patientId": "p66",
+   "resourceId": "triage-0",
+   "duration": 5.4252323328131,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 521.8845168754095,
+   "seq": 1077,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p65",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 521.8845168754095,
+   "seq": 1078,
+   "type": "MOVE",
+   "patientId": "p65",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 522.3845168754095,
+   "seq": 1079,
+   "type": "QUEUE_JOIN",
+   "patientId": "p65",
+   "to": "admission_queue"
+  },
+  {
+   "t": 522.3845168754095,
+   "seq": 1080,
+   "type": "SERVICE_START",
+   "patientId": "p65",
+   "resourceId": "admission-0",
+   "duration": 5.759260826398308,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 524.2791980612606,
+   "seq": 1081,
+   "type": "SERVICE_END",
+   "patientId": "p64",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 524.2791980612606,
+   "seq": 1082,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p64",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 524.2791980612606,
+   "seq": 1083,
+   "type": "MOVE",
+   "patientId": "p64",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 524.7791980612606,
+   "seq": 1084,
+   "type": "QUEUE_JOIN",
+   "patientId": "p64",
+   "to": "admission_queue"
+  },
+  {
+   "t": 525.9678550690682,
+   "seq": 1085,
+   "type": "ARRIVAL",
+   "patientId": "p67",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p67",
+     "name": "Yesenia Araújo",
+     "ageRange": "40-64",
+     "eps": "sierra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 525.9678550690682,
+   "seq": 1086,
+   "type": "MOVE",
+   "patientId": "p67",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 526.2727342550183,
+   "seq": 1087,
+   "type": "SERVICE_END",
+   "patientId": "p63",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 526.2727342550183,
+   "seq": 1088,
+   "type": "SERVICE_START",
+   "patientId": "p64",
+   "resourceId": "admission-1",
+   "duration": 7.97697750345005,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 526.2727342550183,
+   "seq": 1089,
+   "type": "MOVE",
+   "patientId": "p63",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 526.4678550690682,
+   "seq": 1090,
+   "type": "QUEUE_JOIN",
+   "patientId": "p67",
+   "to": "triage_queue"
+  },
+  {
+   "t": 526.4678550690682,
+   "seq": 1091,
+   "type": "SERVICE_START",
+   "patientId": "p67",
+   "resourceId": "triage-1",
+   "duration": 1.8657493262662255,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 526.7727342550183,
+   "seq": 1092,
+   "type": "QUEUE_JOIN",
+   "patientId": "p63",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 526.7727342550183,
+   "seq": 1093,
+   "type": "SERVICE_START",
+   "patientId": "p63",
+   "resourceId": "doctor-1",
+   "duration": 11.410546227008522,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 527.3097492082227,
+   "seq": 1094,
+   "type": "SERVICE_END",
+   "patientId": "p66",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 527.3097492082227,
+   "seq": 1095,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p66",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 527.3097492082227,
+   "seq": 1096,
+   "type": "MOVE",
+   "patientId": "p66",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 527.3815951833982,
+   "seq": 1097,
+   "type": "ARRIVAL",
+   "patientId": "p68",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p68",
+     "name": "Diomedes Molina",
+     "ageRange": "40-64",
+     "eps": "vallenata",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 527.3815951833982,
+   "seq": 1098,
+   "type": "MOVE",
+   "patientId": "p68",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 527.8097492082227,
+   "seq": 1099,
+   "type": "QUEUE_JOIN",
+   "patientId": "p66",
+   "to": "admission_queue"
+  },
+  {
+   "t": 527.8815951833982,
+   "seq": 1100,
+   "type": "QUEUE_JOIN",
+   "patientId": "p68",
+   "to": "triage_queue"
+  },
+  {
+   "t": 527.8815951833982,
+   "seq": 1101,
+   "type": "SERVICE_START",
+   "patientId": "p68",
+   "resourceId": "triage-0",
+   "duration": 2.8968394605147116,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 528.1437777018078,
+   "seq": 1102,
+   "type": "SERVICE_END",
+   "patientId": "p65",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 528.1437777018078,
+   "seq": 1103,
+   "type": "SERVICE_START",
+   "patientId": "p66",
+   "resourceId": "admission-0",
+   "duration": 7.694367895177158,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 528.1437777018078,
+   "seq": 1104,
+   "type": "MOVE",
+   "patientId": "p65",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 528.3336043953344,
+   "seq": 1105,
+   "type": "SERVICE_END",
+   "patientId": "p67",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 528.3336043953344,
+   "seq": 1106,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p67",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 528.3336043953344,
+   "seq": 1107,
+   "type": "MOVE",
+   "patientId": "p67",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 528.6437777018078,
+   "seq": 1108,
+   "type": "QUEUE_JOIN",
+   "patientId": "p65",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 528.6437777018078,
+   "seq": 1109,
+   "type": "SERVICE_START",
+   "patientId": "p65",
+   "resourceId": "doctor-2",
+   "duration": 22.79245723747543,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 528.7964764522225,
+   "seq": 1110,
+   "type": "ARRIVAL",
+   "patientId": "p69",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p69",
+     "name": "Yesenia Mendoza",
+     "ageRange": "40-64",
+     "eps": "sierra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 528.7964764522225,
+   "seq": 1111,
+   "type": "MOVE",
+   "patientId": "p69",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 528.8336043953344,
+   "seq": 1112,
+   "type": "QUEUE_JOIN",
+   "patientId": "p67",
+   "to": "admission_queue"
+  },
+  {
+   "t": 529.2964764522225,
+   "seq": 1113,
+   "type": "QUEUE_JOIN",
+   "patientId": "p69",
+   "to": "triage_queue"
+  },
+  {
+   "t": 529.2964764522225,
+   "seq": 1114,
+   "type": "SERVICE_START",
+   "patientId": "p69",
+   "resourceId": "triage-1",
+   "duration": 1.4410336163217634,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 530.0175185042359,
+   "seq": 1115,
+   "type": "ARRIVAL",
+   "patientId": "p70",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p70",
+     "name": "Marta Araújo",
+     "ageRange": "18-39",
+     "eps": "otra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 530.0175185042359,
+   "seq": 1116,
+   "type": "MOVE",
+   "patientId": "p70",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 530.5175185042359,
+   "seq": 1117,
+   "type": "QUEUE_JOIN",
+   "patientId": "p70",
+   "to": "triage_queue"
+  },
+  {
+   "t": 530.7357738048728,
+   "seq": 1118,
+   "type": "ARRIVAL",
+   "patientId": "p71",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p71",
+     "name": "Andrés Ospino",
+     "ageRange": "65+",
+     "eps": "guatapuri",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 530.7357738048728,
+   "seq": 1119,
+   "type": "MOVE",
+   "patientId": "p71",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 530.7375100685442,
+   "seq": 1120,
+   "type": "SERVICE_END",
+   "patientId": "p69",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 530.7375100685442,
+   "seq": 1121,
+   "type": "SERVICE_START",
+   "patientId": "p70",
+   "resourceId": "triage-1",
+   "duration": 2.910637592832119,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 530.7375100685442,
+   "seq": 1122,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p69",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 530.7375100685442,
+   "seq": 1123,
+   "type": "MOVE",
+   "patientId": "p69",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 530.7784346439129,
+   "seq": 1124,
+   "type": "SERVICE_END",
+   "patientId": "p68",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 530.7784346439129,
+   "seq": 1125,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p68",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 530.7784346439129,
+   "seq": 1126,
+   "type": "MOVE",
+   "patientId": "p68",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 531.2357738048728,
+   "seq": 1127,
+   "type": "QUEUE_JOIN",
+   "patientId": "p71",
+   "to": "triage_queue"
+  },
+  {
+   "t": 531.2357738048728,
+   "seq": 1128,
+   "type": "SERVICE_START",
+   "patientId": "p71",
+   "resourceId": "triage-0",
+   "duration": 4.084837099464901,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 531.2375100685442,
+   "seq": 1129,
+   "type": "QUEUE_JOIN",
+   "patientId": "p69",
+   "to": "admission_queue"
+  },
+  {
+   "t": 531.2784346439129,
+   "seq": 1130,
+   "type": "QUEUE_JOIN",
+   "patientId": "p68",
+   "to": "admission_queue"
+  },
+  {
+   "t": 533.5998972549539,
+   "seq": 1131,
+   "type": "SERVICE_END",
+   "patientId": "p59",
+   "resourceId": "doctor-3",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 533.5998972549539,
+   "seq": 1132,
+   "type": "ROUTED",
+   "patientId": "p59",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 533.5998972549539,
+   "seq": 1133,
+   "type": "MOVE",
+   "patientId": "p59",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 533.6481476613764,
+   "seq": 1134,
+   "type": "SERVICE_END",
+   "patientId": "p70",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 533.6481476613764,
+   "seq": 1135,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p70",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 533.6481476613764,
+   "seq": 1136,
+   "type": "MOVE",
+   "patientId": "p70",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 534.0998972549539,
+   "seq": 1137,
+   "type": "DEPARTURE",
+   "patientId": "p59",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 491.7515837377608,
+     "triageWait": 0,
+     "admissionWait": 3.729237623439303,
+     "doctorWait": 11.258415161677874,
+     "doorToDoctor": 15.89930907747231,
+     "outcome": "alta",
+     "departure": 534.0998972549539
+    },
+    "level": 2,
+    "name": "Karen Zuleta",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 534.1481476613764,
+   "seq": 1138,
+   "type": "QUEUE_JOIN",
+   "patientId": "p70",
+   "to": "admission_queue"
+  },
+  {
+   "t": 534.2497117584684,
+   "seq": 1139,
+   "type": "SERVICE_END",
+   "patientId": "p64",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 534.2497117584684,
+   "seq": 1140,
+   "type": "SERVICE_START",
+   "patientId": "p67",
+   "resourceId": "admission-1",
+   "duration": 7.113400557271664,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 534.2497117584684,
+   "seq": 1141,
+   "type": "MOVE",
+   "patientId": "p64",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 534.7497117584684,
+   "seq": 1142,
+   "type": "QUEUE_JOIN",
+   "patientId": "p64",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 534.7497117584684,
+   "seq": 1143,
+   "type": "SERVICE_START",
+   "patientId": "p64",
+   "resourceId": "doctor-3",
+   "duration": 58.149119774755256,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 535.3206109043377,
+   "seq": 1144,
+   "type": "SERVICE_END",
+   "patientId": "p71",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 535.3206109043377,
+   "seq": 1145,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p71",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 535.3206109043377,
+   "seq": 1146,
+   "type": "MOVE",
+   "patientId": "p71",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 535.8206109043377,
+   "seq": 1147,
+   "type": "QUEUE_JOIN",
+   "patientId": "p71",
+   "to": "admission_queue"
+  },
+  {
+   "t": 535.838145596985,
+   "seq": 1148,
+   "type": "SERVICE_END",
+   "patientId": "p66",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 535.838145596985,
+   "seq": 1149,
+   "type": "SERVICE_START",
+   "patientId": "p69",
+   "resourceId": "admission-0",
+   "duration": 6.003706420563468,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 535.838145596985,
+   "seq": 1150,
+   "type": "MOVE",
+   "patientId": "p66",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 536.338145596985,
+   "seq": 1151,
+   "type": "QUEUE_JOIN",
+   "patientId": "p66",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 536.338145596985,
+   "seq": 1152,
+   "type": "SERVICE_START",
+   "patientId": "p66",
+   "resourceId": "doctor-4",
+   "duration": 19.14945264777597,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 538.1832804820268,
+   "seq": 1153,
+   "type": "SERVICE_END",
+   "patientId": "p63",
+   "resourceId": "doctor-1",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 538.1832804820268,
+   "seq": 1154,
+   "type": "ROUTED",
+   "patientId": "p63",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 538.1832804820268,
+   "seq": 1155,
+   "type": "MOVE",
+   "patientId": "p63",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 538.2296971235135,
+   "seq": 1156,
+   "type": "SERVICE_END",
+   "patientId": "p61",
+   "resourceId": "doctor-5",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 538.2296971235135,
+   "seq": 1157,
+   "type": "ROUTED",
+   "patientId": "p61",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 538.2296971235135,
+   "seq": 1158,
+   "type": "MOVE",
+   "patientId": "p61",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 538.6832804820268,
+   "seq": 1159,
+   "type": "DEPARTURE",
+   "patientId": "p63",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 514.1651346093626,
+     "triageWait": 0,
+     "admissionWait": 0,
+     "doctorWait": 8.979783859840836,
+     "doorToDoctor": 12.607599645655796,
+     "outcome": "alta",
+     "departure": 538.6832804820268
+    },
+    "level": 3,
+    "name": "Marta Quintero",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 538.7296971235135,
+   "seq": 1160,
+   "type": "DEPARTURE",
+   "patientId": "p61",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 495.93395946359647,
+     "triageWait": 0,
+     "admissionWait": 7.659967897395461,
+     "doctorWait": 13.268812075268727,
+     "doorToDoctor": 15.91450344845191,
+     "outcome": "alta",
+     "departure": 538.7296971235135
+    },
+    "level": 3,
+    "name": "Luis Daza",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 540.2214751237823,
+   "seq": 1161,
+   "type": "SERVICE_END",
+   "patientId": "p62",
+   "resourceId": "doctor-0",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 540.2214751237823,
+   "seq": 1162,
+   "type": "ROUTED",
+   "patientId": "p62",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 540.2214751237823,
+   "seq": 1163,
+   "type": "MOVE",
+   "patientId": "p62",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 540.2920291751211,
+   "seq": 1164,
+   "type": "ARRIVAL",
+   "patientId": "p72",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p72",
+     "name": "Andrés Ospino",
+     "ageRange": "0-17",
+     "eps": "guatapuri",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 540.2920291751211,
+   "seq": 1165,
+   "type": "MOVE",
+   "patientId": "p72",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 540.7214751237823,
+   "seq": 1166,
+   "type": "DEPARTURE",
+   "patientId": "p62",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 510.1945454815747,
+     "triageWait": 0,
+     "admissionWait": 0,
+     "doctorWait": 6.200625497165106,
+     "doorToDoctor": 9.456456654662304,
+     "outcome": "alta",
+     "departure": 540.7214751237823
+    },
+    "level": 3,
+    "name": "María Mendoza",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 540.7920291751211,
+   "seq": 1167,
+   "type": "QUEUE_JOIN",
+   "patientId": "p72",
+   "to": "triage_queue"
+  },
+  {
+   "t": 540.7920291751211,
+   "seq": 1168,
+   "type": "SERVICE_START",
+   "patientId": "p72",
+   "resourceId": "triage-0",
+   "duration": 5.49701855104056,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 541.3631123157401,
+   "seq": 1169,
+   "type": "SERVICE_END",
+   "patientId": "p67",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 541.3631123157401,
+   "seq": 1170,
+   "type": "SERVICE_START",
+   "patientId": "p68",
+   "resourceId": "admission-1",
+   "duration": 5.921800257473773,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 541.3631123157401,
+   "seq": 1171,
+   "type": "MOVE",
+   "patientId": "p67",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 541.8418520175485,
+   "seq": 1172,
+   "type": "SERVICE_END",
+   "patientId": "p69",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 541.8418520175485,
+   "seq": 1173,
+   "type": "SERVICE_START",
+   "patientId": "p70",
+   "resourceId": "admission-0",
+   "duration": 5.012734655023669,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 541.8418520175485,
+   "seq": 1174,
+   "type": "MOVE",
+   "patientId": "p69",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 541.8631123157401,
+   "seq": 1175,
+   "type": "QUEUE_JOIN",
+   "patientId": "p67",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 541.8631123157401,
+   "seq": 1176,
+   "type": "SERVICE_START",
+   "patientId": "p67",
+   "resourceId": "doctor-0",
+   "duration": 19.16344250518001,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 542.3418520175485,
+   "seq": 1177,
+   "type": "QUEUE_JOIN",
+   "patientId": "p69",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 542.3418520175485,
+   "seq": 1178,
+   "type": "SERVICE_START",
+   "patientId": "p69",
+   "resourceId": "doctor-1",
+   "duration": 33.51249198135046,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 546.2890477261617,
+   "seq": 1179,
+   "type": "SERVICE_END",
+   "patientId": "p72",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 546.2890477261617,
+   "seq": 1180,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p72",
+   "data": {
+    "level": 5
+   }
+  },
+  {
+   "t": 546.2890477261617,
+   "seq": 1181,
+   "type": "MOVE",
+   "patientId": "p72",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 546.7890477261617,
+   "seq": 1182,
+   "type": "QUEUE_JOIN",
+   "patientId": "p72",
+   "to": "admission_queue"
+  },
+  {
+   "t": 546.8545866725722,
+   "seq": 1183,
+   "type": "SERVICE_END",
+   "patientId": "p70",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 546.8545866725722,
+   "seq": 1184,
+   "type": "SERVICE_START",
+   "patientId": "p71",
+   "resourceId": "admission-0",
+   "duration": 8.339107041397423,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 546.8545866725722,
+   "seq": 1185,
+   "type": "MOVE",
+   "patientId": "p70",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 547.2079235020594,
+   "seq": 1186,
+   "type": "ARRIVAL",
+   "patientId": "p73",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p73",
+     "name": "Jorge Durán",
+     "ageRange": "18-39",
+     "eps": "vallenata",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 547.2079235020594,
+   "seq": 1187,
+   "type": "MOVE",
+   "patientId": "p73",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 547.2849125732139,
+   "seq": 1188,
+   "type": "SERVICE_END",
+   "patientId": "p68",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 547.2849125732139,
+   "seq": 1189,
+   "type": "SERVICE_START",
+   "patientId": "p72",
+   "resourceId": "admission-1",
+   "duration": 8.06912175473798,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 547.2849125732139,
+   "seq": 1190,
+   "type": "MOVE",
+   "patientId": "p68",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 547.3545866725722,
+   "seq": 1191,
+   "type": "QUEUE_JOIN",
+   "patientId": "p70",
+   "to": "waiting_room",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 547.3545866725722,
+   "seq": 1192,
+   "type": "SERVICE_START",
+   "patientId": "p70",
+   "resourceId": "doctor-5",
+   "duration": 20.167595175617283,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 547.7079235020594,
+   "seq": 1193,
+   "type": "QUEUE_JOIN",
+   "patientId": "p73",
+   "to": "triage_queue"
+  },
+  {
+   "t": 547.7079235020594,
+   "seq": 1194,
+   "type": "SERVICE_START",
+   "patientId": "p73",
+   "resourceId": "triage-0",
+   "duration": 4.020570080347598,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 547.7849125732139,
+   "seq": 1195,
+   "type": "QUEUE_JOIN",
+   "patientId": "p68",
+   "to": "waiting_room",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 548.5713029386908,
+   "seq": 1196,
+   "type": "ARRIVAL",
+   "patientId": "p74",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p74",
+     "name": "Andrés Fuentes",
+     "ageRange": "18-39",
+     "eps": "sierra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 548.5713029386908,
+   "seq": 1197,
+   "type": "MOVE",
+   "patientId": "p74",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 549.0713029386908,
+   "seq": 1198,
+   "type": "QUEUE_JOIN",
+   "patientId": "p74",
+   "to": "triage_queue"
+  },
+  {
+   "t": 549.0713029386908,
+   "seq": 1199,
+   "type": "SERVICE_START",
+   "patientId": "p74",
+   "resourceId": "triage-1",
+   "duration": 3.125764223540518,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 551.4362349392833,
+   "seq": 1200,
+   "type": "SERVICE_END",
+   "patientId": "p65",
+   "resourceId": "doctor-2",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 551.4362349392833,
+   "seq": 1201,
+   "type": "SERVICE_START",
+   "patientId": "p68",
+   "resourceId": "doctor-2",
+   "duration": 13.037971550743219,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 551.4362349392833,
+   "seq": 1202,
+   "type": "ROUTED",
+   "patientId": "p65",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 551.4362349392833,
+   "seq": 1203,
+   "type": "MOVE",
+   "patientId": "p65",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 551.728493582407,
+   "seq": 1204,
+   "type": "SERVICE_END",
+   "patientId": "p73",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 551.728493582407,
+   "seq": 1205,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p73",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 551.728493582407,
+   "seq": 1206,
+   "type": "MOVE",
+   "patientId": "p73",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 551.9362349392833,
+   "seq": 1207,
+   "type": "DEPARTURE",
+   "patientId": "p65",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 517.7031312222749,
+     "triageWait": 0,
+     "admissionWait": 0,
+     "doctorWait": 6.759260826398304,
+     "doorToDoctor": 10.940646479532916,
+     "outcome": "alta",
+     "departure": 551.9362349392833
+    },
+    "level": 3,
+    "name": "Leidy Gutiérrez",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 552.1970671622313,
+   "seq": 1208,
+   "type": "SERVICE_END",
+   "patientId": "p74",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 552.1970671622313,
+   "seq": 1209,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p74",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 552.1970671622313,
+   "seq": 1210,
+   "type": "MOVE",
+   "patientId": "p74",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 552.228493582407,
+   "seq": 1211,
+   "type": "QUEUE_JOIN",
+   "patientId": "p73",
+   "to": "admission_queue"
+  },
+  {
+   "t": 552.6970671622313,
+   "seq": 1212,
+   "type": "QUEUE_JOIN",
+   "patientId": "p74",
+   "to": "admission_queue"
+  },
+  {
+   "t": 552.9172226732196,
+   "seq": 1213,
+   "type": "ARRIVAL",
+   "patientId": "p75",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p75",
+     "name": "Jorge Ospino",
+     "ageRange": "0-17",
+     "eps": "sierra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 552.9172226732196,
+   "seq": 1214,
+   "type": "MOVE",
+   "patientId": "p75",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 553.4172226732196,
+   "seq": 1215,
+   "type": "QUEUE_JOIN",
+   "patientId": "p75",
+   "to": "triage_queue"
+  },
+  {
+   "t": 553.4172226732196,
+   "seq": 1216,
+   "type": "SERVICE_START",
+   "patientId": "p75",
+   "resourceId": "triage-0",
+   "duration": 4.00644852695089,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 555.1936937139695,
+   "seq": 1217,
+   "type": "SERVICE_END",
+   "patientId": "p71",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 555.1936937139695,
+   "seq": 1218,
+   "type": "SERVICE_START",
+   "patientId": "p73",
+   "resourceId": "admission-0",
+   "duration": 8.420387297895934,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 555.1936937139695,
+   "seq": 1219,
+   "type": "MOVE",
+   "patientId": "p71",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 555.3540343279519,
+   "seq": 1220,
+   "type": "SERVICE_END",
+   "patientId": "p72",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 555.3540343279519,
+   "seq": 1221,
+   "type": "SERVICE_START",
+   "patientId": "p74",
+   "resourceId": "admission-1",
+   "duration": 8.17778844376316,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 555.3540343279519,
+   "seq": 1222,
+   "type": "MOVE",
+   "patientId": "p72",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 555.487598244761,
+   "seq": 1223,
+   "type": "SERVICE_END",
+   "patientId": "p66",
+   "resourceId": "doctor-4",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 555.487598244761,
+   "seq": 1224,
+   "type": "ROUTED",
+   "patientId": "p66",
+   "data": {
+    "route": "observacion"
+   }
+  },
+  {
+   "t": 555.487598244761,
+   "seq": 1225,
+   "type": "MOVE",
+   "patientId": "p66",
+   "from": "doctor_box",
+   "to": "observation_bed",
+   "duration": 0.5
+  },
+  {
+   "t": 555.6936937139695,
+   "seq": 1226,
+   "type": "QUEUE_JOIN",
+   "patientId": "p71",
+   "to": "waiting_room",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 555.6936937139695,
+   "seq": 1227,
+   "type": "SERVICE_START",
+   "patientId": "p71",
+   "resourceId": "doctor-4",
+   "duration": 41.708392491190395,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 555.8540343279519,
+   "seq": 1228,
+   "type": "QUEUE_JOIN",
+   "patientId": "p72",
+   "to": "waiting_room",
+   "data": {
+    "level": 5
+   }
+  },
+  {
+   "t": 555.987598244761,
+   "seq": 1229,
+   "type": "BED_ASSIGNED",
+   "patientId": "p66",
+   "resourceId": "bed-10",
+   "duration": 163.33665798090803
+  },
+  {
+   "t": 557.4236712001705,
+   "seq": 1230,
+   "type": "SERVICE_END",
+   "patientId": "p75",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 557.4236712001705,
+   "seq": 1231,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p75",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 557.4236712001705,
+   "seq": 1232,
+   "type": "MOVE",
+   "patientId": "p75",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 557.9236712001705,
+   "seq": 1233,
+   "type": "QUEUE_JOIN",
+   "patientId": "p75",
+   "to": "admission_queue"
+  },
+  {
+   "t": 558.4193727305003,
+   "seq": 1234,
+   "type": "ARRIVAL",
+   "patientId": "p76",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p76",
+     "name": "Diomedes Araújo",
+     "ageRange": "18-39",
+     "eps": "vallenata",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 558.4193727305003,
+   "seq": 1235,
+   "type": "MOVE",
+   "patientId": "p76",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 558.9193727305003,
+   "seq": 1236,
+   "type": "QUEUE_JOIN",
+   "patientId": "p76",
+   "to": "triage_queue"
+  },
+  {
+   "t": 558.9193727305003,
+   "seq": 1237,
+   "type": "SERVICE_START",
+   "patientId": "p76",
+   "resourceId": "triage-0",
+   "duration": 2.4618420762102384,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 559.5365050657958,
+   "seq": 1238,
+   "type": "ARRIVAL",
+   "patientId": "p77",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p77",
+     "name": "Iván Molina",
+     "ageRange": "40-64",
+     "eps": "otra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 559.5365050657958,
+   "seq": 1239,
+   "type": "MOVE",
+   "patientId": "p77",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 559.7459691288879,
+   "seq": 1240,
+   "type": "ARRIVAL",
+   "patientId": "p78",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p78",
+     "name": "Marta Arias",
+     "ageRange": "0-17",
+     "eps": "vallenata",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 559.7459691288879,
+   "seq": 1241,
+   "type": "MOVE",
+   "patientId": "p78",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 560.0365050657958,
+   "seq": 1242,
+   "type": "QUEUE_JOIN",
+   "patientId": "p77",
+   "to": "triage_queue"
+  },
+  {
+   "t": 560.0365050657958,
+   "seq": 1243,
+   "type": "SERVICE_START",
+   "patientId": "p77",
+   "resourceId": "triage-1",
+   "duration": 6.30333519176889,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 560.2459691288879,
+   "seq": 1244,
+   "type": "QUEUE_JOIN",
+   "patientId": "p78",
+   "to": "triage_queue"
+  },
+  {
+   "t": 560.9164652771932,
+   "seq": 1245,
+   "type": "ARRIVAL",
+   "patientId": "p79",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p79",
+     "name": "Rosa Martínez",
+     "ageRange": "18-39",
+     "eps": "sierra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 560.9164652771932,
+   "seq": 1246,
+   "type": "MOVE",
+   "patientId": "p79",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 561.0265548209201,
+   "seq": 1247,
+   "type": "SERVICE_END",
+   "patientId": "p67",
+   "resourceId": "doctor-0",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 561.0265548209201,
+   "seq": 1248,
+   "type": "SERVICE_START",
+   "patientId": "p72",
+   "resourceId": "doctor-0",
+   "duration": 27.47411354445567,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 561.0265548209201,
+   "seq": 1249,
+   "type": "ROUTED",
+   "patientId": "p67",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 561.0265548209201,
+   "seq": 1250,
+   "type": "MOVE",
+   "patientId": "p67",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 561.3812148067105,
+   "seq": 1251,
+   "type": "SERVICE_END",
+   "patientId": "p76",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 561.3812148067105,
+   "seq": 1252,
+   "type": "SERVICE_START",
+   "patientId": "p78",
+   "resourceId": "triage-0",
+   "duration": 2.680100171161696,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 561.3812148067105,
+   "seq": 1253,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p76",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 561.3812148067105,
+   "seq": 1254,
+   "type": "MOVE",
+   "patientId": "p76",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 561.4164652771932,
+   "seq": 1255,
+   "type": "QUEUE_JOIN",
+   "patientId": "p79",
+   "to": "triage_queue"
+  },
+  {
+   "t": 561.4625058570459,
+   "seq": 1256,
+   "type": "BED_RELEASED",
+   "patientId": "p50",
+   "resourceId": "bed-1"
+  },
+  {
+   "t": 561.4625058570459,
+   "seq": 1257,
+   "type": "MOVE",
+   "patientId": "p50",
+   "from": "observation_bed",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 561.5265548209201,
+   "seq": 1258,
+   "type": "DEPARTURE",
+   "patientId": "p67",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 525.9678550690682,
+     "triageWait": 0,
+     "admissionWait": 5.4161073631339605,
+     "doctorWait": 13.52950792040565,
+     "doorToDoctor": 15.895257246671918,
+     "outcome": "alta",
+     "departure": 561.5265548209201
+    },
+    "level": 3,
+    "name": "Yesenia Araújo",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 561.8812148067105,
+   "seq": 1259,
+   "type": "QUEUE_JOIN",
+   "patientId": "p76",
+   "to": "admission_queue"
+  },
+  {
+   "t": 561.9625058570459,
+   "seq": 1260,
+   "type": "DEPARTURE",
+   "patientId": "p50",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 438.6971090723183,
+     "triageWait": 0,
+     "admissionWait": 0,
+     "doctorWait": 7.534844699424241,
+     "doorToDoctor": 10.979687743353907,
+     "observationTime": 98.29019577336732,
+     "outcome": "alta",
+     "departure": 561.9625058570459
+    },
+    "level": 4,
+    "name": "Luz Durán",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 563.531822771715,
+   "seq": 1261,
+   "type": "SERVICE_END",
+   "patientId": "p74",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 563.531822771715,
+   "seq": 1262,
+   "type": "SERVICE_START",
+   "patientId": "p75",
+   "resourceId": "admission-1",
+   "duration": 5.114266647207797,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 563.531822771715,
+   "seq": 1263,
+   "type": "MOVE",
+   "patientId": "p74",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 563.6140810118654,
+   "seq": 1264,
+   "type": "SERVICE_END",
+   "patientId": "p73",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 563.6140810118654,
+   "seq": 1265,
+   "type": "SERVICE_START",
+   "patientId": "p76",
+   "resourceId": "admission-0",
+   "duration": 7.592863534206021,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 563.6140810118654,
+   "seq": 1266,
+   "type": "MOVE",
+   "patientId": "p73",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 564.031822771715,
+   "seq": 1267,
+   "type": "QUEUE_JOIN",
+   "patientId": "p74",
+   "to": "waiting_room",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 564.0613149778723,
+   "seq": 1268,
+   "type": "SERVICE_END",
+   "patientId": "p78",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 564.0613149778723,
+   "seq": 1269,
+   "type": "SERVICE_START",
+   "patientId": "p79",
+   "resourceId": "triage-0",
+   "duration": 3.7222760882079946,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 564.0613149778723,
+   "seq": 1270,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p78",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 564.0613149778723,
+   "seq": 1271,
+   "type": "MOVE",
+   "patientId": "p78",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 564.1140810118654,
+   "seq": 1272,
+   "type": "QUEUE_JOIN",
+   "patientId": "p73",
+   "to": "waiting_room",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 564.4742064900265,
+   "seq": 1273,
+   "type": "SERVICE_END",
+   "patientId": "p68",
+   "resourceId": "doctor-2",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 564.4742064900265,
+   "seq": 1274,
+   "type": "SERVICE_START",
+   "patientId": "p74",
+   "resourceId": "doctor-2",
+   "duration": 16.4908677584676,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 564.4742064900265,
+   "seq": 1275,
+   "type": "ROUTED",
+   "patientId": "p68",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 564.4742064900265,
+   "seq": 1276,
+   "type": "MOVE",
+   "patientId": "p68",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 564.5613149778723,
+   "seq": 1277,
+   "type": "QUEUE_JOIN",
+   "patientId": "p78",
+   "to": "admission_queue"
+  },
+  {
+   "t": 564.9742064900265,
+   "seq": 1278,
+   "type": "DEPARTURE",
+   "patientId": "p68",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 527.3815951833982,
+     "triageWait": 0,
+     "admissionWait": 10.084677671827194,
+     "doctorWait": 20.657800295370407,
+     "doorToDoctor": 24.05463975588509,
+     "outcome": "alta",
+     "departure": 564.9742064900265
+    },
+    "level": 4,
+    "name": "Diomedes Molina",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 566.3398402575647,
+   "seq": 1279,
+   "type": "SERVICE_END",
+   "patientId": "p77",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 566.3398402575647,
+   "seq": 1280,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p77",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 566.3398402575647,
+   "seq": 1281,
+   "type": "MOVE",
+   "patientId": "p77",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 566.8398402575647,
+   "seq": 1282,
+   "type": "QUEUE_JOIN",
+   "patientId": "p77",
+   "to": "admission_queue"
+  },
+  {
+   "t": 567.5221818481895,
+   "seq": 1283,
+   "type": "SERVICE_END",
+   "patientId": "p70",
+   "resourceId": "doctor-5",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 567.5221818481895,
+   "seq": 1284,
+   "type": "SERVICE_START",
+   "patientId": "p73",
+   "resourceId": "doctor-5",
+   "duration": 11.677257021673473,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 567.5221818481895,
+   "seq": 1285,
+   "type": "ROUTED",
+   "patientId": "p70",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 567.5221818481895,
+   "seq": 1286,
+   "type": "MOVE",
+   "patientId": "p70",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 567.7835910660802,
+   "seq": 1287,
+   "type": "SERVICE_END",
+   "patientId": "p79",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 567.7835910660802,
+   "seq": 1288,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p79",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 567.7835910660802,
+   "seq": 1289,
+   "type": "MOVE",
+   "patientId": "p79",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 568.0221818481895,
+   "seq": 1290,
+   "type": "DEPARTURE",
+   "patientId": "p70",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 530.0175185042359,
+     "triageWait": 0.2199915643083159,
+     "admissionWait": 7.693704356172134,
+     "doctorWait": 13.706439011195812,
+     "doorToDoctor": 17.33706816833626,
+     "outcome": "alta",
+     "departure": 568.0221818481895
+    },
+    "level": 4,
+    "name": "Marta Araújo",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 568.2835910660802,
+   "seq": 1291,
+   "type": "QUEUE_JOIN",
+   "patientId": "p79",
+   "to": "admission_queue"
+  },
+  {
+   "t": 568.6460894189229,
+   "seq": 1292,
+   "type": "SERVICE_END",
+   "patientId": "p75",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 568.6460894189229,
+   "seq": 1293,
+   "type": "SERVICE_START",
+   "patientId": "p78",
+   "resourceId": "admission-1",
+   "duration": 5.262946273710025,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 568.6460894189229,
+   "seq": 1294,
+   "type": "MOVE",
+   "patientId": "p75",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 569.1460894189229,
+   "seq": 1295,
+   "type": "QUEUE_JOIN",
+   "patientId": "p75",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 569.1561140894074,
+   "seq": 1296,
+   "type": "ARRIVAL",
+   "patientId": "p80",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p80",
+     "name": "Andrés Martínez",
+     "ageRange": "18-39",
+     "eps": "vallenata",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 569.1561140894074,
+   "seq": 1297,
+   "type": "MOVE",
+   "patientId": "p80",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 569.6561140894074,
+   "seq": 1298,
+   "type": "QUEUE_JOIN",
+   "patientId": "p80",
+   "to": "triage_queue"
+  },
+  {
+   "t": 569.6561140894074,
+   "seq": 1299,
+   "type": "SERVICE_START",
+   "patientId": "p80",
+   "resourceId": "triage-0",
+   "duration": 8.31421895740336,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 570.4475065897911,
+   "seq": 1300,
+   "type": "ARRIVAL",
+   "patientId": "p81",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p81",
+     "name": "Andrés Gutiérrez",
+     "ageRange": "65+",
+     "eps": "cesarvida",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 570.4475065897911,
+   "seq": 1301,
+   "type": "MOVE",
+   "patientId": "p81",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 570.8861917964474,
+   "seq": 1302,
+   "type": "ARRIVAL",
+   "patientId": "p82",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p82",
+     "name": "Diomedes Arias",
+     "ageRange": "40-64",
+     "eps": "vallenata",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 570.8861917964474,
+   "seq": 1303,
+   "type": "MOVE",
+   "patientId": "p82",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 570.9475065897911,
+   "seq": 1304,
+   "type": "QUEUE_JOIN",
+   "patientId": "p81",
+   "to": "triage_queue"
+  },
+  {
+   "t": 570.9475065897911,
+   "seq": 1305,
+   "type": "SERVICE_START",
+   "patientId": "p81",
+   "resourceId": "triage-1",
+   "duration": 3.446185377086586,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 571.2069445460714,
+   "seq": 1306,
+   "type": "SERVICE_END",
+   "patientId": "p76",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 571.2069445460714,
+   "seq": 1307,
+   "type": "SERVICE_START",
+   "patientId": "p77",
+   "resourceId": "admission-0",
+   "duration": 6.6988625747693,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 571.2069445460714,
+   "seq": 1308,
+   "type": "MOVE",
+   "patientId": "p76",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 571.3861917964474,
+   "seq": 1309,
+   "type": "QUEUE_JOIN",
+   "patientId": "p82",
+   "to": "triage_queue"
+  },
+  {
+   "t": 571.7069445460714,
+   "seq": 1310,
+   "type": "QUEUE_JOIN",
+   "patientId": "p76",
+   "to": "waiting_room",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 572.3712570624157,
+   "seq": 1311,
+   "type": "ARRIVAL",
+   "patientId": "p83",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p83",
+     "name": "Yesenia Castro",
+     "ageRange": "0-17",
+     "eps": "vallenata",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 572.3712570624157,
+   "seq": 1312,
+   "type": "MOVE",
+   "patientId": "p83",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 572.8677313739869,
+   "seq": 1313,
+   "type": "ARRIVAL",
+   "patientId": "p84",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p84",
+     "name": "María Cuello",
+     "ageRange": "65+",
+     "eps": "vallenata",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 572.8677313739869,
+   "seq": 1314,
+   "type": "MOVE",
+   "patientId": "p84",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 572.8712570624157,
+   "seq": 1315,
+   "type": "QUEUE_JOIN",
+   "patientId": "p83",
+   "to": "triage_queue"
+  },
+  {
+   "t": 573.3677313739869,
+   "seq": 1316,
+   "type": "QUEUE_JOIN",
+   "patientId": "p84",
+   "to": "triage_queue"
+  },
+  {
+   "t": 573.9090356926329,
+   "seq": 1317,
+   "type": "SERVICE_END",
+   "patientId": "p78",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 573.9090356926329,
+   "seq": 1318,
+   "type": "SERVICE_START",
+   "patientId": "p79",
+   "resourceId": "admission-1",
+   "duration": 6.155581794715376,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 573.9090356926329,
+   "seq": 1319,
+   "type": "MOVE",
+   "patientId": "p78",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 574.3936919668778,
+   "seq": 1320,
+   "type": "SERVICE_END",
+   "patientId": "p81",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 574.3936919668778,
+   "seq": 1321,
+   "type": "SERVICE_START",
+   "patientId": "p82",
+   "resourceId": "triage-1",
+   "duration": 4.277544967822681,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 574.3936919668778,
+   "seq": 1322,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p81",
+   "data": {
+    "level": 2
+   }
+  },
+  {
+   "t": 574.3936919668778,
+   "seq": 1323,
+   "type": "MOVE",
+   "patientId": "p81",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 574.4090356926329,
+   "seq": 1324,
+   "type": "QUEUE_JOIN",
+   "patientId": "p78",
+   "to": "waiting_room",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 574.8936919668778,
+   "seq": 1325,
+   "type": "QUEUE_JOIN",
+   "patientId": "p81",
+   "to": "admission_queue"
+  },
+  {
+   "t": 575.8543439988989,
+   "seq": 1326,
+   "type": "SERVICE_END",
+   "patientId": "p69",
+   "resourceId": "doctor-1",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 575.8543439988989,
+   "seq": 1327,
+   "type": "SERVICE_START",
+   "patientId": "p75",
+   "resourceId": "doctor-1",
+   "duration": 25.196257413628896,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 575.8543439988989,
+   "seq": 1328,
+   "type": "ROUTED",
+   "patientId": "p69",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 575.8543439988989,
+   "seq": 1329,
+   "type": "MOVE",
+   "patientId": "p69",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 576.3543439988989,
+   "seq": 1330,
+   "type": "DEPARTURE",
+   "patientId": "p69",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 528.7964764522225,
+     "triageWait": 0,
+     "admissionWait": 4.600635528440762,
+     "doctorWait": 11.604341949004265,
+     "doorToDoctor": 13.545375565326026,
+     "outcome": "alta",
+     "departure": 576.3543439988989
+    },
+    "level": 3,
+    "name": "Yesenia Mendoza",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 577.9058071208408,
+   "seq": 1331,
+   "type": "SERVICE_END",
+   "patientId": "p77",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 577.9058071208408,
+   "seq": 1332,
+   "type": "SERVICE_START",
+   "patientId": "p81",
+   "resourceId": "admission-0",
+   "duration": 6.008854900770246,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 577.9058071208408,
+   "seq": 1333,
+   "type": "MOVE",
+   "patientId": "p77",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 577.9703330468108,
+   "seq": 1334,
+   "type": "SERVICE_END",
+   "patientId": "p80",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 577.9703330468108,
+   "seq": 1335,
+   "type": "SERVICE_START",
+   "patientId": "p83",
+   "resourceId": "triage-0",
+   "duration": 2.0299896283244174,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 577.9703330468108,
+   "seq": 1336,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p80",
+   "data": {
+    "level": 5
+   }
+  },
+  {
+   "t": 577.9703330468108,
+   "seq": 1337,
+   "type": "MOVE",
+   "patientId": "p80",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 578.4058071208408,
+   "seq": 1338,
+   "type": "QUEUE_JOIN",
+   "patientId": "p77",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 578.4703330468108,
+   "seq": 1339,
+   "type": "QUEUE_JOIN",
+   "patientId": "p80",
+   "to": "admission_queue"
+  },
+  {
+   "t": 578.6712369347005,
+   "seq": 1340,
+   "type": "SERVICE_END",
+   "patientId": "p82",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 578.6712369347005,
+   "seq": 1341,
+   "type": "SERVICE_START",
+   "patientId": "p84",
+   "resourceId": "triage-1",
+   "duration": 3.7964656125693277,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 578.6712369347005,
+   "seq": 1342,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p82",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 578.6712369347005,
+   "seq": 1343,
+   "type": "MOVE",
+   "patientId": "p82",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 579.1712369347005,
+   "seq": 1344,
+   "type": "QUEUE_JOIN",
+   "patientId": "p82",
+   "to": "admission_queue"
+  },
+  {
+   "t": 579.1994388698629,
+   "seq": 1345,
+   "type": "SERVICE_END",
+   "patientId": "p73",
+   "resourceId": "doctor-5",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 579.1994388698629,
+   "seq": 1346,
+   "type": "SERVICE_START",
+   "patientId": "p77",
+   "resourceId": "doctor-5",
+   "duration": 22.31629269139569,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 579.1994388698629,
+   "seq": 1347,
+   "type": "ROUTED",
+   "patientId": "p73",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 579.1994388698629,
+   "seq": 1348,
+   "type": "MOVE",
+   "patientId": "p73",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 579.6994388698629,
+   "seq": 1349,
+   "type": "DEPARTURE",
+   "patientId": "p73",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 547.2079235020594,
+     "triageWait": 0,
+     "admissionWait": 2.965200131562483,
+     "doctorWait": 15.793688265782407,
+     "doorToDoctor": 20.314258346130032,
+     "outcome": "alta",
+     "departure": 579.6994388698629
+    },
+    "level": 4,
+    "name": "Jorge Durán",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 580.0003226751352,
+   "seq": 1350,
+   "type": "SERVICE_END",
+   "patientId": "p83",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 580.0003226751352,
+   "seq": 1351,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p83",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 580.0003226751352,
+   "seq": 1352,
+   "type": "MOVE",
+   "patientId": "p83",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 580.0646174873483,
+   "seq": 1353,
+   "type": "SERVICE_END",
+   "patientId": "p79",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 580.0646174873483,
+   "seq": 1354,
+   "type": "SERVICE_START",
+   "patientId": "p80",
+   "resourceId": "admission-1",
+   "duration": 8.566036417710693,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 580.0646174873483,
+   "seq": 1355,
+   "type": "MOVE",
+   "patientId": "p79",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 580.5003226751352,
+   "seq": 1356,
+   "type": "QUEUE_JOIN",
+   "patientId": "p83",
+   "to": "admission_queue"
+  },
+  {
+   "t": 580.5646174873483,
+   "seq": 1357,
+   "type": "QUEUE_JOIN",
+   "patientId": "p79",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 580.9650742484941,
+   "seq": 1358,
+   "type": "SERVICE_END",
+   "patientId": "p74",
+   "resourceId": "doctor-2",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 580.9650742484941,
+   "seq": 1359,
+   "type": "SERVICE_START",
+   "patientId": "p79",
+   "resourceId": "doctor-2",
+   "duration": 5.788024911399963,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 580.9650742484941,
+   "seq": 1360,
+   "type": "ROUTED",
+   "patientId": "p74",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 580.9650742484941,
+   "seq": 1361,
+   "type": "MOVE",
+   "patientId": "p74",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 581.4650742484941,
+   "seq": 1362,
+   "type": "DEPARTURE",
+   "patientId": "p74",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 548.5713029386908,
+     "triageWait": 0,
+     "admissionWait": 2.65696716572063,
+     "doctorWait": 12.277139327795226,
+     "doorToDoctor": 15.902903551335726,
+     "outcome": "alta",
+     "departure": 581.4650742484941
+    },
+    "level": 4,
+    "name": "Andrés Fuentes",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 582.4677025472698,
+   "seq": 1363,
+   "type": "SERVICE_END",
+   "patientId": "p84",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 582.4677025472698,
+   "seq": 1364,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p84",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 582.4677025472698,
+   "seq": 1365,
+   "type": "MOVE",
+   "patientId": "p84",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 582.9677025472698,
+   "seq": 1366,
+   "type": "QUEUE_JOIN",
+   "patientId": "p84",
+   "to": "admission_queue"
+  },
+  {
+   "t": 583.9146620216111,
+   "seq": 1367,
+   "type": "SERVICE_END",
+   "patientId": "p81",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 583.9146620216111,
+   "seq": 1368,
+   "type": "SERVICE_START",
+   "patientId": "p82",
+   "resourceId": "admission-0",
+   "duration": 5.429875688537725,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 583.9146620216111,
+   "seq": 1369,
+   "type": "MOVE",
+   "patientId": "p81",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 584.4146620216111,
+   "seq": 1370,
+   "type": "QUEUE_JOIN",
+   "patientId": "p81",
+   "to": "waiting_room",
+   "data": {
+    "level": 2
+   }
+  },
+  {
+   "t": 584.8838307838726,
+   "seq": 1371,
+   "type": "ARRIVAL",
+   "patientId": "p85",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p85",
+     "name": "Rafael Castro",
+     "ageRange": "40-64",
+     "eps": "sierra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 584.8838307838726,
+   "seq": 1372,
+   "type": "MOVE",
+   "patientId": "p85",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 585.3838307838726,
+   "seq": 1373,
+   "type": "QUEUE_JOIN",
+   "patientId": "p85",
+   "to": "triage_queue"
+  },
+  {
+   "t": 585.3838307838726,
+   "seq": 1374,
+   "type": "SERVICE_START",
+   "patientId": "p85",
+   "resourceId": "triage-0",
+   "duration": 3.307759254710149,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 586.7530991598941,
+   "seq": 1375,
+   "type": "SERVICE_END",
+   "patientId": "p79",
+   "resourceId": "doctor-2",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 586.7530991598941,
+   "seq": 1376,
+   "type": "SERVICE_START",
+   "patientId": "p81",
+   "resourceId": "doctor-2",
+   "duration": 20.92269219409025,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 586.7530991598941,
+   "seq": 1377,
+   "type": "ROUTED",
+   "patientId": "p79",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 586.7530991598941,
+   "seq": 1378,
+   "type": "MOVE",
+   "patientId": "p79",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 587.2530991598941,
+   "seq": 1379,
+   "type": "DEPARTURE",
+   "patientId": "p79",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 560.9164652771932,
+     "triageWait": 2.6448497006790603,
+     "admissionWait": 5.625444626552621,
+     "doctorWait": 13.1814831824139,
+     "doorToDoctor": 20.04860897130095,
+     "outcome": "alta",
+     "departure": 587.2530991598941
+    },
+    "level": 3,
+    "name": "Rosa Martínez",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 587.4227342807905,
+   "seq": 1380,
+   "type": "ARRIVAL",
+   "patientId": "p86",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p86",
+     "name": "Diana Fuentes",
+     "ageRange": "40-64",
+     "eps": "cesarvida",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 587.4227342807905,
+   "seq": 1381,
+   "type": "MOVE",
+   "patientId": "p86",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 587.9227342807905,
+   "seq": 1382,
+   "type": "QUEUE_JOIN",
+   "patientId": "p86",
+   "to": "triage_queue"
+  },
+  {
+   "t": 587.9227342807905,
+   "seq": 1383,
+   "type": "SERVICE_START",
+   "patientId": "p86",
+   "resourceId": "triage-1",
+   "duration": 2.637146087264095,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 588.5006683653758,
+   "seq": 1384,
+   "type": "SERVICE_END",
+   "patientId": "p72",
+   "resourceId": "doctor-0",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 588.5006683653758,
+   "seq": 1385,
+   "type": "SERVICE_START",
+   "patientId": "p76",
+   "resourceId": "doctor-0",
+   "duration": 31.59910868017933,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 588.5006683653758,
+   "seq": 1386,
+   "type": "ROUTED",
+   "patientId": "p72",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 588.5006683653758,
+   "seq": 1387,
+   "type": "MOVE",
+   "patientId": "p72",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 588.630653905059,
+   "seq": 1388,
+   "type": "SERVICE_END",
+   "patientId": "p80",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 588.630653905059,
+   "seq": 1389,
+   "type": "SERVICE_START",
+   "patientId": "p83",
+   "resourceId": "admission-1",
+   "duration": 8.64391852446958,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 588.630653905059,
+   "seq": 1390,
+   "type": "MOVE",
+   "patientId": "p80",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 588.6915900385827,
+   "seq": 1391,
+   "type": "SERVICE_END",
+   "patientId": "p85",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 588.6915900385827,
+   "seq": 1392,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p85",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 588.6915900385827,
+   "seq": 1393,
+   "type": "MOVE",
+   "patientId": "p85",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 589.0006683653758,
+   "seq": 1394,
+   "type": "DEPARTURE",
+   "patientId": "p72",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 540.2920291751211,
+     "triageWait": 0,
+     "admissionWait": 0.49586484705218936,
+     "doctorWait": 14.73750709475837,
+     "doorToDoctor": 20.734525645798954,
+     "outcome": "alta",
+     "departure": 589.0006683653758
+    },
+    "level": 5,
+    "name": "Andrés Ospino",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 589.130653905059,
+   "seq": 1395,
+   "type": "QUEUE_JOIN",
+   "patientId": "p80",
+   "to": "waiting_room",
+   "data": {
+    "level": 5
+   }
+  },
+  {
+   "t": 589.1915900385827,
+   "seq": 1396,
+   "type": "QUEUE_JOIN",
+   "patientId": "p85",
+   "to": "admission_queue"
+  },
+  {
+   "t": 589.3445377101489,
+   "seq": 1397,
+   "type": "SERVICE_END",
+   "patientId": "p82",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 589.3445377101489,
+   "seq": 1398,
+   "type": "SERVICE_START",
+   "patientId": "p84",
+   "resourceId": "admission-0",
+   "duration": 3.4597377151920323,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 589.3445377101489,
+   "seq": 1399,
+   "type": "MOVE",
+   "patientId": "p82",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 589.8445377101489,
+   "seq": 1400,
+   "type": "QUEUE_JOIN",
+   "patientId": "p82",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 590.5598803680546,
+   "seq": 1401,
+   "type": "SERVICE_END",
+   "patientId": "p86",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 590.5598803680546,
+   "seq": 1402,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p86",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 590.5598803680546,
+   "seq": 1403,
+   "type": "MOVE",
+   "patientId": "p86",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 591.0598803680546,
+   "seq": 1404,
+   "type": "QUEUE_JOIN",
+   "patientId": "p86",
+   "to": "admission_queue"
+  },
+  {
+   "t": 592.8042754253408,
+   "seq": 1405,
+   "type": "SERVICE_END",
+   "patientId": "p84",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 592.8042754253408,
+   "seq": 1406,
+   "type": "SERVICE_START",
+   "patientId": "p85",
+   "resourceId": "admission-0",
+   "duration": 6.8046828249553695,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 592.8042754253408,
+   "seq": 1407,
+   "type": "MOVE",
+   "patientId": "p84",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 592.8988315332236,
+   "seq": 1408,
+   "type": "SERVICE_END",
+   "patientId": "p64",
+   "resourceId": "doctor-3",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 592.8988315332236,
+   "seq": 1409,
+   "type": "SERVICE_START",
+   "patientId": "p82",
+   "resourceId": "doctor-3",
+   "duration": 24.17742547720018,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 592.8988315332236,
+   "seq": 1410,
+   "type": "ROUTED",
+   "patientId": "p64",
+   "data": {
+    "route": "hospitalizacion"
+   }
+  },
+  {
+   "t": 592.8988315332236,
+   "seq": 1411,
+   "type": "MOVE",
+   "patientId": "p64",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 593.3042754253408,
+   "seq": 1412,
+   "type": "QUEUE_JOIN",
+   "patientId": "p84",
+   "to": "waiting_room",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 593.3682293284302,
+   "seq": 1413,
+   "type": "RENEGE",
+   "patientId": "p84",
+   "from": "waiting_room"
+  },
+  {
+   "t": 593.3682293284302,
+   "seq": 1414,
+   "type": "MOVE",
+   "patientId": "p84",
+   "from": "waiting_room",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 593.3988315332236,
+   "seq": 1415,
+   "type": "DEPARTURE",
+   "patientId": "p64",
+   "data": {
+    "outcome": "hospitalizacion",
+    "journey": {
+     "arrival": 516.0291130722168,
+     "triageWait": 0,
+     "admissionWait": 1.493536193757791,
+     "doctorWait": 10.47051369720782,
+     "doorToDoctor": 18.720598686251606,
+     "outcome": "hospitalizacion",
+     "departure": 593.3988315332236
+    },
+    "level": 3,
+    "name": "María Molina",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 593.8682293284302,
+   "seq": 1416,
+   "type": "DEPARTURE",
+   "patientId": "p84",
+   "data": {
+    "outcome": "abandono",
+    "journey": {
+     "arrival": 572.8677313739869,
+     "triageWait": 5.303505560713575,
+     "admissionWait": 6.376835162879047,
+     "outcome": "abandono",
+     "departure": 593.8682293284302
+    },
+    "level": 4,
+    "name": "María Cuello",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 595.6001500464153,
+   "seq": 1417,
+   "type": "BED_RELEASED",
+   "patientId": "p4",
+   "resourceId": "bed-0"
+  },
+  {
+   "t": 595.6001500464153,
+   "seq": 1418,
+   "type": "MOVE",
+   "patientId": "p4",
+   "from": "observation_bed",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 596.1001500464153,
+   "seq": 1419,
+   "type": "DEPARTURE",
+   "patientId": "p4",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 38.61367937447774,
+     "triageWait": 0,
+     "admissionWait": 0,
+     "doctorWait": 8.207578278410118,
+     "doorToDoctor": 11.328631070468319,
+     "observationTime": 527.1309838607982,
+     "outcome": "alta",
+     "departure": 596.1001500464153
+    },
+    "level": 4,
+    "name": "María Fuentes",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 597.2745724295286,
+   "seq": 1420,
+   "type": "SERVICE_END",
+   "patientId": "p83",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 597.2745724295286,
+   "seq": 1421,
+   "type": "SERVICE_START",
+   "patientId": "p86",
+   "resourceId": "admission-1",
+   "duration": 6.919241010596394,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 597.2745724295286,
+   "seq": 1422,
+   "type": "MOVE",
+   "patientId": "p83",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 597.4020862051599,
+   "seq": 1423,
+   "type": "SERVICE_END",
+   "patientId": "p71",
+   "resourceId": "doctor-4",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 597.4020862051599,
+   "seq": 1424,
+   "type": "SERVICE_START",
+   "patientId": "p78",
+   "resourceId": "doctor-4",
+   "duration": 22.785654196499408,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 597.4020862051599,
+   "seq": 1425,
+   "type": "ROUTED",
+   "patientId": "p71",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 597.4020862051599,
+   "seq": 1426,
+   "type": "MOVE",
+   "patientId": "p71",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 597.7745724295286,
+   "seq": 1427,
+   "type": "QUEUE_JOIN",
+   "patientId": "p83",
+   "to": "waiting_room",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 597.9020862051599,
+   "seq": 1428,
+   "type": "DEPARTURE",
+   "patientId": "p71",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 530.7357738048728,
+     "triageWait": 0,
+     "admissionWait": 11.033975768234427,
+     "doctorWait": 20.373082809631796,
+     "doorToDoctor": 24.957919909096745,
+     "outcome": "alta",
+     "departure": 597.9020862051599
+    },
+    "level": 4,
+    "name": "Andrés Ospino",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 599.6089582502963,
+   "seq": 1429,
+   "type": "SERVICE_END",
+   "patientId": "p85",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 599.6089582502963,
+   "seq": 1430,
+   "type": "MOVE",
+   "patientId": "p85",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 600.1089582502963,
+   "seq": 1431,
+   "type": "QUEUE_JOIN",
+   "patientId": "p85",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 601.0506014125278,
+   "seq": 1432,
+   "type": "SERVICE_END",
+   "patientId": "p75",
+   "resourceId": "doctor-1",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 601.0506014125278,
+   "seq": 1433,
+   "type": "SERVICE_START",
+   "patientId": "p85",
+   "resourceId": "doctor-1",
+   "duration": 23.906783935116845,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 601.0506014125278,
+   "seq": 1434,
+   "type": "ROUTED",
+   "patientId": "p75",
+   "data": {
+    "route": "observacion"
+   }
+  },
+  {
+   "t": 601.0506014125278,
+   "seq": 1435,
+   "type": "MOVE",
+   "patientId": "p75",
+   "from": "doctor_box",
+   "to": "observation_bed",
+   "duration": 0.5
+  },
+  {
+   "t": 601.5157315612586,
+   "seq": 1436,
+   "type": "SERVICE_END",
+   "patientId": "p77",
+   "resourceId": "doctor-5",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 601.5157315612586,
+   "seq": 1437,
+   "type": "SERVICE_START",
+   "patientId": "p83",
+   "resourceId": "doctor-5",
+   "duration": 26.554626741149214,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 601.5157315612586,
+   "seq": 1438,
+   "type": "ROUTED",
+   "patientId": "p77",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 601.5157315612586,
+   "seq": 1439,
+   "type": "MOVE",
+   "patientId": "p77",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 601.5506014125278,
+   "seq": 1440,
+   "type": "BED_ASSIGNED",
+   "patientId": "p75",
+   "resourceId": "bed-0",
+   "duration": 86.5182975819404
+  },
+  {
+   "t": 602.0157315612586,
+   "seq": 1441,
+   "type": "DEPARTURE",
+   "patientId": "p77",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 559.5365050657958,
+     "triageWait": 0,
+     "admissionWait": 4.367104288506766,
+     "doctorWait": 12.859598612298214,
+     "doorToDoctor": 19.662933804067052,
+     "outcome": "alta",
+     "departure": 602.0157315612586
+    },
+    "level": 3,
+    "name": "Iván Molina",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 603.715552178578,
+   "seq": 1442,
+   "type": "ARRIVAL",
+   "patientId": "p87",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p87",
+     "name": "Rosa Molina",
+     "ageRange": "40-64",
+     "eps": "cesarvida",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 603.715552178578,
+   "seq": 1443,
+   "type": "MOVE",
+   "patientId": "p87",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 604.1938134401249,
+   "seq": 1444,
+   "type": "SERVICE_END",
+   "patientId": "p86",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 604.1938134401249,
+   "seq": 1445,
+   "type": "MOVE",
+   "patientId": "p86",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 604.215552178578,
+   "seq": 1446,
+   "type": "QUEUE_JOIN",
+   "patientId": "p87",
+   "to": "triage_queue"
+  },
+  {
+   "t": 604.215552178578,
+   "seq": 1447,
+   "type": "SERVICE_START",
+   "patientId": "p87",
+   "resourceId": "triage-0",
+   "duration": 2.843818041519262,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 604.6938134401249,
+   "seq": 1448,
+   "type": "QUEUE_JOIN",
+   "patientId": "p86",
+   "to": "waiting_room",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 606.7857802852616,
+   "seq": 1449,
+   "type": "ARRIVAL",
+   "patientId": "p88",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p88",
+     "name": "Rafael Cuello",
+     "ageRange": "0-17",
+     "eps": "vallenata",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 606.7857802852616,
+   "seq": 1450,
+   "type": "MOVE",
+   "patientId": "p88",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 607.0593702200973,
+   "seq": 1451,
+   "type": "SERVICE_END",
+   "patientId": "p87",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 607.0593702200973,
+   "seq": 1452,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p87",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 607.0593702200973,
+   "seq": 1453,
+   "type": "MOVE",
+   "patientId": "p87",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 607.2857802852616,
+   "seq": 1454,
+   "type": "QUEUE_JOIN",
+   "patientId": "p88",
+   "to": "triage_queue"
+  },
+  {
+   "t": 607.2857802852616,
+   "seq": 1455,
+   "type": "SERVICE_START",
+   "patientId": "p88",
+   "resourceId": "triage-0",
+   "duration": 4.0474700742780785,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 607.5593702200973,
+   "seq": 1456,
+   "type": "QUEUE_JOIN",
+   "patientId": "p87",
+   "to": "admission_queue"
+  },
+  {
+   "t": 607.5593702200973,
+   "seq": 1457,
+   "type": "SERVICE_START",
+   "patientId": "p87",
+   "resourceId": "admission-0",
+   "duration": 3.48420611228058,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 607.6757913539843,
+   "seq": 1458,
+   "type": "SERVICE_END",
+   "patientId": "p81",
+   "resourceId": "doctor-2",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 607.6757913539843,
+   "seq": 1459,
+   "type": "SERVICE_START",
+   "patientId": "p86",
+   "resourceId": "doctor-2",
+   "duration": 34.693023209634504,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 607.6757913539843,
+   "seq": 1460,
+   "type": "ROUTED",
+   "patientId": "p81",
+   "data": {
+    "route": "observacion"
+   }
+  },
+  {
+   "t": 607.6757913539843,
+   "seq": 1461,
+   "type": "MOVE",
+   "patientId": "p81",
+   "from": "doctor_box",
+   "to": "observation_bed",
+   "duration": 0.5
+  },
+  {
+   "t": 608.1757913539843,
+   "seq": 1462,
+   "type": "BED_ASSIGNED",
+   "patientId": "p81",
+   "resourceId": "bed-1",
+   "duration": 160.77794704015065
+  },
+  {
+   "t": 608.374308990756,
+   "seq": 1463,
+   "type": "ARRIVAL",
+   "patientId": "p89",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p89",
+     "name": "Ana Zuleta",
+     "ageRange": "0-17",
+     "eps": "cesarvida",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 608.374308990756,
+   "seq": 1464,
+   "type": "MOVE",
+   "patientId": "p89",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 608.874308990756,
+   "seq": 1465,
+   "type": "QUEUE_JOIN",
+   "patientId": "p89",
+   "to": "triage_queue"
+  },
+  {
+   "t": 608.874308990756,
+   "seq": 1466,
+   "type": "SERVICE_START",
+   "patientId": "p89",
+   "resourceId": "triage-1",
+   "duration": 4.87850015478693,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 609.4285789981758,
+   "seq": 1467,
+   "type": "ARRIVAL",
+   "patientId": "p90",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p90",
+     "name": "Jorge Daza",
+     "ageRange": "40-64",
+     "eps": "vallenata",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 609.4285789981758,
+   "seq": 1468,
+   "type": "MOVE",
+   "patientId": "p90",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 609.9227994670762,
+   "seq": 1469,
+   "type": "ARRIVAL",
+   "patientId": "p91",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p91",
+     "name": "Hernán Araújo",
+     "ageRange": "40-64",
+     "eps": "guatapuri",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 609.9227994670762,
+   "seq": 1470,
+   "type": "MOVE",
+   "patientId": "p91",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 609.9285789981758,
+   "seq": 1471,
+   "type": "QUEUE_JOIN",
+   "patientId": "p90",
+   "to": "triage_queue"
+  },
+  {
+   "t": 610.4227994670762,
+   "seq": 1472,
+   "type": "QUEUE_JOIN",
+   "patientId": "p91",
+   "to": "triage_queue"
+  },
+  {
+   "t": 611.0435763323779,
+   "seq": 1473,
+   "type": "SERVICE_END",
+   "patientId": "p87",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 611.0435763323779,
+   "seq": 1474,
+   "type": "MOVE",
+   "patientId": "p87",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 611.3332503595396,
+   "seq": 1475,
+   "type": "SERVICE_END",
+   "patientId": "p88",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 611.3332503595396,
+   "seq": 1476,
+   "type": "SERVICE_START",
+   "patientId": "p90",
+   "resourceId": "triage-0",
+   "duration": 9.756257618010139,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 611.3332503595396,
+   "seq": 1477,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p88",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 611.3332503595396,
+   "seq": 1478,
+   "type": "MOVE",
+   "patientId": "p88",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 611.5435763323779,
+   "seq": 1479,
+   "type": "QUEUE_JOIN",
+   "patientId": "p87",
+   "to": "waiting_room",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 611.8332503595396,
+   "seq": 1480,
+   "type": "QUEUE_JOIN",
+   "patientId": "p88",
+   "to": "admission_queue"
+  },
+  {
+   "t": 611.8332503595396,
+   "seq": 1481,
+   "type": "SERVICE_START",
+   "patientId": "p88",
+   "resourceId": "admission-0",
+   "duration": 5.007963122731569,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 612.3850394052903,
+   "seq": 1482,
+   "type": "ARRIVAL",
+   "patientId": "p92",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p92",
+     "name": "Ana Durán",
+     "ageRange": "65+",
+     "eps": "sierra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 612.3850394052903,
+   "seq": 1483,
+   "type": "MOVE",
+   "patientId": "p92",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 612.8850394052903,
+   "seq": 1484,
+   "type": "QUEUE_JOIN",
+   "patientId": "p92",
+   "to": "triage_queue"
+  },
+  {
+   "t": 613.752809145543,
+   "seq": 1485,
+   "type": "SERVICE_END",
+   "patientId": "p89",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 613.752809145543,
+   "seq": 1486,
+   "type": "SERVICE_START",
+   "patientId": "p91",
+   "resourceId": "triage-1",
+   "duration": 7.226566797373882,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 613.752809145543,
+   "seq": 1487,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p89",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 613.752809145543,
+   "seq": 1488,
+   "type": "MOVE",
+   "patientId": "p89",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 614.252809145543,
+   "seq": 1489,
+   "type": "QUEUE_JOIN",
+   "patientId": "p89",
+   "to": "admission_queue"
+  },
+  {
+   "t": 614.252809145543,
+   "seq": 1490,
+   "type": "SERVICE_START",
+   "patientId": "p89",
+   "resourceId": "admission-1",
+   "duration": 4.641047359281503,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 616.6657511049376,
+   "seq": 1491,
+   "type": "ARRIVAL",
+   "patientId": "p93",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p93",
+     "name": "Jorge Castro",
+     "ageRange": "18-39",
+     "eps": "vallenata",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 616.6657511049376,
+   "seq": 1492,
+   "type": "MOVE",
+   "patientId": "p93",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 616.8412134822712,
+   "seq": 1493,
+   "type": "SERVICE_END",
+   "patientId": "p88",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 616.8412134822712,
+   "seq": 1494,
+   "type": "MOVE",
+   "patientId": "p88",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 617.0762570104238,
+   "seq": 1495,
+   "type": "SERVICE_END",
+   "patientId": "p82",
+   "resourceId": "doctor-3",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 617.0762570104238,
+   "seq": 1496,
+   "type": "SERVICE_START",
+   "patientId": "p87",
+   "resourceId": "doctor-3",
+   "duration": 36.987295515853916,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 617.0762570104238,
+   "seq": 1497,
+   "type": "ROUTED",
+   "patientId": "p82",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 617.0762570104238,
+   "seq": 1498,
+   "type": "MOVE",
+   "patientId": "p82",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 617.154209049391,
+   "seq": 1499,
+   "type": "ARRIVAL",
+   "patientId": "p94",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p94",
+     "name": "Marta Maestre",
+     "ageRange": "18-39",
+     "eps": "sierra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 617.154209049391,
+   "seq": 1500,
+   "type": "MOVE",
+   "patientId": "p94",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 617.1657511049376,
+   "seq": 1501,
+   "type": "QUEUE_JOIN",
+   "patientId": "p93",
+   "to": "triage_queue"
+  },
+  {
+   "t": 617.3412134822712,
+   "seq": 1502,
+   "type": "QUEUE_JOIN",
+   "patientId": "p88",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 617.5762570104238,
+   "seq": 1503,
+   "type": "DEPARTURE",
+   "patientId": "p82",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 570.8861917964474,
+     "triageWait": 3.007500170430376,
+     "admissionWait": 4.743425086910634,
+     "doctorWait": 14.227594598523183,
+     "doorToDoctor": 22.012639736776237,
+     "outcome": "alta",
+     "departure": 617.5762570104238
+    },
+    "level": 3,
+    "name": "Diomedes Arias",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 617.654209049391,
+   "seq": 1504,
+   "type": "QUEUE_JOIN",
+   "patientId": "p94",
+   "to": "triage_queue"
+  },
+  {
+   "t": 618.8938565048245,
+   "seq": 1505,
+   "type": "SERVICE_END",
+   "patientId": "p89",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 618.8938565048245,
+   "seq": 1506,
+   "type": "MOVE",
+   "patientId": "p89",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 619.3938565048245,
+   "seq": 1507,
+   "type": "QUEUE_JOIN",
+   "patientId": "p89",
+   "to": "waiting_room",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 620.0997770455551,
+   "seq": 1508,
+   "type": "SERVICE_END",
+   "patientId": "p76",
+   "resourceId": "doctor-0",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 620.0997770455551,
+   "seq": 1509,
+   "type": "SERVICE_START",
+   "patientId": "p88",
+   "resourceId": "doctor-0",
+   "duration": 37.23664294757317,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 620.0997770455551,
+   "seq": 1510,
+   "type": "ROUTED",
+   "patientId": "p76",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 620.0997770455551,
+   "seq": 1511,
+   "type": "MOVE",
+   "patientId": "p76",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 620.1877404016593,
+   "seq": 1512,
+   "type": "SERVICE_END",
+   "patientId": "p78",
+   "resourceId": "doctor-4",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 620.1877404016593,
+   "seq": 1513,
+   "type": "SERVICE_START",
+   "patientId": "p89",
+   "resourceId": "doctor-4",
+   "duration": 14.719403414225104,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 620.1877404016593,
+   "seq": 1514,
+   "type": "ROUTED",
+   "patientId": "p78",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 620.1877404016593,
+   "seq": 1515,
+   "type": "MOVE",
+   "patientId": "p78",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 620.5997770455551,
+   "seq": 1516,
+   "type": "DEPARTURE",
+   "patientId": "p76",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 558.4193727305003,
+     "triageWait": 0,
+     "admissionWait": 1.7328662051548918,
+     "doctorWait": 27.119453558665214,
+     "doorToDoctor": 30.08129563487546,
+     "outcome": "alta",
+     "departure": 620.5997770455551
+    },
+    "level": 4,
+    "name": "Diomedes Araújo",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 620.6877404016593,
+   "seq": 1517,
+   "type": "DEPARTURE",
+   "patientId": "p78",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 559.7459691288879,
+     "triageWait": 1.1352456778226951,
+     "admissionWait": 4.084774441050627,
+     "doctorWait": 33.34077122728763,
+     "doorToDoctor": 37.65611707627204,
+     "outcome": "alta",
+     "departure": 620.6877404016593
+    },
+    "level": 4,
+    "name": "Marta Arias",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 620.7336275613596,
+   "seq": 1518,
+   "type": "ARRIVAL",
+   "patientId": "p95",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p95",
+     "name": "Iván Zuleta",
+     "ageRange": "0-17",
+     "eps": "vallenata",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 620.7336275613596,
+   "seq": 1519,
+   "type": "MOVE",
+   "patientId": "p95",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 620.9793759429168,
+   "seq": 1520,
+   "type": "SERVICE_END",
+   "patientId": "p91",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 620.9793759429168,
+   "seq": 1521,
+   "type": "SERVICE_START",
+   "patientId": "p92",
+   "resourceId": "triage-1",
+   "duration": 5.7938019095407185,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 620.9793759429168,
+   "seq": 1522,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p91",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 620.9793759429168,
+   "seq": 1523,
+   "type": "MOVE",
+   "patientId": "p91",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 621.0895079775498,
+   "seq": 1524,
+   "type": "SERVICE_END",
+   "patientId": "p90",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 621.0895079775498,
+   "seq": 1525,
+   "type": "SERVICE_START",
+   "patientId": "p93",
+   "resourceId": "triage-0",
+   "duration": 2.2732190605686826,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 621.0895079775498,
+   "seq": 1526,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p90",
+   "data": {
+    "level": 2
+   }
+  },
+  {
+   "t": 621.0895079775498,
+   "seq": 1527,
+   "type": "MOVE",
+   "patientId": "p90",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 621.2336275613596,
+   "seq": 1528,
+   "type": "QUEUE_JOIN",
+   "patientId": "p95",
+   "to": "triage_queue"
+  },
+  {
+   "t": 621.2506188725255,
+   "seq": 1529,
+   "type": "ARRIVAL",
+   "patientId": "p96",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p96",
+     "name": "Jorge Castro",
+     "ageRange": "65+",
+     "eps": "guatapuri",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 621.2506188725255,
+   "seq": 1530,
+   "type": "MOVE",
+   "patientId": "p96",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 621.4793759429168,
+   "seq": 1531,
+   "type": "QUEUE_JOIN",
+   "patientId": "p91",
+   "to": "admission_queue"
+  },
+  {
+   "t": 621.4793759429168,
+   "seq": 1532,
+   "type": "SERVICE_START",
+   "patientId": "p91",
+   "resourceId": "admission-0",
+   "duration": 6.201344081395311,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 621.5895079775498,
+   "seq": 1533,
+   "type": "QUEUE_JOIN",
+   "patientId": "p90",
+   "to": "admission_queue"
+  },
+  {
+   "t": 621.5895079775498,
+   "seq": 1534,
+   "type": "SERVICE_START",
+   "patientId": "p90",
+   "resourceId": "admission-1",
+   "duration": 5.0760181200318835,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 621.7506188725255,
+   "seq": 1535,
+   "type": "QUEUE_JOIN",
+   "patientId": "p96",
+   "to": "triage_queue"
+  },
+  {
+   "t": 623.3627270381185,
+   "seq": 1536,
+   "type": "SERVICE_END",
+   "patientId": "p93",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 623.3627270381185,
+   "seq": 1537,
+   "type": "SERVICE_START",
+   "patientId": "p94",
+   "resourceId": "triage-0",
+   "duration": 2.4461079273273914,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 623.3627270381185,
+   "seq": 1538,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p93",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 623.3627270381185,
+   "seq": 1539,
+   "type": "MOVE",
+   "patientId": "p93",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 623.7274434386687,
+   "seq": 1540,
+   "type": "ARRIVAL",
+   "patientId": "p97",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p97",
+     "name": "Alfredo Durán",
+     "ageRange": "18-39",
+     "eps": "guatapuri",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 623.7274434386687,
+   "seq": 1541,
+   "type": "MOVE",
+   "patientId": "p97",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 623.8627270381185,
+   "seq": 1542,
+   "type": "QUEUE_JOIN",
+   "patientId": "p93",
+   "to": "admission_queue"
+  },
+  {
+   "t": 624.2274434386687,
+   "seq": 1543,
+   "type": "QUEUE_JOIN",
+   "patientId": "p97",
+   "to": "triage_queue"
+  },
+  {
+   "t": 624.9573853476447,
+   "seq": 1544,
+   "type": "SERVICE_END",
+   "patientId": "p85",
+   "resourceId": "doctor-1",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 624.9573853476447,
+   "seq": 1545,
+   "type": "SERVICE_START",
+   "patientId": "p80",
+   "resourceId": "doctor-1",
+   "duration": 19.45561954698231,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 624.9573853476447,
+   "seq": 1546,
+   "type": "ROUTED",
+   "patientId": "p85",
+   "data": {
+    "route": "remision"
+   }
+  },
+  {
+   "t": 624.9573853476447,
+   "seq": 1547,
+   "type": "MOVE",
+   "patientId": "p85",
+   "from": "doctor_box",
+   "to": "hallway",
+   "duration": 0.5
+  },
+  {
+   "t": 625.4573853476447,
+   "seq": 1548,
+   "type": "HALLWAY_WAIT",
+   "patientId": "p85",
+   "data": {
+    "reason": "complejidad"
+   }
+  },
+  {
+   "t": 625.4573853476447,
+   "seq": 1549,
+   "type": "TRANSFER_START",
+   "patientId": "p85",
+   "resourceId": "amb-0",
+   "from": "ambulance_bay",
+   "to": "clinic_0",
+   "duration": 12.164721067634371,
+   "data": {
+    "clinic": "Clínica Río Claro"
+   }
+  },
+  {
+   "t": 625.8088349654458,
+   "seq": 1550,
+   "type": "SERVICE_END",
+   "patientId": "p94",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 625.8088349654458,
+   "seq": 1551,
+   "type": "SERVICE_START",
+   "patientId": "p95",
+   "resourceId": "triage-0",
+   "duration": 1.8719874205632732,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 625.8088349654458,
+   "seq": 1552,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p94",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 625.8088349654458,
+   "seq": 1553,
+   "type": "MOVE",
+   "patientId": "p94",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 626.3088349654458,
+   "seq": 1554,
+   "type": "QUEUE_JOIN",
+   "patientId": "p94",
+   "to": "admission_queue"
+  },
+  {
+   "t": 626.6655260975817,
+   "seq": 1555,
+   "type": "SERVICE_END",
+   "patientId": "p90",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 626.6655260975817,
+   "seq": 1556,
+   "type": "SERVICE_START",
+   "patientId": "p93",
+   "resourceId": "admission-1",
+   "duration": 3.8818142476112776,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 626.6655260975817,
+   "seq": 1557,
+   "type": "MOVE",
+   "patientId": "p90",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 626.7731778524576,
+   "seq": 1558,
+   "type": "SERVICE_END",
+   "patientId": "p92",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 626.7731778524576,
+   "seq": 1559,
+   "type": "SERVICE_START",
+   "patientId": "p96",
+   "resourceId": "triage-1",
+   "duration": 6.928445185487026,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 626.7731778524576,
+   "seq": 1560,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p92",
+   "data": {
+    "level": 2
+   }
+  },
+  {
+   "t": 626.7731778524576,
+   "seq": 1561,
+   "type": "MOVE",
+   "patientId": "p92",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 627.1655260975817,
+   "seq": 1562,
+   "type": "QUEUE_JOIN",
+   "patientId": "p90",
+   "to": "waiting_room",
+   "data": {
+    "level": 2
+   }
+  },
+  {
+   "t": 627.2731778524576,
+   "seq": 1563,
+   "type": "QUEUE_JOIN",
+   "patientId": "p92",
+   "to": "admission_queue"
+  },
+  {
+   "t": 627.6807200243121,
+   "seq": 1564,
+   "type": "SERVICE_END",
+   "patientId": "p91",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 627.6807200243121,
+   "seq": 1565,
+   "type": "SERVICE_START",
+   "patientId": "p94",
+   "resourceId": "admission-0",
+   "duration": 5.802768078843814,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 627.6807200243121,
+   "seq": 1566,
+   "type": "MOVE",
+   "patientId": "p91",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 627.6808223860091,
+   "seq": 1567,
+   "type": "SERVICE_END",
+   "patientId": "p95",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 627.6808223860091,
+   "seq": 1568,
+   "type": "SERVICE_START",
+   "patientId": "p97",
+   "resourceId": "triage-0",
+   "duration": 4.173949052115526,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 627.6808223860091,
+   "seq": 1569,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p95",
+   "data": {
+    "level": 2
+   }
+  },
+  {
+   "t": 627.6808223860091,
+   "seq": 1570,
+   "type": "MOVE",
+   "patientId": "p95",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 627.7859907687521,
+   "seq": 1571,
+   "type": "ARRIVAL",
+   "patientId": "p98",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p98",
+     "name": "Paola Mendoza",
+     "ageRange": "65+",
+     "eps": "sierra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 627.7859907687521,
+   "seq": 1572,
+   "type": "MOVE",
+   "patientId": "p98",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 628.0092542017002,
+   "seq": 1573,
+   "type": "ARRIVAL",
+   "patientId": "p99",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p99",
+     "name": "Rosa Gutiérrez",
+     "ageRange": "18-39",
+     "eps": "vallenata",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 628.0092542017002,
+   "seq": 1574,
+   "type": "MOVE",
+   "patientId": "p99",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 628.0703583024078,
+   "seq": 1575,
+   "type": "SERVICE_END",
+   "patientId": "p83",
+   "resourceId": "doctor-5",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 628.0703583024078,
+   "seq": 1576,
+   "type": "SERVICE_START",
+   "patientId": "p90",
+   "resourceId": "doctor-5",
+   "duration": 9.687948621403237,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 628.0703583024078,
+   "seq": 1577,
+   "type": "ROUTED",
+   "patientId": "p83",
+   "data": {
+    "route": "observacion"
+   }
+  },
+  {
+   "t": 628.0703583024078,
+   "seq": 1578,
+   "type": "MOVE",
+   "patientId": "p83",
+   "from": "doctor_box",
+   "to": "observation_bed",
+   "duration": 0.5
+  },
+  {
+   "t": 628.1807200243121,
+   "seq": 1579,
+   "type": "QUEUE_JOIN",
+   "patientId": "p91",
+   "to": "waiting_room",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 628.1808223860091,
+   "seq": 1580,
+   "type": "QUEUE_JOIN",
+   "patientId": "p95",
+   "to": "admission_queue"
+  },
+  {
+   "t": 628.2859907687521,
+   "seq": 1581,
+   "type": "QUEUE_JOIN",
+   "patientId": "p98",
+   "to": "triage_queue"
+  },
+  {
+   "t": 628.5092542017002,
+   "seq": 1582,
+   "type": "QUEUE_JOIN",
+   "patientId": "p99",
+   "to": "triage_queue"
+  },
+  {
+   "t": 628.5703583024078,
+   "seq": 1583,
+   "type": "BED_ASSIGNED",
+   "patientId": "p83",
+   "resourceId": "bed-11",
+   "duration": 273.4816512496277
+  },
+  {
+   "t": 630.3780891364167,
+   "seq": 1584,
+   "type": "ARRIVAL",
+   "patientId": "p100",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p100",
+     "name": "Luz Romero",
+     "ageRange": "65+",
+     "eps": "vallenata",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 630.3780891364167,
+   "seq": 1585,
+   "type": "MOVE",
+   "patientId": "p100",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 630.547340345193,
+   "seq": 1586,
+   "type": "SERVICE_END",
+   "patientId": "p93",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 630.547340345193,
+   "seq": 1587,
+   "type": "SERVICE_START",
+   "patientId": "p92",
+   "resourceId": "admission-1",
+   "duration": 4.642423267597193,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 630.547340345193,
+   "seq": 1588,
+   "type": "MOVE",
+   "patientId": "p93",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 630.6253562441226,
+   "seq": 1589,
+   "type": "ARRIVAL",
+   "patientId": "p101",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p101",
+     "name": "Sandra Maestre",
+     "ageRange": "18-39",
+     "eps": "vallenata",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 630.6253562441226,
+   "seq": 1590,
+   "type": "MOVE",
+   "patientId": "p101",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 630.8780891364167,
+   "seq": 1591,
+   "type": "QUEUE_JOIN",
+   "patientId": "p100",
+   "to": "triage_queue"
+  },
+  {
+   "t": 631.047340345193,
+   "seq": 1592,
+   "type": "QUEUE_JOIN",
+   "patientId": "p93",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 631.1253562441226,
+   "seq": 1593,
+   "type": "QUEUE_JOIN",
+   "patientId": "p101",
+   "to": "triage_queue"
+  },
+  {
+   "t": 631.8547714381247,
+   "seq": 1594,
+   "type": "SERVICE_END",
+   "patientId": "p97",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 631.8547714381247,
+   "seq": 1595,
+   "type": "SERVICE_START",
+   "patientId": "p98",
+   "resourceId": "triage-0",
+   "duration": 2.889824101069232,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 631.8547714381247,
+   "seq": 1596,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p97",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 631.8547714381247,
+   "seq": 1597,
+   "type": "MOVE",
+   "patientId": "p97",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 632.3547714381247,
+   "seq": 1598,
+   "type": "QUEUE_JOIN",
+   "patientId": "p97",
+   "to": "admission_queue"
+  },
+  {
+   "t": 632.807968898149,
+   "seq": 1599,
+   "type": "ARRIVAL",
+   "patientId": "p102",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p102",
+     "name": "Yesenia Romero",
+     "ageRange": "18-39",
+     "eps": "sierra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 632.807968898149,
+   "seq": 1600,
+   "type": "MOVE",
+   "patientId": "p102",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 632.8660794409365,
+   "seq": 1601,
+   "type": "ARRIVAL",
+   "patientId": "p103",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p103",
+     "name": "Jorge Maestre",
+     "ageRange": "18-39",
+     "eps": "sierra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 632.8660794409365,
+   "seq": 1602,
+   "type": "MOVE",
+   "patientId": "p103",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 632.8852918804512,
+   "seq": 1603,
+   "type": "ARRIVAL",
+   "patientId": "p104",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p104",
+     "name": "Luz Maestre",
+     "ageRange": "18-39",
+     "eps": "sierra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 632.8852918804512,
+   "seq": 1604,
+   "type": "MOVE",
+   "patientId": "p104",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 633.307968898149,
+   "seq": 1605,
+   "type": "QUEUE_JOIN",
+   "patientId": "p102",
+   "to": "triage_queue"
+  },
+  {
+   "t": 633.3660794409365,
+   "seq": 1606,
+   "type": "QUEUE_JOIN",
+   "patientId": "p103",
+   "to": "triage_queue"
+  },
+  {
+   "t": 633.3852918804512,
+   "seq": 1607,
+   "type": "QUEUE_JOIN",
+   "patientId": "p104",
+   "to": "triage_queue"
+  },
+  {
+   "t": 633.4834881031559,
+   "seq": 1608,
+   "type": "SERVICE_END",
+   "patientId": "p94",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 633.4834881031559,
+   "seq": 1609,
+   "type": "SERVICE_START",
+   "patientId": "p95",
+   "resourceId": "admission-0",
+   "duration": 5.8871041490606535,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 633.4834881031559,
+   "seq": 1610,
+   "type": "MOVE",
+   "patientId": "p94",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 633.7016230379446,
+   "seq": 1611,
+   "type": "SERVICE_END",
+   "patientId": "p96",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 633.7016230379446,
+   "seq": 1612,
+   "type": "SERVICE_START",
+   "patientId": "p99",
+   "resourceId": "triage-1",
+   "duration": 4.360326918941627,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 633.7016230379446,
+   "seq": 1613,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p96",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 633.7016230379446,
+   "seq": 1614,
+   "type": "MOVE",
+   "patientId": "p96",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 633.9834881031559,
+   "seq": 1615,
+   "type": "QUEUE_JOIN",
+   "patientId": "p94",
+   "to": "waiting_room",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 634.2016230379446,
+   "seq": 1616,
+   "type": "QUEUE_JOIN",
+   "patientId": "p96",
+   "to": "admission_queue"
+  },
+  {
+   "t": 634.7445955391939,
+   "seq": 1617,
+   "type": "SERVICE_END",
+   "patientId": "p98",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 634.7445955391939,
+   "seq": 1618,
+   "type": "SERVICE_START",
+   "patientId": "p100",
+   "resourceId": "triage-0",
+   "duration": 2.1406155478016147,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 634.7445955391939,
+   "seq": 1619,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p98",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 634.7445955391939,
+   "seq": 1620,
+   "type": "MOVE",
+   "patientId": "p98",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 634.9071438158844,
+   "seq": 1621,
+   "type": "SERVICE_END",
+   "patientId": "p89",
+   "resourceId": "doctor-4",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 634.9071438158844,
+   "seq": 1622,
+   "type": "SERVICE_START",
+   "patientId": "p93",
+   "resourceId": "doctor-4",
+   "duration": 5.977499553967019,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 634.9071438158844,
+   "seq": 1623,
+   "type": "ROUTED",
+   "patientId": "p89",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 634.9071438158844,
+   "seq": 1624,
+   "type": "MOVE",
+   "patientId": "p89",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 635.1897636127902,
+   "seq": 1625,
+   "type": "SERVICE_END",
+   "patientId": "p92",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 635.1897636127902,
+   "seq": 1626,
+   "type": "SERVICE_START",
+   "patientId": "p97",
+   "resourceId": "admission-1",
+   "duration": 5.360733063430296,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 635.1897636127902,
+   "seq": 1627,
+   "type": "MOVE",
+   "patientId": "p92",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 635.2445955391939,
+   "seq": 1628,
+   "type": "QUEUE_JOIN",
+   "patientId": "p98",
+   "to": "admission_queue"
+  },
+  {
+   "t": 635.4071438158844,
+   "seq": 1629,
+   "type": "DEPARTURE",
+   "patientId": "p89",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 608.374308990756,
+     "triageWait": 0,
+     "admissionWait": 0,
+     "doctorWait": 6.434931256116329,
+     "doorToDoctor": 11.813431410903263,
+     "outcome": "alta",
+     "departure": 635.4071438158844
+    },
+    "level": 4,
+    "name": "Ana Zuleta",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 635.6897636127902,
+   "seq": 1630,
+   "type": "QUEUE_JOIN",
+   "patientId": "p92",
+   "to": "waiting_room",
+   "data": {
+    "level": 2
+   }
+  },
+  {
+   "t": 636.2207864434546,
+   "seq": 1631,
+   "type": "ARRIVAL",
+   "patientId": "p105",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p105",
+     "name": "Karen Mendoza",
+     "ageRange": "18-39",
+     "eps": "sierra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 636.2207864434546,
+   "seq": 1632,
+   "type": "MOVE",
+   "patientId": "p105",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 636.7207864434546,
+   "seq": 1633,
+   "type": "QUEUE_JOIN",
+   "patientId": "p105",
+   "to": "triage_queue"
+  },
+  {
+   "t": 636.8852110869956,
+   "seq": 1634,
+   "type": "SERVICE_END",
+   "patientId": "p100",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 636.8852110869956,
+   "seq": 1635,
+   "type": "SERVICE_START",
+   "patientId": "p101",
+   "resourceId": "triage-0",
+   "duration": 6.8262157610791,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 636.8852110869956,
+   "seq": 1636,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p100",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 636.8852110869956,
+   "seq": 1637,
+   "type": "MOVE",
+   "patientId": "p100",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 637.2727572372839,
+   "seq": 1638,
+   "type": "ARRIVAL",
+   "patientId": "p106",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p106",
+     "name": "Daniela Maestre",
+     "ageRange": "40-64",
+     "eps": "otra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 637.2727572372839,
+   "seq": 1639,
+   "type": "MOVE",
+   "patientId": "p106",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 637.3852110869956,
+   "seq": 1640,
+   "type": "QUEUE_JOIN",
+   "patientId": "p100",
+   "to": "admission_queue"
+  },
+  {
+   "t": 637.6221064152791,
+   "seq": 1641,
+   "type": "TRANSFER_END",
+   "patientId": "p85",
+   "resourceId": "amb-0",
+   "to": "clinic_0"
+  },
+  {
+   "t": 637.6221064152791,
+   "seq": 1642,
+   "type": "DEPARTURE",
+   "patientId": "p85",
+   "data": {
+    "outcome": "remitido",
+    "journey": {
+     "arrival": 584.8838307838726,
+     "triageWait": 0,
+     "admissionWait": 3.6126853867581303,
+     "doctorWait": 12.359011373945123,
+     "doorToDoctor": 16.166770628655286,
+     "hallwayWait": 0,
+     "clinic": "Clínica Río Claro",
+     "outcome": "remitido",
+     "departure": 637.6221064152791
+    },
+    "level": 3,
+    "name": "Rafael Castro",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 637.7583069238111,
+   "seq": 1643,
+   "type": "SERVICE_END",
+   "patientId": "p90",
+   "resourceId": "doctor-5",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 637.7583069238111,
+   "seq": 1644,
+   "type": "SERVICE_START",
+   "patientId": "p92",
+   "resourceId": "doctor-5",
+   "duration": 7.037563506219938,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 637.7583069238111,
+   "seq": 1645,
+   "type": "ROUTED",
+   "patientId": "p90",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 637.7583069238111,
+   "seq": 1646,
+   "type": "MOVE",
+   "patientId": "p90",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 637.7727572372839,
+   "seq": 1647,
+   "type": "QUEUE_JOIN",
+   "patientId": "p106",
+   "to": "triage_queue"
+  },
+  {
+   "t": 638.0619499568862,
+   "seq": 1648,
+   "type": "SERVICE_END",
+   "patientId": "p99",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 638.0619499568862,
+   "seq": 1649,
+   "type": "SERVICE_START",
+   "patientId": "p102",
+   "resourceId": "triage-1",
+   "duration": 4.653326114042162,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 638.0619499568862,
+   "seq": 1650,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p99",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 638.0619499568862,
+   "seq": 1651,
+   "type": "MOVE",
+   "patientId": "p99",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 638.2583069238111,
+   "seq": 1652,
+   "type": "DEPARTURE",
+   "patientId": "p90",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 609.4285789981758,
+     "triageWait": 1.404671361363853,
+     "admissionWait": 0,
+     "doctorWait": 6.980850324858011,
+     "doorToDoctor": 18.641779304232045,
+     "outcome": "alta",
+     "departure": 638.2583069238111
+    },
+    "level": 2,
+    "name": "Jorge Daza",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 638.4576605928434,
+   "seq": 1653,
+   "type": "ARRIVAL",
+   "patientId": "p107",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p107",
+     "name": "Rosa Zuleta",
+     "ageRange": "18-39",
+     "eps": "sierra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 638.4576605928434,
+   "seq": 1654,
+   "type": "MOVE",
+   "patientId": "p107",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 638.5619499568862,
+   "seq": 1655,
+   "type": "QUEUE_JOIN",
+   "patientId": "p99",
+   "to": "admission_queue"
+  },
+  {
+   "t": 638.9576605928434,
+   "seq": 1656,
+   "type": "QUEUE_JOIN",
+   "patientId": "p107",
+   "to": "triage_queue"
+  },
+  {
+   "t": 639.232272652964,
+   "seq": 1657,
+   "type": "ARRIVAL",
+   "patientId": "p108",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p108",
+     "name": "Rosa Martínez",
+     "ageRange": "0-17",
+     "eps": "vallenata",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 639.232272652964,
+   "seq": 1658,
+   "type": "MOVE",
+   "patientId": "p108",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 639.3705922522165,
+   "seq": 1659,
+   "type": "SERVICE_END",
+   "patientId": "p95",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 639.3705922522165,
+   "seq": 1660,
+   "type": "SERVICE_START",
+   "patientId": "p96",
+   "resourceId": "admission-0",
+   "duration": 4.95755608662019,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 639.3705922522165,
+   "seq": 1661,
+   "type": "MOVE",
+   "patientId": "p95",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 639.732272652964,
+   "seq": 1662,
+   "type": "QUEUE_JOIN",
+   "patientId": "p108",
+   "to": "triage_queue"
+  },
+  {
+   "t": 639.8705922522165,
+   "seq": 1663,
+   "type": "QUEUE_JOIN",
+   "patientId": "p95",
+   "to": "waiting_room",
+   "data": {
+    "level": 2
+   }
+  },
+  {
+   "t": 640.5504966762205,
+   "seq": 1664,
+   "type": "SERVICE_END",
+   "patientId": "p97",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 640.5504966762205,
+   "seq": 1665,
+   "type": "SERVICE_START",
+   "patientId": "p98",
+   "resourceId": "admission-1",
+   "duration": 7.29926336182691,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 640.5504966762205,
+   "seq": 1666,
+   "type": "MOVE",
+   "patientId": "p97",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 640.8846433698515,
+   "seq": 1667,
+   "type": "SERVICE_END",
+   "patientId": "p93",
+   "resourceId": "doctor-4",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 640.8846433698515,
+   "seq": 1668,
+   "type": "SERVICE_START",
+   "patientId": "p95",
+   "resourceId": "doctor-4",
+   "duration": 29.235330257453114,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 640.8846433698515,
+   "seq": 1669,
+   "type": "ROUTED",
+   "patientId": "p93",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 640.8846433698515,
+   "seq": 1670,
+   "type": "MOVE",
+   "patientId": "p93",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 641.0504966762205,
+   "seq": 1671,
+   "type": "QUEUE_JOIN",
+   "patientId": "p97",
+   "to": "waiting_room",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 641.3846433698515,
+   "seq": 1672,
+   "type": "DEPARTURE",
+   "patientId": "p93",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 616.6657511049376,
+     "triageWait": 3.9237568726122163,
+     "admissionWait": 2.8027990594632683,
+     "doctorWait": 11.544416777765946,
+     "doorToDoctor": 18.241392710946798,
+     "outcome": "alta",
+     "departure": 641.3846433698515
+    },
+    "level": 3,
+    "name": "Jorge Castro",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 641.8832303439284,
+   "seq": 1673,
+   "type": "ARRIVAL",
+   "patientId": "p109",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p109",
+     "name": "Iván Gutiérrez",
+     "ageRange": "40-64",
+     "eps": "guatapuri",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 641.8832303439284,
+   "seq": 1674,
+   "type": "MOVE",
+   "patientId": "p109",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 642.3688145636188,
+   "seq": 1675,
+   "type": "SERVICE_END",
+   "patientId": "p86",
+   "resourceId": "doctor-2",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 642.3688145636188,
+   "seq": 1676,
+   "type": "SERVICE_START",
+   "patientId": "p91",
+   "resourceId": "doctor-2",
+   "duration": 25.61382632661854,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 642.3688145636188,
+   "seq": 1677,
+   "type": "ROUTED",
+   "patientId": "p86",
+   "data": {
+    "route": "observacion"
+   }
+  },
+  {
+   "t": 642.3688145636188,
+   "seq": 1678,
+   "type": "MOVE",
+   "patientId": "p86",
+   "from": "doctor_box",
+   "to": "observation_bed",
+   "duration": 0.5
+  },
+  {
+   "t": 642.3832303439284,
+   "seq": 1679,
+   "type": "QUEUE_JOIN",
+   "patientId": "p109",
+   "to": "triage_queue"
+  },
+  {
+   "t": 642.7152760709284,
+   "seq": 1680,
+   "type": "SERVICE_END",
+   "patientId": "p102",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 642.7152760709284,
+   "seq": 1681,
+   "type": "SERVICE_START",
+   "patientId": "p103",
+   "resourceId": "triage-1",
+   "duration": 2.3031293647959314,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 642.7152760709284,
+   "seq": 1682,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p102",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 642.7152760709284,
+   "seq": 1683,
+   "type": "MOVE",
+   "patientId": "p102",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 642.8688145636188,
+   "seq": 1684,
+   "type": "BED_ASSIGNED",
+   "patientId": "p86",
+   "resourceId": "bed-12",
+   "duration": 543.4185151789973
+  },
+  {
+   "t": 643.2152760709284,
+   "seq": 1685,
+   "type": "QUEUE_JOIN",
+   "patientId": "p102",
+   "to": "admission_queue"
+  },
+  {
+   "t": 643.490401840285,
+   "seq": 1686,
+   "type": "ARRIVAL",
+   "patientId": "p110",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p110",
+     "name": "Yesenia Romero",
+     "ageRange": "40-64",
+     "eps": "vallenata",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 643.490401840285,
+   "seq": 1687,
+   "type": "MOVE",
+   "patientId": "p110",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 643.7114268480747,
+   "seq": 1688,
+   "type": "SERVICE_END",
+   "patientId": "p101",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 643.7114268480747,
+   "seq": 1689,
+   "type": "SERVICE_START",
+   "patientId": "p104",
+   "resourceId": "triage-0",
+   "duration": 2.8820482131156964,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 643.7114268480747,
+   "seq": 1690,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p101",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 643.7114268480747,
+   "seq": 1691,
+   "type": "MOVE",
+   "patientId": "p101",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 643.990401840285,
+   "seq": 1692,
+   "type": "QUEUE_JOIN",
+   "patientId": "p110",
+   "to": "triage_queue"
+  },
+  {
+   "t": 644.2114268480747,
+   "seq": 1693,
+   "type": "QUEUE_JOIN",
+   "patientId": "p101",
+   "to": "admission_queue"
+  },
+  {
+   "t": 644.3281483388367,
+   "seq": 1694,
+   "type": "SERVICE_END",
+   "patientId": "p96",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 644.3281483388367,
+   "seq": 1695,
+   "type": "SERVICE_START",
+   "patientId": "p100",
+   "resourceId": "admission-0",
+   "duration": 3.9486636906690347,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 644.3281483388367,
+   "seq": 1696,
+   "type": "MOVE",
+   "patientId": "p96",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 644.4130048946271,
+   "seq": 1697,
+   "type": "SERVICE_END",
+   "patientId": "p80",
+   "resourceId": "doctor-1",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 644.4130048946271,
+   "seq": 1698,
+   "type": "SERVICE_START",
+   "patientId": "p94",
+   "resourceId": "doctor-1",
+   "duration": 11.862237092787131,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 644.4130048946271,
+   "seq": 1699,
+   "type": "ROUTED",
+   "patientId": "p80",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 644.4130048946271,
+   "seq": 1700,
+   "type": "MOVE",
+   "patientId": "p80",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 644.7958704300311,
+   "seq": 1701,
+   "type": "SERVICE_END",
+   "patientId": "p92",
+   "resourceId": "doctor-5",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 644.7958704300311,
+   "seq": 1702,
+   "type": "SERVICE_START",
+   "patientId": "p97",
+   "resourceId": "doctor-5",
+   "duration": 8.57049750053623,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 644.7958704300311,
+   "seq": 1703,
+   "type": "ROUTED",
+   "patientId": "p92",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 644.7958704300311,
+   "seq": 1704,
+   "type": "MOVE",
+   "patientId": "p92",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 644.8281483388367,
+   "seq": 1705,
+   "type": "QUEUE_JOIN",
+   "patientId": "p96",
+   "to": "waiting_room",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 644.9130048946271,
+   "seq": 1706,
+   "type": "DEPARTURE",
+   "patientId": "p80",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 569.1561140894074,
+     "triageWait": 0,
+     "admissionWait": 1.5942844405375354,
+     "doctorWait": 46.987052300833966,
+     "doorToDoctor": 55.80127125823731,
+     "outcome": "alta",
+     "departure": 644.9130048946271
+    },
+    "level": 5,
+    "name": "Andrés Martínez",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 645.0184054357244,
+   "seq": 1707,
+   "type": "SERVICE_END",
+   "patientId": "p103",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 645.0184054357244,
+   "seq": 1708,
+   "type": "SERVICE_START",
+   "patientId": "p105",
+   "resourceId": "triage-1",
+   "duration": 2.4540774624199786,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 645.0184054357244,
+   "seq": 1709,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p103",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 645.0184054357244,
+   "seq": 1710,
+   "type": "MOVE",
+   "patientId": "p103",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 645.2958704300311,
+   "seq": 1711,
+   "type": "DEPARTURE",
+   "patientId": "p92",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 612.3850394052903,
+     "triageWait": 8.094336537626532,
+     "admissionWait": 3.2741624927353996,
+     "doctorWait": 10.985129071353526,
+     "doorToDoctor": 25.373267518520834,
+     "outcome": "alta",
+     "departure": 645.2958704300311
+    },
+    "level": 2,
+    "name": "Ana Durán",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 645.5184054357244,
+   "seq": 1712,
+   "type": "QUEUE_JOIN",
+   "patientId": "p103",
+   "to": "admission_queue"
+  },
+  {
+   "t": 646.3301267265507,
+   "seq": 1713,
+   "type": "BED_RELEASED",
+   "patientId": "p36",
+   "resourceId": "bed-3"
+  },
+  {
+   "t": 646.3301267265507,
+   "seq": 1714,
+   "type": "MOVE",
+   "patientId": "p36",
+   "from": "observation_bed",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 646.5232040058634,
+   "seq": 1715,
+   "type": "ARRIVAL",
+   "patientId": "p111",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p111",
+     "name": "José Araújo",
+     "ageRange": "0-17",
+     "eps": "otra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 646.5232040058634,
+   "seq": 1716,
+   "type": "MOVE",
+   "patientId": "p111",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 646.5934750611904,
+   "seq": 1717,
+   "type": "SERVICE_END",
+   "patientId": "p104",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 646.5934750611904,
+   "seq": 1718,
+   "type": "SERVICE_START",
+   "patientId": "p106",
+   "resourceId": "triage-0",
+   "duration": 5.819768475656311,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 646.5934750611904,
+   "seq": 1719,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p104",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 646.5934750611904,
+   "seq": 1720,
+   "type": "MOVE",
+   "patientId": "p104",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 646.8301267265507,
+   "seq": 1721,
+   "type": "DEPARTURE",
+   "patientId": "p36",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 364.6320629929508,
+     "triageWait": 0,
+     "admissionWait": 0,
+     "doctorWait": 5.744508246995849,
+     "doorToDoctor": 8.658260922067825,
+     "observationTime": 264.166405302806,
+     "outcome": "alta",
+     "departure": 646.8301267265507
+    },
+    "level": 3,
+    "name": "Alfredo Daza",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 647.0232040058634,
+   "seq": 1722,
+   "type": "QUEUE_JOIN",
+   "patientId": "p111",
+   "to": "triage_queue"
+  },
+  {
+   "t": 647.0934750611904,
+   "seq": 1723,
+   "type": "QUEUE_JOIN",
+   "patientId": "p104",
+   "to": "admission_queue"
+  },
+  {
+   "t": 647.4724828981443,
+   "seq": 1724,
+   "type": "SERVICE_END",
+   "patientId": "p105",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 647.4724828981443,
+   "seq": 1725,
+   "type": "SERVICE_START",
+   "patientId": "p107",
+   "resourceId": "triage-1",
+   "duration": 5.845903538612494,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 647.4724828981443,
+   "seq": 1726,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p105",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 647.4724828981443,
+   "seq": 1727,
+   "type": "MOVE",
+   "patientId": "p105",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 647.8497600380474,
+   "seq": 1728,
+   "type": "SERVICE_END",
+   "patientId": "p98",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 647.8497600380474,
+   "seq": 1729,
+   "type": "SERVICE_START",
+   "patientId": "p99",
+   "resourceId": "admission-1",
+   "duration": 3.4189934566706937,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 647.8497600380474,
+   "seq": 1730,
+   "type": "MOVE",
+   "patientId": "p98",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 647.9724828981443,
+   "seq": 1731,
+   "type": "QUEUE_JOIN",
+   "patientId": "p105",
+   "to": "admission_queue"
+  },
+  {
+   "t": 648.2768120295058,
+   "seq": 1732,
+   "type": "SERVICE_END",
+   "patientId": "p100",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 648.2768120295058,
+   "seq": 1733,
+   "type": "SERVICE_START",
+   "patientId": "p102",
+   "resourceId": "admission-0",
+   "duration": 6.815623538945867,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 648.2768120295058,
+   "seq": 1734,
+   "type": "MOVE",
+   "patientId": "p100",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 648.3497600380474,
+   "seq": 1735,
+   "type": "QUEUE_JOIN",
+   "patientId": "p98",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 648.7768120295058,
+   "seq": 1736,
+   "type": "QUEUE_JOIN",
+   "patientId": "p100",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 651.2687534947181,
+   "seq": 1737,
+   "type": "SERVICE_END",
+   "patientId": "p99",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 651.2687534947181,
+   "seq": 1738,
+   "type": "SERVICE_START",
+   "patientId": "p101",
+   "resourceId": "admission-1",
+   "duration": 4.07871085479383,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 651.2687534947181,
+   "seq": 1739,
+   "type": "MOVE",
+   "patientId": "p99",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 651.6386347922189,
+   "seq": 1740,
+   "type": "ARRIVAL",
+   "patientId": "p112",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p112",
+     "name": "Karen Arias",
+     "ageRange": "65+",
+     "eps": "sierra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 651.6386347922189,
+   "seq": 1741,
+   "type": "MOVE",
+   "patientId": "p112",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 651.7687534947181,
+   "seq": 1742,
+   "type": "QUEUE_JOIN",
+   "patientId": "p99",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 652.0374237752239,
+   "seq": 1743,
+   "type": "ARRIVAL",
+   "patientId": "p113",
+   "to": "entrance",
+   "data": {
+    "info": {
+     "id": "p113",
+     "name": "Andrés Zuleta",
+     "ageRange": "40-64",
+     "eps": "sierra",
+     "isVisitor": false
+    },
+    "massCasualty": false
+   }
+  },
+  {
+   "t": 652.0374237752239,
+   "seq": 1744,
+   "type": "MOVE",
+   "patientId": "p113",
+   "from": "entrance",
+   "to": "triage_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 652.1386347922189,
+   "seq": 1745,
+   "type": "QUEUE_JOIN",
+   "patientId": "p112",
+   "to": "triage_queue"
+  },
+  {
+   "t": 652.4132435368467,
+   "seq": 1746,
+   "type": "SERVICE_END",
+   "patientId": "p106",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 652.4132435368467,
+   "seq": 1747,
+   "type": "SERVICE_START",
+   "patientId": "p108",
+   "resourceId": "triage-0",
+   "duration": 3.3167221520986083,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 652.4132435368467,
+   "seq": 1748,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p106",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 652.4132435368467,
+   "seq": 1749,
+   "type": "MOVE",
+   "patientId": "p106",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 652.5374237752239,
+   "seq": 1750,
+   "type": "QUEUE_JOIN",
+   "patientId": "p113",
+   "to": "triage_queue"
+  },
+  {
+   "t": 652.9132435368467,
+   "seq": 1751,
+   "type": "QUEUE_JOIN",
+   "patientId": "p106",
+   "to": "admission_queue"
+  },
+  {
+   "t": 653.3183864367568,
+   "seq": 1752,
+   "type": "SERVICE_END",
+   "patientId": "p107",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 653.3183864367568,
+   "seq": 1753,
+   "type": "SERVICE_START",
+   "patientId": "p109",
+   "resourceId": "triage-1",
+   "duration": 2.6657410344745127,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 653.3183864367568,
+   "seq": 1754,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p107",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 653.3183864367568,
+   "seq": 1755,
+   "type": "MOVE",
+   "patientId": "p107",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 653.3663679305673,
+   "seq": 1756,
+   "type": "SERVICE_END",
+   "patientId": "p97",
+   "resourceId": "doctor-5",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 653.3663679305673,
+   "seq": 1757,
+   "type": "SERVICE_START",
+   "patientId": "p98",
+   "resourceId": "doctor-5",
+   "duration": 9.70109507138393,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 653.3663679305673,
+   "seq": 1758,
+   "type": "ROUTED",
+   "patientId": "p97",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 653.3663679305673,
+   "seq": 1759,
+   "type": "MOVE",
+   "patientId": "p97",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 653.8183864367568,
+   "seq": 1760,
+   "type": "QUEUE_JOIN",
+   "patientId": "p107",
+   "to": "admission_queue"
+  },
+  {
+   "t": 653.8663679305673,
+   "seq": 1761,
+   "type": "DEPARTURE",
+   "patientId": "p97",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 623.7274434386687,
+     "triageWait": 3.4533789473404113,
+     "admissionWait": 2.834992174665558,
+     "doctorWait": 12.941098991906415,
+     "doorToDoctor": 21.068426991362344,
+     "outcome": "alta",
+     "departure": 653.8663679305673
+    },
+    "level": 4,
+    "name": "Alfredo Durán",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 654.0635525262777,
+   "seq": 1762,
+   "type": "SERVICE_END",
+   "patientId": "p87",
+   "resourceId": "doctor-3",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 654.0635525262777,
+   "seq": 1763,
+   "type": "SERVICE_START",
+   "patientId": "p100",
+   "resourceId": "doctor-3",
+   "duration": 14.7127608688816,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 654.0635525262777,
+   "seq": 1764,
+   "type": "ROUTED",
+   "patientId": "p87",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 654.0635525262777,
+   "seq": 1765,
+   "type": "MOVE",
+   "patientId": "p87",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 654.5635525262777,
+   "seq": 1766,
+   "type": "DEPARTURE",
+   "patientId": "p87",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 603.715552178578,
+     "triageWait": 0,
+     "admissionWait": 0,
+     "doctorWait": 10.016886790326453,
+     "doorToDoctor": 13.360704831845737,
+     "outcome": "alta",
+     "departure": 654.5635525262777
+    },
+    "level": 4,
+    "name": "Rosa Molina",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 655.0924355684516,
+   "seq": 1767,
+   "type": "SERVICE_END",
+   "patientId": "p102",
+   "resourceId": "admission-0",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 655.0924355684516,
+   "seq": 1768,
+   "type": "SERVICE_START",
+   "patientId": "p103",
+   "resourceId": "admission-0",
+   "duration": 5.434980966236202,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 655.0924355684516,
+   "seq": 1769,
+   "type": "MOVE",
+   "patientId": "p102",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 655.3474643495119,
+   "seq": 1770,
+   "type": "SERVICE_END",
+   "patientId": "p101",
+   "resourceId": "admission-1",
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 655.3474643495119,
+   "seq": 1771,
+   "type": "SERVICE_START",
+   "patientId": "p104",
+   "resourceId": "admission-1",
+   "duration": 4.9548732556028385,
+   "data": {
+    "station": "admission"
+   }
+  },
+  {
+   "t": 655.3474643495119,
+   "seq": 1772,
+   "type": "MOVE",
+   "patientId": "p101",
+   "from": "admission",
+   "to": "waiting_room",
+   "duration": 0.5
+  },
+  {
+   "t": 655.5924355684516,
+   "seq": 1773,
+   "type": "QUEUE_JOIN",
+   "patientId": "p102",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 655.7299656889453,
+   "seq": 1774,
+   "type": "SERVICE_END",
+   "patientId": "p108",
+   "resourceId": "triage-0",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 655.7299656889453,
+   "seq": 1775,
+   "type": "SERVICE_START",
+   "patientId": "p110",
+   "resourceId": "triage-0",
+   "duration": 6.911714564579699,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 655.7299656889453,
+   "seq": 1776,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p108",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 655.7299656889453,
+   "seq": 1777,
+   "type": "MOVE",
+   "patientId": "p108",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 655.8474643495119,
+   "seq": 1778,
+   "type": "QUEUE_JOIN",
+   "patientId": "p101",
+   "to": "waiting_room",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 655.9841274712313,
+   "seq": 1779,
+   "type": "SERVICE_END",
+   "patientId": "p109",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 655.9841274712313,
+   "seq": 1780,
+   "type": "SERVICE_START",
+   "patientId": "p111",
+   "resourceId": "triage-1",
+   "duration": 1.6081668345564464,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 655.9841274712313,
+   "seq": 1781,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p109",
+   "data": {
+    "level": 3
+   }
+  },
+  {
+   "t": 655.9841274712313,
+   "seq": 1782,
+   "type": "MOVE",
+   "patientId": "p109",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 656.2299656889453,
+   "seq": 1783,
+   "type": "QUEUE_JOIN",
+   "patientId": "p108",
+   "to": "admission_queue"
+  },
+  {
+   "t": 656.2752419874142,
+   "seq": 1784,
+   "type": "SERVICE_END",
+   "patientId": "p94",
+   "resourceId": "doctor-1",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 656.2752419874142,
+   "seq": 1785,
+   "type": "SERVICE_START",
+   "patientId": "p99",
+   "resourceId": "doctor-1",
+   "duration": 22.898339944338723,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 656.2752419874142,
+   "seq": 1786,
+   "type": "ROUTED",
+   "patientId": "p94",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 656.2752419874142,
+   "seq": 1787,
+   "type": "MOVE",
+   "patientId": "p94",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 656.4841274712313,
+   "seq": 1788,
+   "type": "QUEUE_JOIN",
+   "patientId": "p109",
+   "to": "admission_queue"
+  },
+  {
+   "t": 656.7752419874142,
+   "seq": 1789,
+   "type": "DEPARTURE",
+   "patientId": "p94",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 617.154209049391,
+     "triageWait": 5.708517988727408,
+     "admissionWait": 1.371885058866269,
+     "doctorWait": 18.60416992918124,
+     "doorToDoctor": 27.258795845236023,
+     "outcome": "alta",
+     "departure": 656.7752419874142
+    },
+    "level": 4,
+    "name": "Marta Maestre",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 657.3364199931283,
+   "seq": 1790,
+   "type": "SERVICE_END",
+   "patientId": "p88",
+   "resourceId": "doctor-0",
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 657.3364199931283,
+   "seq": 1791,
+   "type": "SERVICE_START",
+   "patientId": "p102",
+   "resourceId": "doctor-0",
+   "duration": 24.514441564398606,
+   "data": {
+    "station": "doctor"
+   }
+  },
+  {
+   "t": 657.3364199931283,
+   "seq": 1792,
+   "type": "ROUTED",
+   "patientId": "p88",
+   "data": {
+    "route": "alta"
+   }
+  },
+  {
+   "t": 657.3364199931283,
+   "seq": 1793,
+   "type": "MOVE",
+   "patientId": "p88",
+   "from": "doctor_box",
+   "to": "exit",
+   "duration": 0.5
+  },
+  {
+   "t": 657.5922943057877,
+   "seq": 1794,
+   "type": "SERVICE_END",
+   "patientId": "p111",
+   "resourceId": "triage-1",
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 657.5922943057877,
+   "seq": 1795,
+   "type": "SERVICE_START",
+   "patientId": "p112",
+   "resourceId": "triage-1",
+   "duration": 6.018702208206761,
+   "data": {
+    "station": "triage"
+   }
+  },
+  {
+   "t": 657.5922943057877,
+   "seq": 1796,
+   "type": "TRIAGE_ASSIGNED",
+   "patientId": "p111",
+   "data": {
+    "level": 4
+   }
+  },
+  {
+   "t": 657.5922943057877,
+   "seq": 1797,
+   "type": "MOVE",
+   "patientId": "p111",
+   "from": "triage",
+   "to": "admission_queue",
+   "duration": 0.5
+  },
+  {
+   "t": 657.8364199931283,
+   "seq": 1798,
+   "type": "DEPARTURE",
+   "patientId": "p88",
+   "data": {
+    "outcome": "alta",
+    "journey": {
+     "arrival": 606.7857802852616,
+     "triageWait": 0,
+     "admissionWait": 0,
+     "doctorWait": 8.766526686015482,
+     "doorToDoctor": 13.313996760293549,
+     "outcome": "alta",
+     "departure": 657.8364199931283
+    },
+    "level": 3,
+    "name": "Rafael Cuello",
+    "isVisitor": false
+   }
+  },
+  {
+   "t": 658.0922943057877,
+   "seq": 1799,
+   "type": "QUEUE_JOIN",
+   "patientId": "p111",
+   "to": "admission_queue"
+  }
+ ]
+}
