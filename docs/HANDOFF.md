@@ -177,3 +177,17 @@ Hecho:
 Siguiente paso: T19 (mapa de la ciudad con hospital y clínicas) y T21 (póster).
 
 Preguntas para el autor: fecha exacta del final de corte. En la feria: ¿60 s de inactividad está bien o prefieres menos (`?demo=30`)?
+
+## 2026-11-22 · Claude · main (rama feat/T19-mapa, ya fusionada)
+Hecho:
+- T19 (la tomó Claude por decisión del autor). `src/render/map/`:
+  - `layout.ts` (`cityLayout`): cada clínica a una distancia **proporcional a su tiempo medio de viaje** del modelo (12, 18 y 25 min → 0,55 baldosas/min), en direcciones este, norte y noreste.
+  - `city.ts` (`CityScene`): segunda escena del mismo juego de Phaser (empieza dormida). Hospital con cruz roja, 3 clínicas con barra y texto de ocupación en vivo (`ed.snapshot().clinics`), vías, casas y río (decorado estático). Las **ambulancias con paciente** avanzan por su vía en proporción a la duración real del traslado (`TRANSFER_START.duration`). Su `update` también llama `driver.tick`: **el motor sigue simulando en el mapa** (SPEC D2; verificado: 25 min simulados en 2,5 s a ×600).
+  - Clic en el hospital → escena del hospital con fundido de 0,3 s; clic en una clínica → tarjeta (`src/ui/clinic.ts`): ocupación, remitidos recibidos en la sesión, EPS con contrato, viaje medio, demanda propia y **probabilidad de encontrarla llena con su demanda propia (Erlang B)**.
+  - Botón "Ver ciudad / Ver hospital". La demo (T18) vuelve al hospital si arranca en el mapa.
+- `src/render/draw.ts`: utilidades isométricas compartidas (box, boxAt, pts, shade). `Playback.listeners` (lista de oyentes; antes `onApply`), `transfers[].clinicId` y `receivedByClinic`.
+- 87 pruebas pasan, `npm run build` compila.
+
+Con esto quedan hechas todas las tareas de software de las metas A y B (T01–T19). Pendiente: T13 en el monitor externo (autor, 24 nov) y T21 (póster). T20 solo si el profesor lo pide.
+
+Preguntas para el autor: fecha exacta del final de corte.
