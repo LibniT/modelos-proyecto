@@ -27,7 +27,7 @@ Estados: `pendiente` · `en curso (agente, fecha)` · `hecha` · `bloqueada (por
 | T08 | Tooltips al pasar el mouse (pacientes y recursos) | Codex A | `src/render`, `src/ui` | bloqueada (por T05) |
 | T09 | Generador de personajes por código (24×32 px, paleta, 4 direcciones, quieto / caminar / sentado / acostado) | Codex B | `tools/`, `src/render/characters`, `assets/generated` | pendiente |
 | T10 | Creador simple: nombre, edad, EPS, síntoma, colores → `ed.injectVisitor(...)` | Codex B | `src/ui/creator` | pendiente |
-| T11 | Pestaña "Validación" en la UI (ya existe la base en `src/main.ts`): tabla + botón, con Worker | Claude | `src/ui/validation` | pendiente |
+| T11 | Pestaña "Validación" en la UI (ya existe la base en `src/main.ts`): tabla + botón, con Worker | Claude | `src/ui/validation` | hecha (Claude, 22 nov) |
 | T12 | Remisión visible: ambulancia sale de la escena con el paciente (TRANSFER_START/END) | Codex A | `src/render` | bloqueada (por T05) |
 | T13 | Prueba final sin internet con el monitor externo + video de respaldo | Autor | — | pendiente (24 nov) |
 

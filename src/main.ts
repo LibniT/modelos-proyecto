@@ -4,9 +4,7 @@
  */
 import { EmergencyDepartment } from './model/ed';
 import { realisticParams } from './model/params';
-import type { ReplicationConfig, ReplicationResult } from './batch/replicate';
-import { validationParams } from './model/params';
-import { validationMarkdown, validationTable } from './validation/report';
+import { mountValidationPanel } from './ui/validation/panel';
 
 const app = document.getElementById('app')!;
 app.innerHTML = `
@@ -17,9 +15,15 @@ app.innerHTML = `
   button { background: #2563eb; color: white; border: 0; border-radius: 6px; padding: 8px 14px; cursor: pointer; margin-right: 6px; }
   pre { background: #16202b; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 12px; }
   .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  nav button { background: #1e293b; } nav button[aria-selected="true"] { background: #2563eb; }
 </style>
 <main>
   <h1>SimUrgencias — motor (vista provisional)</h1>
+  <nav class="row" role="tablist">
+    <button role="tab" data-tab="sim" aria-selected="true">Simulación</button>
+    <button role="tab" data-tab="val" aria-selected="false">Validación</button>
+  </nav>
+  <section id="tab-sim">
   <div class="row">
     <button id="pause">Pausa</button>
     <button data-speed="1">×1</button><button data-speed="60">×60</button><button data-speed="600">×600</button>
@@ -27,10 +31,19 @@ app.innerHTML = `
     <span id="clock"></span>
   </div>
   <pre id="state"></pre>
-  <h2>Validación (30 réplicas, modo validación)</h2>
-  <button id="validate">Correr validación</button> <span id="progress"></span>
-  <pre id="table"></pre>
+  </section>
+  <section id="tab-val" hidden></section>
 </main>`;
+
+mountValidationPanel(document.getElementById('tab-val')!);
+document.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach(
+  (b) =>
+    (b.onclick = () => {
+      document.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach((o) => o.setAttribute('aria-selected', String(o === b)));
+      document.getElementById('tab-sim')!.hidden = b.dataset.tab !== 'sim';
+      document.getElementById('tab-val')!.hidden = b.dataset.tab !== 'val';
+    }),
+);
 
 const ed = new EmergencyDepartment(realisticParams(), { seed: Date.now() % 100000, recordEvents: false });
 ed.step(8 * 60);
@@ -75,16 +88,3 @@ document.getElementById('pause')!.onclick = () => (paused = !paused);
 document.querySelectorAll<HTMLButtonElement>('[data-speed]').forEach((b) => (b.onclick = () => (speed = Number(b.dataset.speed))));
 document.getElementById('mass')!.onclick = () => ed.triggerMassCasualty(8);
 
-document.getElementById('validate')!.onclick = () => {
-  const params = validationParams();
-  const cfg: ReplicationConfig = { params, n: 30, seedBase: 1000, measure: 7 * 1440 };
-  const w = new Worker(new URL('./batch/worker.ts', import.meta.url), { type: 'module' });
-  w.onmessage = (ev: MessageEvent<{ type: string; done?: number; result?: ReplicationResult }>) => {
-    if (ev.data.type === 'progress') document.getElementById('progress')!.textContent = `${ev.data.done}/30`;
-    else if (ev.data.result) {
-      document.getElementById('table')!.textContent = validationMarkdown(validationTable(params, ev.data.result));
-      w.terminate();
-    }
-  };
-  w.postMessage(cfg);
-};
