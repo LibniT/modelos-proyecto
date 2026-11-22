@@ -68,10 +68,10 @@ export function mountPanel(root: HTMLElement, driver: LiveDriver, reload: (mode:
     type: 'line',
     data: {
       datasets: [
-        // stepped 'after': el valor se mantiene hasta el instante del siguiente evento (trayectoria escalonada exacta)
-        { data: [] as { x: number; y: number }[], borderColor: '#257d76', borderWidth: 2.5, pointRadius: 0, stepped: 'after' },
+        // Chart.js traza primero la horizontal y salta en la abscisa del siguiente evento.
+        { data: [] as { x: number; y: number }[], borderColor: '#257d76', borderWidth: 2.5, pointRadius: 0, stepped: 'before' },
         // T17: el gemelo sin accidente (solo se llena después de un accidente)
-        { data: [] as { x: number; y: number }[], borderColor: '#677373', borderWidth: 1.5, borderDash: [4, 3], pointRadius: 0, stepped: 'after' },
+        { data: [] as { x: number; y: number }[], borderColor: '#677373', borderWidth: 1.5, borderDash: [4, 3], pointRadius: 0, stepped: 'before' },
       ],
     },
     options: {
@@ -129,6 +129,7 @@ export function mountPanel(root: HTMLElement, driver: LiveDriver, reload: (mode:
 
   // 5 veces por segundo: métricas del motor y N(t) desde su trayectoria exacta (no se muestrea).
   setInterval(() => {
+    if(root.hidden || !root.offsetWidth)return;
     const ed = driver.ed;
     const m = ed.metrics();
     METRICS.forEach((x, i) => ($(`pn-m${i}`).textContent = x.show(m)));

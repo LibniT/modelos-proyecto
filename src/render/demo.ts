@@ -67,6 +67,7 @@ export interface DemoOptions {
   idleSeconds?: number;
   /** al empezar (p. ej. volver a la pestaña Escena) */
   onStart?: () => void;
+  suspend?: () => boolean;
 }
 
 const clock = (t: number) => `${String(Math.floor((t % 1440) / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
@@ -96,6 +97,10 @@ export class DemoMode {
 
   private tick(): void {
     const { driver, scene } = this.o;
+    if(this.o.suspend?.()){
+      this.touch();
+      return;
+    }
     if (driver.pb !== this.pb) {
       // El Playback cambia al cambiar de modo: se vuelve a enganchar.
       this.pb = driver.pb;
