@@ -37,3 +37,20 @@ Notas:
 - `.claude/launch.json` (local, sin subir) arranca `npm run dev` en el panel de vista previa de Claude.
 
 Preguntas para el autor: fecha exacta del final de corte. ¿Probar con 3 auxiliares de admisión en un experimento aparte?
+
+## 2026-11-22 · Claude · main (rama feat/T05-escena, ya fusionada)
+Hecho:
+- T05 (la tomó Claude por decisión del autor). Tres piezas en `src/render`:
+  - `layout.ts`: grilla 26×16, proyección `iso()`, posición de cada puesto (`stationPos('doctor-3')`), sillas / filas / camillas (`slotPos`), puntos de zona (`zoneAnchor`) y rutas fijas por el pasillo central (`route`, `along`). Sin Phaser.
+  - `playback.ts`: `Playback` consume `SimEvent` (`push`, `advance(t)`) y da la posición de cada paciente (`position(f, t, snap)`). Sin Phaser, con 4 pruebas en `tests/render` (nadie comparte silla, MOVE dura exactamente `duration`, nada se mueve entre eventos).
+  - `scene.ts`: `HospitalScene` (Phaser Graphics, sin imágenes) + `Driver`. `MockDriver` reproduce el mock en bucle. Puestos por encima de la capacidad salen en gris. Cámara: arrastrar y rueda.
+- `main.ts`: pestañas Escena / Motor (texto) / Validación. 58 pruebas pasan, `npm run build` compila (bundle ~1,6 MB por Phaser; sin CDN, funciona sin internet).
+
+Decisiones (fieles al modelo):
+- El modelo no tiene traslado cola → puesto: con `SERVICE_START` el paciente aparece en el puesto en ese instante (no se inventa una caminata).
+- `BED_ASSIGNED` llega al final del MOVE a observación: el paciente camina a la entrada de observación y luego ocupa su cama.
+- `TRANSFER_START`: el paciente y la ambulancia desaparecen. **El regreso de la ambulancia no emite evento**: en el mock no vuelve a aparecer. En T06 hay que leerlo de `snapshot().ambulances.busy`.
+
+Siguiente paso: T06 (conectar al motor en vivo): crear un `LiveDriver` que implemente `Driver` (`ed.step(t)`, `pb.push(ed.drainEvents())`, `pb.advance(t)`) y construir `Playback` con `ed.snapshot()`. T07/T08/T12 ya no están bloqueadas.
+
+Preguntas para el autor: ¿T06 la hago yo (Claude) o Codex? Fecha exacta del final de corte.
