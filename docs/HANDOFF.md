@@ -149,3 +149,18 @@ Hecho:
 Siguiente paso: Meta B restante: T17 (botón de accidente masivo + tiempo de recuperación), T18 (modo demo), T19 (mapa de la ciudad), T21 (póster).
 
 Preguntas para el autor: fecha exacta del final de corte.
+
+## 2026-11-22 · Claude · main (rama feat/T17-accidente, ya fusionada)
+Hecho:
+- T17 (la tomó Claude por decisión del autor).
+  - **Definición con rigor:** con NHPP el "nivel previo" de la SPEC no sirve (N cambia con la hora). La recuperación se mide contra el **contrafactual con CRN**: el mismo hospital con la misma semilla sin el accidente. Recuperación = primer instante (desde t0 + 30 min) en que el promedio temporal exacto de N en 30 min queda a ±10 % del contrafactual. SPEC §11.11.
+  - `src/batch/recovery.ts`: `NPath` (trayectoria escalonada exacta de N(t) por eventos ARRIVAL/DEPARTURE, promedios exactos, puntos para graficar), `trackN(ed)`, `recoveryTime(...)`.
+  - **En vivo:** `LiveDriver` lleva un **gemelo** (misma semilla, sin dibujar) que recibe los mismos PARAM_CHANGE y visitantes, pero no el accidente. Probado: antes del accidente la trayectoria de N es idéntica punto por punto. `LiveDriver.massCasualty(n)`, `LiveDriver.injectVisitor(info)`. El panel recibe `reload(mode)`.
+  - **Interfaz:** selector de heridos (5/8/15/25) + botón; texto en vivo "Aún no se recupera… / Recuperado en X h Y min (a las HH:MM)"; en la gráfica, línea gris punteada del gemelo.
+  - **Gráfica N(t) exacta:** ya no se muestrea cada 200 ms; se dibuja la trayectoria escalonada exacta (`stepped: 'after'`), con cada salto en el instante del evento.
+  - **Experimento** `npm run accidente` → `docs/ACCIDENTE.md` + `docs/figuras/t17-accidente.svg` (200 réplicas, accidente el día 2 a las 10:00): **8 heridos → 4,1 h [3,8; 4,5]; 15 heridos → 6,5 h [6,2; 6,9]**; percentil 90: 7,1 h y 10,3 h; ninguna réplica sin recuperar en 48 h.
+- 81 pruebas pasan, `npm run build` compila.
+
+Siguiente paso: T18 (modo demo automático), T19 (mapa de la ciudad), T21 (póster: ya hay figuras de validación, T14, Welch y accidente).
+
+Preguntas para el autor: fecha exacta del final de corte.
