@@ -21,12 +21,19 @@ const MAX_DT = 0.25;
 
 /** T06 — escena conectada al motor en vivo. */
 export class LiveDriver implements Driver {
-  pb: Playback;
+  pb!: Playback;
+  ed!: EmergencyDepartment;
   speed = 60;
   paused = false;
 
   /** `ed` debe crearse con `recordEvents: true`. */
-  constructor(readonly ed: EmergencyDepartment) {
+  constructor(ed: EmergencyDepartment) {
+    this.load(ed);
+  }
+
+  /** Cambia de motor (p. ej. al cambiar de modo): la escena se reconstruye desde su snapshot. */
+  load(ed: EmergencyDepartment): void {
+    this.ed = ed;
     ed.drainEvents(); // lo anterior ya está resumido en el snapshot
     this.pb = new Playback(ed.snapshot());
   }

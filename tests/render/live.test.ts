@@ -1,5 +1,5 @@
 import { EmergencyDepartment } from '../../src/model/ed';
-import { realisticParams } from '../../src/model/params';
+import { realisticParams, validationParams } from '../../src/model/params';
 import { LiveDriver } from '../../src/render/drivers';
 
 describe('Escena conectada al motor en vivo (T06)', () => {
@@ -36,5 +36,16 @@ describe('Escena conectada al motor en vivo (T06)', () => {
     d.paused = true;
     d.tick(1);
     expect(ed.now).toBe(0);
+  });
+
+  it('cambiar de modo (load) reconstruye la escena desde el nuevo motor', () => {
+    const d = new LiveDriver(new EmergencyDepartment(realisticParams(), { seed: 1, recordEvents: true }));
+    d.tick(10);
+    const ed = new EmergencyDepartment(validationParams(), { seed: 2, recordEvents: true });
+    ed.step(8 * 60);
+    d.load(ed);
+    expect(d.pb.t).toBe(ed.now);
+    expect(new Set(d.pb.figures.keys())).toEqual(new Set(ed.snapshot().patients.map((p) => p.id)));
+    expect(d.pb.capacity.doctors).toBe(validationParams().capacity.doctors);
   });
 });

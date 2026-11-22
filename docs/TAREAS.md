@@ -23,7 +23,7 @@ Estados: `pendiente` · `en curso (agente, fecha)` · `hecha` · `bloqueada (por
 | T04 | Validación: Erlang C, Cobham, Erlang B, Little, IC t-Student, réplicas, `npm run report` | Claude | `src/validation`, `src/batch`, `tests` | hecha (Claude, 22 nov) |
 | T05 | **Escena isométrica dibujada por código** que reproduce `src/render/mock/events.json` | Claude | `src/render` | hecha (Claude, 22 nov) |
 | T06 | Conectar la escena al motor en vivo (`ed.step`, `drainEvents`, `snapshot`) + controles pausa / ×1 / ×60 / ×600 | Claude | `src/render`, `src/main.ts` | hecha (Claude, 22 nov) |
-| T07 | Panel: deslizadores (λ, médicos, triage, admisión, camas, ambulancias), selector de modo, métricas en vivo, gráfica N(t) con Chart.js | Codex A | `src/ui` | pendiente |
+| T07 | Panel: deslizadores (λ, médicos, triage, admisión, camas, ambulancias), selector de modo, métricas en vivo, gráfica N(t) con Chart.js | Claude | `src/ui` | hecha (Claude, 22 nov) |
 | T08 | Tooltips al pasar el mouse (pacientes y recursos) | Codex A | `src/render`, `src/ui` | pendiente |
 | T09 | Generador de personajes por código (24×32 px, paleta, 4 direcciones, quieto / caminar / sentado / acostado) | Codex B | `tools/`, `src/render/characters`, `assets/generated` | pendiente |
 | T10 | Creador simple: nombre, edad, EPS, síntoma, colores → `ed.injectVisitor(...)` | Codex B | `src/ui/creator` | pendiente |
