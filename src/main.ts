@@ -5,6 +5,7 @@
 import { EmergencyDepartment } from './model/ed';
 import { realisticParams } from './model/params';
 import { mountValidationPanel } from './ui/validation/panel';
+import { MockDriver, mountScene, TRIAGE_COLOR } from './render/scene';
 
 const app = document.getElementById('app')!;
 app.innerHTML = `
@@ -20,10 +21,21 @@ app.innerHTML = `
 <main>
   <h1>SimUrgencias — motor (vista provisional)</h1>
   <nav class="row" role="tablist">
-    <button role="tab" data-tab="sim" aria-selected="true">Simulación</button>
+    <button role="tab" data-tab="scene" aria-selected="true">Escena</button>
+    <button role="tab" data-tab="sim" aria-selected="false">Motor (texto)</button>
     <button role="tab" data-tab="val" aria-selected="false">Validación</button>
   </nav>
-  <section id="tab-sim">
+  <section id="tab-scene">
+    <div class="row">
+      <button id="sc-pause">Pausa</button>
+      <button data-sc-speed="1">×1</button><button data-sc-speed="60">×60</button><button data-sc-speed="120">×120</button><button data-sc-speed="600">×600</button>
+      <span id="sc-clock"></span>
+    </div>
+    <div id="scene" style="height: 620px; margin-top: 8px; border-radius: 8px; overflow: hidden"></div>
+    <p class="row" id="sc-legend"></p>
+    <p style="font-size: 12px; opacity: .75">Reproduce <code>src/render/mock/events.json</code>: 3 horas de eventos reales del motor (modo realista, semilla 2026). Arrastra para mover la cámara y usa la rueda para acercar. EPS y clínicas ficticias · parámetros estimados con fines académicos.</p>
+  </section>
+  <section id="tab-sim" hidden>
   <div class="row">
     <button id="pause">Pausa</button>
     <button data-speed="1">×1</button><button data-speed="60">×60</button><button data-speed="600">×600</button>
@@ -40,8 +52,7 @@ document.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach(
   (b) =>
     (b.onclick = () => {
       document.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach((o) => o.setAttribute('aria-selected', String(o === b)));
-      document.getElementById('tab-sim')!.hidden = b.dataset.tab !== 'sim';
-      document.getElementById('tab-val')!.hidden = b.dataset.tab !== 'val';
+      for (const t of ['scene', 'sim', 'val']) document.getElementById(`tab-${t}`)!.hidden = b.dataset.tab !== t;
     }),
 );
 
@@ -88,3 +99,15 @@ document.getElementById('pause')!.onclick = () => (paused = !paused);
 document.querySelectorAll<HTMLButtonElement>('[data-speed]').forEach((b) => (b.onclick = () => (speed = Number(b.dataset.speed))));
 document.getElementById('mass')!.onclick = () => ed.triggerMassCasualty(8);
 
+
+// ---------- Escena (T05: reproduce el mock; T06 la conecta al motor en vivo) ----------
+const driver = new MockDriver();
+mountScene(document.getElementById('scene')!, driver);
+document.getElementById('sc-legend')!.innerHTML = ['Sin triage', 'I', 'II', 'III', 'IV', 'V']
+  .map((n, i) => `<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#${TRIAGE_COLOR[i].toString(16).padStart(6, '0')}"></span> ${n}</span>`)
+  .join(' ');
+document.getElementById('sc-pause')!.onclick = () => (driver.paused = !driver.paused);
+document.querySelectorAll<HTMLButtonElement>('[data-sc-speed]').forEach((b) => (b.onclick = () => (driver.speed = Number(b.dataset.scSpeed))));
+setInterval(() => {
+  document.getElementById('sc-clock')!.textContent = `${fmtClock(driver.pb.t)} · ×${driver.speed}${driver.paused ? ' (pausa)' : ''} · pacientes: ${driver.pb.figures.size}`;
+}, 200);

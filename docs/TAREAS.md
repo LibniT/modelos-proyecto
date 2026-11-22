@@ -21,14 +21,14 @@ Estados: `pendiente` · `en curso (agente, fecha)` · `hecha` · `bloqueada (por
 | T02 | Núcleo del motor: sfc32 con flujos, heap, simulador, distribuciones (Exp, Gamma, Lognormal, Triangular) + pruebas KS | Claude | `src/engine`, `tests` | hecha (Claude, 22 nov) |
 | T03 | Modelo de urgencias: red triage → admisión → médico (prioridad) → observación / alta / remisión, pasillo, ambulancias, clínicas, abandono, NHPP, visitantes, accidente masivo, eventos y snapshot | Claude | `src/model`, `tests` | hecha (Claude, 22 nov) |
 | T04 | Validación: Erlang C, Cobham, Erlang B, Little, IC t-Student, réplicas, `npm run report` | Claude | `src/validation`, `src/batch`, `tests` | hecha (Claude, 22 nov) |
-| T05 | **Escena isométrica dibujada por código** que reproduce `src/render/mock/events.json` | Codex A | `src/render` | pendiente |
-| T06 | Conectar la escena al motor en vivo (`ed.step`, `drainEvents`, `snapshot`) + controles pausa / ×1 / ×60 / ×600 | Codex A o Claude | `src/render`, `src/main.ts` | bloqueada (por T05) |
+| T05 | **Escena isométrica dibujada por código** que reproduce `src/render/mock/events.json` | Claude | `src/render` | hecha (Claude, 22 nov) |
+| T06 | Conectar la escena al motor en vivo (`ed.step`, `drainEvents`, `snapshot`) + controles pausa / ×1 / ×60 / ×600 | Codex A o Claude | `src/render`, `src/main.ts` | pendiente |
 | T07 | Panel: deslizadores (λ, médicos, triage, admisión, camas, ambulancias), selector de modo, métricas en vivo, gráfica N(t) con Chart.js | Codex A | `src/ui` | pendiente |
-| T08 | Tooltips al pasar el mouse (pacientes y recursos) | Codex A | `src/render`, `src/ui` | bloqueada (por T05) |
+| T08 | Tooltips al pasar el mouse (pacientes y recursos) | Codex A | `src/render`, `src/ui` | pendiente |
 | T09 | Generador de personajes por código (24×32 px, paleta, 4 direcciones, quieto / caminar / sentado / acostado) | Codex B | `tools/`, `src/render/characters`, `assets/generated` | pendiente |
 | T10 | Creador simple: nombre, edad, EPS, síntoma, colores → `ed.injectVisitor(...)` | Codex B | `src/ui/creator` | pendiente |
 | T11 | Pestaña "Validación" en la UI (ya existe la base en `src/main.ts`): tabla + botón, con Worker | Claude | `src/ui/validation` | hecha (Claude, 22 nov) |
-| T12 | Remisión visible: ambulancia sale de la escena con el paciente (TRANSFER_START/END) | Codex A | `src/render` | bloqueada (por T05) |
+| T12 | Remisión visible: ambulancia sale de la escena con el paciente (TRANSFER_START/END) | Codex A | `src/render` | pendiente |
 | T13 | Prueba final sin internet con el monitor externo + video de respaldo | Autor | — | pendiente (24 nov) |
 
 ### Detalle T05 (escena) — lo que necesita saber el agente
