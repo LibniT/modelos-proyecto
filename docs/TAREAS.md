@@ -29,7 +29,7 @@ Estados: `pendiente` · `en curso (agente, fecha)` · `hecha` · `bloqueada (por
 | T10 | Creador simple: nombre, edad, EPS, síntoma, colores → `ed.injectVisitor(...)` | Codex B | `src/ui/creator` | pendiente |
 | T11 | Pestaña "Validación" en la UI (ya existe la base en `src/main.ts`): tabla + botón, con Worker | Claude | `src/ui/validation` | hecha (Claude, 22 nov) |
 | T12 | Remisión visible: ambulancia sale de la escena con el paciente (TRANSFER_START/END) | Codex A | `src/render` | pendiente |
-| T13 | Prueba final sin internet con el monitor externo + video de respaldo | Autor | — | pendiente (24 nov) |
+| T13 | Prueba final sin internet con el monitor externo + video de respaldo | Autor | — | hecha en el PC del autor (22 nov: preview sin internet + video de 2:44); repetir en el monitor externo el 24 |
 
 ### Detalle T05 (escena) — lo que necesita saber el agente
 - Lee SPEC §4.4 y `src/engine/events.ts`. Reproduce `src/render/mock/events.json` (`initial` = snapshot inicial, `events` = lista ordenada).

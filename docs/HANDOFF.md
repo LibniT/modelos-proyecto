@@ -97,3 +97,14 @@ Limitación conocida: la detección de muebles usa el piso; sobre la cara superi
 Siguiente paso: T09 (personajes, Codex B) y T12 (ambulancia animada). Autor: T13 el martes 24 (`npm run build` + `npm run preview` sin wifi en el monitor de la feria).
 
 Preguntas para el autor: fecha exacta del final de corte.
+
+## 2026-11-22 · Claude · main (revisión de T13)
+Hecho:
+- El autor probó la versión de la feria **sin internet** (wifi y ethernet desconectados): `npm run build` + `npm run preview` en http://localhost:4173. Claude revisó cuadro a cuadro el video de respaldo (2:44, `Videos/2026-11-22 15-45-16.mp4`, fuera del repositorio): se ven `localhost:4173` en la barra y el ícono de red de Windows sin conexión.
+- Funcionan en el video: escena en vivo a ×1/×60/×120/×600, pestaña Motor (texto), pestaña Validación (16/16 dentro del IC 95 % en 0,5 s), cambio de modo, deslizadores al máximo y al mínimo (λ = 30, 1 enfermera de triage → la cola de triage crece y desborda hacia la entrada, como debe en un sistema inestable), tooltips y gráfica N(t).
+- Detalle visto: al volver a la pestaña Escena, el lienzo queda en negro menos de 0,5 s hasta que Phaser detecta el nuevo tamaño. No es un fallo.
+- El aviso de `vite build` "Some chunks are larger than 500 kB" es solo una advertencia (Phaser pesa ~1,7 MB); no afecta la versión sin internet.
+
+A medias: repetir la prueba el martes 24 en el monitor externo de la feria (resolución distinta).
+
+Preguntas para el autor: fecha exacta del final de corte.
