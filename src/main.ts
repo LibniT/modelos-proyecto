@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 /**
  * Página principal: un solo motor en vivo alimenta la escena (T05–T06) y la vista de texto.
  * Panel de control (T07) a la derecha de la escena. La validación corre aparte en un Web Worker (T11).
@@ -8,6 +9,7 @@ import { realisticParams, validationParams, type Mode } from './model/params';
 import { mountValidationPanel } from './ui/validation/panel';
 import { mountPanel } from './ui/panel';
 import { describe } from './ui/tooltip';
+import { mountCreator } from './ui/creator/creator';
 import type { Hit } from './render/hit';
 import { mountScene, TRIAGE_COLOR } from './render/scene';
 import { LiveDriver, MockDriver } from './render/drivers';
@@ -40,6 +42,7 @@ app.innerHTML = `
     <button id="pause">Pausa</button>
     <button data-speed="1">×1</button><button data-speed="60">×60</button><button data-speed="120">×120</button><button data-speed="600">×600</button>
     <button id="mass">Accidente masivo (8)</button>
+    <button id="create" style="background:#16a34a">Crear mi paciente</button>
     <span id="clock"></span>
   </div>
   <section id="tab-scene">
@@ -51,6 +54,7 @@ app.innerHTML = `
       <aside id="panel"></aside>
     </div>
     <p class="row" id="legend"></p>
+    <p id="toast" role="status" style="color:#facc15; min-height: 1em; margin: 4px 0"></p>
     <p style="font-size: 12px; opacity: .75" id="source"></p>
   </section>
   <section id="tab-sim" hidden><pre id="state"></pre></section>
@@ -95,6 +99,8 @@ const onHover = (hit: Hit | undefined, x: number, y: number) => {
   tip.style.top = `${y + 12}px`;
 };
 mountScene($('scene'), driver, live ? onHover : undefined);
+// Solo en desarrollo (npm run dev): inspeccionar el estado desde la consola. No existe en el build de la feria.
+if (import.meta.env.DEV) Object.assign(window, { __sim: { driver, live } });
 if (live) mountPanel($('panel'), live, makeEd);
 
 $('source').textContent = mockMode
@@ -119,6 +125,8 @@ $('pause').onclick = () => {
   $('pause').textContent = driver.paused ? 'Continuar' : 'Pausa';
 };
 $('mass').hidden = mockMode;
+$('create').hidden = mockMode;
+if (live) mountCreator($('create') as HTMLButtonElement, () => live.ed, (msg) => ($('toast').textContent = msg));
 $('mass').onclick = () => live?.ed.triggerMassCasualty(8);
 
 function fmtClock(t: number): string {
@@ -133,7 +141,8 @@ setInterval(() => {
   $('clock').textContent = `${fmtClock(driver.pb.t)} · ×${driver.speed}${driver.paused ? ' (pausa)' : ''} · pacientes: ${driver.pb.figures.size}`;
   if (!live) return;
   const ed = live.ed;
-  ($('mass') as HTMLButtonElement).disabled = ed.params.mode === 'validacion'; // el motor lo rechaza en validación
+  // El motor rechaza el accidente masivo y los visitantes en validación (cambiarían el proceso de llegadas).
+  ($('mass') as HTMLButtonElement).disabled = ($('create') as HTMLButtonElement).disabled = ed.params.mode === 'validacion';
   if ($('tab-sim').hidden) return;
   const s = ed.snapshot();
   const m = ed.metrics();

@@ -25,8 +25,8 @@ Estados: `pendiente` · `en curso (agente, fecha)` · `hecha` · `bloqueada (por
 | T06 | Conectar la escena al motor en vivo (`ed.step`, `drainEvents`, `snapshot`) + controles pausa / ×1 / ×60 / ×600 | Claude | `src/render`, `src/main.ts` | hecha (Claude, 22 nov) |
 | T07 | Panel: deslizadores (λ, médicos, triage, admisión, camas, ambulancias), selector de modo, métricas en vivo, gráfica N(t) con Chart.js | Claude | `src/ui` | hecha (Claude, 22 nov) |
 | T08 | Tooltips al pasar el mouse (pacientes y recursos) | Claude | `src/render`, `src/ui` | hecha (Claude, 22 nov) |
-| T09 | Generador de personajes por código (24×32 px, paleta, 4 direcciones, quieto / caminar / sentado / acostado) | Codex B | `tools/`, `src/render/characters`, `assets/generated` | pendiente |
-| T10 | Creador simple: nombre, edad, EPS, síntoma, colores → `ed.injectVisitor(...)` | Codex B | `src/ui/creator` | pendiente |
+| T09 | Generador de personajes por código (24×32 px, paleta, 4 direcciones, quieto / caminar / sentado / acostado) | Claude | `tools/`, `src/render/characters`, `assets/generated` | hecha (Claude, 22 nov) |
+| T10 | Creador simple: nombre, edad, EPS, síntoma, colores → `ed.injectVisitor(...)` | Claude | `src/ui/creator` | hecha (Claude, 22 nov) |
 | T11 | Pestaña "Validación" en la UI (ya existe la base en `src/main.ts`): tabla + botón, con Worker | Claude | `src/ui/validation` | hecha (Claude, 22 nov) |
 | T12 | Remisión visible: ambulancia sale de la escena con el paciente (TRANSFER_START/END) | Claude | `src/render` | hecha (Claude, 22 nov) |
 | T13 | Prueba final sin internet con el monitor externo + video de respaldo | Autor | — | hecha en el PC del autor (22 nov: preview sin internet + video de 2:44); repetir en el monitor externo el 24 |
