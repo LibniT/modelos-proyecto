@@ -5,7 +5,7 @@
  */
 import type { SimEvent, TriageLevel, Zone } from '../engine/events';
 import type { Snapshot } from '../model/ed';
-import { along, isSlotZone, route, slotPos, stationPos, zoneAnchor, type SlotZone, type Vec } from './layout';
+import { along, ambulanceRoute, isSlotZone, route, slotPos, stationPos, zoneAnchor, type SlotZone, type Vec } from './layout';
 
 export interface Figure {
   id: string;
@@ -29,6 +29,8 @@ export class Playback {
   readonly capacity: Capacity;
   /** ambulancias que salieron (TRANSFER_START). El regreso no tiene evento: T06 lo lee de snapshot(). */
   readonly ambulancesAway = new Set<string>();
+  /** T12: traslados en curso por ambulancia (TRANSFER_START → TRANSFER_END), con su duración del motor */
+  readonly transfers = new Map<string, { patientId: string; t0: number; dur: number; clinic: string }>();
   /** reloj: instante del último avance */
   t: number;
   private readonly pending: SimEvent[] = [];
@@ -76,6 +78,13 @@ export class Playback {
     }
     if (f.slot !== undefined && isSlotZone(f.zone)) return slotPos(f.zone, f.slot);
     return zoneAnchor(f.zone);
+  }
+
+  /** Posición de una ambulancia en traslado: avanza por su ruta en proporción al tiempo de viaje del motor. */
+  ambulancePosition(ambId: string, t: number): Vec | undefined {
+    const tr = this.transfers.get(ambId);
+    if (!tr) return undefined;
+    return along(ambulanceRoute(ambId), tr.dur > 0 ? (t - tr.t0) / tr.dur : 1);
   }
 
   /** Posición en el instante t. Con `snap` (velocidad > ×120) salta al destino sin interpolar. */
@@ -148,7 +157,13 @@ export class Playback {
         f.zone = 'ambulance_bay';
         f.resourceId = undefined;
         f.hidden = true;
-        if (e.resourceId) this.ambulancesAway.add(e.resourceId);
+        if (e.resourceId) {
+          this.ambulancesAway.add(e.resourceId);
+          this.transfers.set(e.resourceId, { patientId: f.id, t0: e.t, dur: e.duration ?? 0, clinic: String(e.data?.clinic ?? e.to) });
+        }
+        break;
+      case 'TRANSFER_END':
+        if (e.resourceId) this.transfers.delete(e.resourceId);
         break;
       case 'DEPARTURE':
         this.free(f);

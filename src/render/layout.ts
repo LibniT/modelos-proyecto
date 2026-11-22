@@ -100,6 +100,15 @@ export function zoneAnchor(zone: Zone): Vec {
   }
 }
 
+/** Vía a las clínicas: sale de la bahía hacia −x, fuera del edificio (T12). */
+export const ROAD = { x0: -7, x1: 0, y0: 0, y1: 7 };
+
+/** Ruta fija de la ambulancia `amb-i` desde su puesto hasta el final visible de la vía. */
+export function ambulanceRoute(ambId: string): Vec[] {
+  const s = stationPos(ambId)!;
+  return [s, { x: ROAD.x0 + 0.5, y: s.y }];
+}
+
 /** Ruta fija entre dos puntos: recta si están del mismo lado del pasillo central; si no, por el pasillo. */
 export function route(a: Vec, b: Vec): Vec[] {
   if ((a.y - CORRIDOR_Y) * (b.y - CORRIDOR_Y) > 0) return [a, b];

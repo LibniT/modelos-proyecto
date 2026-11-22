@@ -1,7 +1,7 @@
 import type { SimEvent } from '../../src/engine/events';
 import type { Snapshot } from '../../src/model/ed';
 import { Playback } from '../../src/render/playback';
-import { along, route } from '../../src/render/layout';
+import { ambulanceRoute, along, route } from '../../src/render/layout';
 import mock from '../../src/render/mock/events.json';
 
 const initial = mock.initial as unknown as Snapshot;
@@ -57,5 +57,24 @@ describe('Reproductor de eventos de la escena (T05)', () => {
     expect(path).toHaveLength(4);
     expect(along(path, 0)).toEqual(path[0]);
     expect(along(path, 1)).toEqual(path[3]);
+  });
+
+  it('T12: la ambulancia recorre su ruta en exactamente la duración del traslado y desaparece al llegar', () => {
+    const pb = new Playback(initial);
+    pb.push(events);
+    const start = events.find((e) => e.type === 'TRANSFER_START')!;
+    const end = events.find((e) => e.type === 'TRANSFER_END' && e.patientId === start.patientId)!;
+    const amb = start.resourceId!;
+    pb.advance(start.t);
+    expect(pb.figures.get(start.patientId!)!.hidden).toBe(true); // el paciente va dentro
+    const route = ambulanceRoute(amb);
+    expect(pb.ambulancePosition(amb, start.t)).toEqual(route[0]);
+    const mid = pb.ambulancePosition(amb, start.t + start.duration! / 2)!;
+    expect(mid.x).toBeCloseTo((route[0].x + route[1].x) / 2, 9);
+    expect(pb.transfers.get(amb)!.clinic).toBe(start.data!.clinic);
+    expect(end.t).toBeCloseTo(start.t + start.duration!, 9); // el motor llega cuando dijo
+    pb.advance(end.t);
+    expect(pb.transfers.has(amb)).toBe(false);
+    expect(pb.ambulancesAway.has(amb)).toBe(true); // sigue fuera: regresa sin evento
   });
 });

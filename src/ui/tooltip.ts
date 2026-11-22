@@ -36,13 +36,13 @@ const STATION_NAME: Record<string, string> = {
   amb: 'Ambulancia',
 };
 
-function stationTip(id: string, s: Snapshot, ambAway: ReadonlySet<string>): Tip {
+function stationTip(id: string, s: Snapshot, ambAway: ReadonlySet<string>, clinicOf: (ambId: string) => string | undefined): Tip {
   const [kind, n] = id.split('-');
   const i = Number(n);
   const cap = { triage: s.triage.capacity, admission: s.admission.capacity, doctor: s.doctors.capacity, bed: s.obsBeds.capacity, amb: s.ambulances.capacity }[kind]!;
   const who = s.patients.find((p) => p.resourceId === id && p.state !== 'caminando');
   const lines: string[] = [];
-  if (who) lines.push(kind === 'amb' ? `Trasladando a ${who.name} a una clínica` : `Atiende a ${who.name}${who.triage ? ` (triage ${ROMAN[who.triage]})` : ''}`);
+  if (who) lines.push(kind === 'amb' ? `Trasladando a ${who.name} a ${clinicOf(id) ?? 'una clínica'}` : `Atiende a ${who.name}${who.triage ? ` (triage ${ROMAN[who.triage]})` : ''}`);
   else if (kind === 'amb' && ambAway.has(id)) lines.push('Regresando de la clínica');
   else if (i < cap) lines.push('Libre');
   if (i >= cap) lines.push(who ? 'Sin personal al terminar esta atención (capacidad reducida)' : 'Sin personal: la capacidad actual es menor');
@@ -63,10 +63,16 @@ function areaTip(name: string, s: Snapshot): Tip | undefined {
   return lines[name] && { title: name, lines: lines[name] };
 }
 
-export function describe(hit: Hit, s: Snapshot, epsName: (id: string) => string, ambAway: ReadonlySet<string>): Tip | undefined {
+export function describe(
+  hit: Hit,
+  s: Snapshot,
+  epsName: (id: string) => string,
+  ambAway: ReadonlySet<string>,
+  clinicOf: (ambId: string) => string | undefined = () => undefined,
+): Tip | undefined {
   if (hit.kind === 'patient') {
     const p = s.patients.find((x) => x.id === hit.id);
     return p && patientTip(p, s, epsName);
   }
-  return hit.kind === 'station' ? stationTip(hit.id, s, ambAway) : areaTip(hit.name, s);
+  return hit.kind === 'station' ? stationTip(hit.id, s, ambAway, clinicOf) : areaTip(hit.name, s);
 }

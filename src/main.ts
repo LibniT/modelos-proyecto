@@ -81,7 +81,7 @@ const driver = live ?? new MockDriver();
 // T08: tooltips con el estado actual del motor (solo en vivo; el mock no tiene snapshot).
 const tip = $('tip');
 const onHover = (hit: Hit | undefined, x: number, y: number) => {
-  const t = hit && live && describe(hit, live.ed.snapshot(), (id) => live.ed.params.eps.find((e) => e.id === id)?.name ?? id, live.pb.ambulancesAway);
+  const t = hit && live && describe(hit, live.ed.snapshot(), (id) => live.ed.params.eps.find((e) => e.id === id)?.name ?? id, live.pb.ambulancesAway, (a) => live.pb.transfers.get(a)?.clinic);
   tip.hidden = !t;
   if (!t) return;
   const color = t.level === undefined ? '#e6edf3' : `#${TRIAGE_COLOR[t.level].toString(16).padStart(6, '0')}`;

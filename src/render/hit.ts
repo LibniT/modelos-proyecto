@@ -38,6 +38,12 @@ export function hitTest(pb: Playback, world: Vec, snap: boolean): Hit | undefine
   if (best) return best;
 
   const g = unIso(world);
+  // T12: ambulancia en traslado sobre la vía (solo se dibuja hasta ×120).
+  if (!snap)
+    for (const id of pb.transfers.keys()) {
+      const p = pb.ambulancePosition(id, pb.t)!;
+      if (Math.abs(g.x - p.x) <= 1.2 && Math.abs(g.y - p.y) <= 0.8) return { kind: 'station', id };
+    }
   const s = STATIONS.find((r) => g.x >= r.x0 && g.x <= r.x1 && g.y >= r.y0 && g.y <= r.y1);
   if (s) return { kind: 'station', id: s.id };
 

@@ -3,7 +3,7 @@
  * Dibuja lo que dice el `Playback`; el `Driver` (drivers.ts) decide de dónde salen los eventos.
  */
 import Phaser from 'phaser';
-import { AREAS, GRID, MAX, iso, slotPos, stationPos, type Vec } from './layout';
+import { AREAS, GRID, MAX, ROAD, iso, slotPos, stationPos, type Vec } from './layout';
 import type { Playback } from './playback';
 import type { Driver } from './drivers';
 import { hitTest, type Hit } from './hit';
@@ -59,11 +59,14 @@ export class HospitalScene extends Phaser.Scene {
         .setOrigin(0.5)
         .setDepth(2);
     }
+    const rq = iso({ x: ROAD.x0 - 0.6, y: (ROAD.y0 + ROAD.y1) / 2 }); // al final de la vía, fuera de los carriles
+    this.add.text(rq.x, rq.y, 'Hacia las clínicas', { fontFamily: 'system-ui, sans-serif', fontSize: '14px', color: '#f8fafc' }).setOrigin(0.5).setDepth(2);
     const cam = this.cameras.main;
     const fit = () => {
+      // Edificio + vía de las clínicas (que sube por la izquierda).
       const c = iso({ x: GRID.w / 2, y: GRID.h / 2 });
-      cam.setZoom(Math.min(this.scale.width / 1400, this.scale.height / 760));
-      cam.centerOn(c.x, c.y);
+      cam.setZoom(Math.min(this.scale.width / 1400, this.scale.height / 840));
+      cam.centerOn(c.x, c.y - 50);
     };
     fit();
     this.scale.on('resize', fit);
@@ -102,6 +105,13 @@ export class HospitalScene extends Phaser.Scene {
   private drawStatic(pb: Playback): void {
     const g = this.floor.clear();
     const cap = pb.capacity;
+    // Vía a las clínicas (T12), con un carril por ambulancia.
+    g.fillStyle(0x374151).fillPoints(pts([{ x: ROAD.x0, y: ROAD.y0 }, { x: ROAD.x1, y: ROAD.y0 }, { x: ROAD.x1, y: ROAD.y1 }, { x: ROAD.x0, y: ROAD.y1 }]), true);
+    g.lineStyle(2, 0xfacc15, 0.8);
+    for (let i = 0; i < MAX.amb - 1; i++) {
+      const y = (stationPos(`amb-${i}`)!.y + stationPos(`amb-${i + 1}`)!.y) / 2;
+      for (let x = ROAD.x0; x < ROAD.x1; x += 1) g.strokePoints(pts([{ x, y }, { x: x + 0.5, y }]));
+    }
     for (const a of AREAS) {
       g.fillStyle(a.color).fillPoints(pts([{ x: a.x0, y: a.y0 }, { x: a.x1, y: a.y0 }, { x: a.x1, y: a.y1 }, { x: a.x0, y: a.y1 }]), true);
       g.lineStyle(1, 0x000000, 0.08);
@@ -143,6 +153,13 @@ export class HospitalScene extends Phaser.Scene {
 
   private drawPeople(pb: Playback): void {
     const g = this.people.clear();
+    // T12: ambulancias en traslado (posición ∝ tiempo de viaje del motor). Sobre ×120 saltan al destino: fuera de la escena.
+    if (this.driver.speed <= SNAP_SPEED)
+      for (const id of pb.transfers.keys()) {
+        const p = pb.ambulancePosition(id, pb.t)!;
+        boxAt(g, p, 2.2, 1.2, 26, 0xf8fafc);
+        boxAt(g, { x: p.x - 0.6, y: p.y }, 0.4, 1.21, 27, 0xdc2626);
+      }
     const snap = this.driver.speed > SNAP_SPEED;
     const list = [...pb.figures.values()]
       .filter((f) => !f.hidden)
