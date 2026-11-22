@@ -65,3 +65,19 @@ Hecho:
 Siguiente paso: T07 (panel con deslizadores, `src/ui`): usa `driver.ed.setCapacity(...)` / `setArrivalRate(...)`; la escena ya reacciona a `PARAM_CHANGE` (puestos en gris). T08 tooltips: `driver.pb.figures` + `ed.snapshot()`.
 
 Preguntas para el autor: ¿T07 la hago yo o Codex? Fecha exacta del final de corte.
+
+## 2026-11-22 · Claude · main (rama feat/T07-panel, ya fusionada)
+Hecho:
+- T07 (la tomó Claude por decisión del autor). `src/ui/panel.ts` → `mountPanel(root, liveDriver, makeEd)`, a la derecha de la escena:
+  - Deslizadores λ (1–30/h), médicos ≤ 8, triage ≤ 3, admisión ≤ 3, camas ≤ 20, ambulancias ≤ 3 → `ed.setArrivalRate` / `ed.setCapacity`. La escena reacciona por `PARAM_CHANGE`.
+  - Selector de modo: crea un motor nuevo (`makeEd`) y lo carga con `LiveDriver.load(ed)` (nuevo). El accidente masivo se desactiva en validación (el motor lo rechaza).
+  - Métricas en vivo (todas las claves pedidas). **Cada cambio de parámetros llama `ed.resetStats()`**, así las métricas miden solo la configuración actual (se indica "desde HH:MM").
+  - Gráfica N(t) con Chart.js: N leído de `snapshot()` cada ≥ 5 min simulados, ventana de 12 h, escalonada.
+  - Aviso "EPS y clínicas ficticias · parámetros estimados con fines académicos".
+- 61 pruebas pasan, `npm run build` compila.
+
+Meta A: T05, T06, T07 y T11 hechas. Falta T08 (tooltips) como mejora y T13 (prueba sin internet, autor, martes 24).
+
+Siguiente paso: T08 (tooltips: `driver.pb.figures` para ubicar al paciente bajo el puntero + `ed.snapshot()` para sus datos), T09 (personajes, Codex B), T12 (ambulancia animada).
+
+Preguntas para el autor: fecha exacta del final de corte.
