@@ -7,6 +7,8 @@ import { EmergencyDepartment } from './model/ed';
 import { realisticParams, validationParams, type Mode } from './model/params';
 import { mountValidationPanel } from './ui/validation/panel';
 import { mountPanel } from './ui/panel';
+import { describe } from './ui/tooltip';
+import type { Hit } from './render/hit';
 import { mountScene, TRIAGE_COLOR } from './render/scene';
 import { LiveDriver, MockDriver } from './render/drivers';
 
@@ -22,6 +24,8 @@ app.innerHTML = `
   nav button { background: #1e293b; } nav button[aria-selected="true"] { background: #2563eb; }
   [data-speed][aria-pressed="true"] { outline: 2px solid #facc15; }
   button:disabled { opacity: .4; cursor: not-allowed; }
+  #tip { position: absolute; pointer-events: none; background: rgba(15, 23, 32, .94); border: 1px solid #334155; border-radius: 6px; padding: 6px 10px; font-size: 12px; line-height: 1.45; max-width: 280px; z-index: 5; }
+  #tip b { display: block; font-size: 13px; margin-bottom: 2px; }
   .stage { display: grid; grid-template-columns: 1fr 320px; gap: 12px; align-items: start; }
   @media (max-width: 900px) { .stage { grid-template-columns: 1fr; } }
 </style>
@@ -40,7 +44,10 @@ app.innerHTML = `
   </div>
   <section id="tab-scene">
     <div class="stage">
-      <div id="scene" style="height: 680px; border-radius: 8px; overflow: hidden; min-width: 0"></div>
+      <div style="position: relative; min-width: 0">
+        <div id="scene" style="height: 680px; border-radius: 8px; overflow: hidden"></div>
+        <div id="tip" hidden></div>
+      </div>
       <aside id="panel"></aside>
     </div>
     <p class="row" id="legend"></p>
@@ -71,7 +78,23 @@ function makeEd(mode: Mode): EmergencyDepartment {
 }
 const live = mockMode ? undefined : new LiveDriver(makeEd('realista'));
 const driver = live ?? new MockDriver();
-mountScene($('scene'), driver);
+// T08: tooltips con el estado actual del motor (solo en vivo; el mock no tiene snapshot).
+const tip = $('tip');
+const onHover = (hit: Hit | undefined, x: number, y: number) => {
+  const t = hit && live && describe(hit, live.ed.snapshot(), (id) => live.ed.params.eps.find((e) => e.id === id)?.name ?? id, live.pb.ambulancesAway);
+  tip.hidden = !t;
+  if (!t) return;
+  const color = t.level === undefined ? '#e6edf3' : `#${TRIAGE_COLOR[t.level].toString(16).padStart(6, '0')}`;
+  const b = document.createElement('b');
+  b.textContent = t.title;
+  b.style.color = color;
+  tip.replaceChildren(b, ...t.lines.map((l) => Object.assign(document.createElement('div'), { textContent: l })));
+  // A la derecha del puntero; si no cabe, a la izquierda.
+  const w = $('scene').clientWidth;
+  tip.style.left = `${x + 16 + tip.offsetWidth > w ? x - 16 - tip.offsetWidth : x + 16}px`;
+  tip.style.top = `${y + 12}px`;
+};
+mountScene($('scene'), driver, live ? onHover : undefined);
 if (live) mountPanel($('panel'), live, makeEd);
 
 $('source').textContent = mockMode

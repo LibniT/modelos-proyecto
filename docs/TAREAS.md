@@ -24,7 +24,7 @@ Estados: `pendiente` · `en curso (agente, fecha)` · `hecha` · `bloqueada (por
 | T05 | **Escena isométrica dibujada por código** que reproduce `src/render/mock/events.json` | Claude | `src/render` | hecha (Claude, 22 nov) |
 | T06 | Conectar la escena al motor en vivo (`ed.step`, `drainEvents`, `snapshot`) + controles pausa / ×1 / ×60 / ×600 | Claude | `src/render`, `src/main.ts` | hecha (Claude, 22 nov) |
 | T07 | Panel: deslizadores (λ, médicos, triage, admisión, camas, ambulancias), selector de modo, métricas en vivo, gráfica N(t) con Chart.js | Claude | `src/ui` | hecha (Claude, 22 nov) |
-| T08 | Tooltips al pasar el mouse (pacientes y recursos) | Codex A | `src/render`, `src/ui` | pendiente |
+| T08 | Tooltips al pasar el mouse (pacientes y recursos) | Claude | `src/render`, `src/ui` | hecha (Claude, 22 nov) |
 | T09 | Generador de personajes por código (24×32 px, paleta, 4 direcciones, quieto / caminar / sentado / acostado) | Codex B | `tools/`, `src/render/characters`, `assets/generated` | pendiente |
 | T10 | Creador simple: nombre, edad, EPS, síntoma, colores → `ed.injectVisitor(...)` | Codex B | `src/ui/creator` | pendiente |
 | T11 | Pestaña "Validación" en la UI (ya existe la base en `src/main.ts`): tabla + botón, con Worker | Claude | `src/ui/validation` | hecha (Claude, 22 nov) |

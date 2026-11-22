@@ -1,0 +1,47 @@
+/**
+ * ¿Qué hay bajo el puntero? Paciente > puesto > área. Sin Phaser (se prueba en Node).
+ */
+import { AREAS, MAX, iso, stationPos, unIso, type Vec } from './layout';
+import type { Playback } from './playback';
+
+export type Hit = { kind: 'patient'; id: string } | { kind: 'station'; id: string } | { kind: 'area'; name: string };
+
+/** radio de acierto sobre el cuerpo del paciente (px de mundo) */
+const PATIENT_R = 12;
+/** huella de cada puesto respecto a su posición (baldosas): cubre el mueble dibujado en scene.ts */
+const FOOTPRINT = {
+  triage: [-0.5, 1.5, -0.9, 0.9],
+  admission: [-0.5, 1.5, -0.9, 0.9],
+  doctor: [-0.9, 0.9, -2.3, 1.8],
+  bed: [-0.6, 0.6, -1.1, 1.1],
+  amb: [-1.2, 1.2, -0.8, 0.8],
+} as const;
+
+const STATIONS = (Object.keys(FOOTPRINT) as (keyof typeof FOOTPRINT)[]).flatMap((k) =>
+  Array.from({ length: MAX[k] }, (_, i) => {
+    const id = `${k}-${i}`;
+    const p = stationPos(id)!;
+    const [x0, x1, y0, y1] = FOOTPRINT[k];
+    return { id, x0: p.x + x0, x1: p.x + x1, y0: p.y + y0, y1: p.y + y1 };
+  }),
+);
+
+export function hitTest(pb: Playback, world: Vec, snap: boolean): Hit | undefined {
+  let best: Hit | undefined;
+  let bestD = PATIENT_R;
+  for (const f of pb.figures.values()) {
+    if (f.hidden) continue;
+    const q = iso(pb.position(f, pb.t, snap));
+    const d = Math.hypot(world.x - q.x, world.y - (q.y - 9)); // centro del cuerpo dibujado
+    if (d < bestD) [best, bestD] = [{ kind: 'patient', id: f.id }, d];
+  }
+  if (best) return best;
+
+  const g = unIso(world);
+  const s = STATIONS.find((r) => g.x >= r.x0 && g.x <= r.x1 && g.y >= r.y0 && g.y <= r.y1);
+  if (s) return { kind: 'station', id: s.id };
+
+  // Las áreas se recorren de la última a la primera: la última dibujada queda encima.
+  const a = [...AREAS].reverse().find((r) => g.x >= r.x0 && g.x < r.x1 && g.y >= r.y0 && g.y < r.y1);
+  return a ? { kind: 'area', name: a.name } : undefined;
+}

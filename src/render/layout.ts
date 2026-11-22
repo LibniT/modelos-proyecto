@@ -20,6 +20,8 @@ export const MAX = { triage: 3, admission: 3, doctor: 8, bed: 20, amb: 3 };
 
 /** Proyección isométrica: baldosas → píxeles de mundo. */
 export const iso = (p: Vec): Vec => ({ x: (p.x - p.y) * (TILE.w / 2), y: (p.x + p.y) * (TILE.h / 2) });
+/** Inversa de `iso`: píxeles de mundo → baldosas (sobre el piso). */
+export const unIso = (q: Vec): Vec => ({ x: (q.x / (TILE.w / 2) + q.y / (TILE.h / 2)) / 2, y: (q.y / (TILE.h / 2) - q.x / (TILE.w / 2)) / 2 });
 
 /** Áreas del piso (rectángulos [x0, x1) × [y0, y1)) con su rótulo. */
 export const AREAS: { name: string; x0: number; y0: number; x1: number; y1: number; color: number; label?: Vec }[] = [

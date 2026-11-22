@@ -6,6 +6,10 @@ import Phaser from 'phaser';
 import { AREAS, GRID, MAX, iso, slotPos, stationPos, type Vec } from './layout';
 import type { Playback } from './playback';
 import type { Driver } from './drivers';
+import { hitTest, type Hit } from './hit';
+
+/** Lo que hay bajo el puntero y dónde está el puntero (px del lienzo); undefined = nada o fuera. */
+export type HoverFn = (hit: Hit | undefined, x: number, y: number) => void;
 
 export const TRIAGE_COLOR = [0x9ca3af, 0xdc2626, 0xf97316, 0xeab308, 0x16a34a, 0x2563eb];
 const SNAP_SPEED = 120;
@@ -35,8 +39,12 @@ export class HospitalScene extends Phaser.Scene {
   private floor!: Phaser.GameObjects.Graphics;
   private people!: Phaser.GameObjects.Graphics;
   private staticKey = '';
+  private pointerOver = false;
 
-  constructor(private readonly driver: Driver) {
+  constructor(
+    private readonly driver: Driver,
+    private readonly onHover?: HoverFn,
+  ) {
     super('hospital');
   }
 
@@ -65,6 +73,11 @@ export class HospitalScene extends Phaser.Scene {
       cam.scrollX -= (p.x - p.prevPosition.x) / cam.zoom;
       cam.scrollY -= (p.y - p.prevPosition.y) / cam.zoom;
     });
+    this.input.on('gameover', () => (this.pointerOver = true));
+    this.input.on('gameout', () => {
+      this.pointerOver = false;
+      this.onHover?.(undefined, 0, 0);
+    });
     this.input.on('wheel', (_p: unknown, _o: unknown, _dx: number, dy: number) => cam.setZoom(Phaser.Math.Clamp(cam.zoom * (dy > 0 ? 0.9 : 1.1), 0.3, 2.5)));
   }
 
@@ -77,6 +90,13 @@ export class HospitalScene extends Phaser.Scene {
       this.drawStatic(pb);
     }
     this.drawPeople(pb);
+    if (this.onHover && this.pointerOver) {
+      // Cada cuadro: el paciente bajo el puntero puede moverse aunque el puntero esté quieto.
+      const p = this.input.activePointer;
+      p.updateWorldPoint(this.cameras.main);
+      const hit = p.isDown ? undefined : hitTest(pb, { x: p.worldX, y: p.worldY }, this.driver.speed > SNAP_SPEED);
+      this.onHover(hit, p.x, p.y);
+    }
   }
 
   private drawStatic(pb: Playback): void {
@@ -144,13 +164,13 @@ export class HospitalScene extends Phaser.Scene {
 }
 
 /** Crea el juego de Phaser dentro de `parent` (debe tener alto definido). */
-export function mountScene(parent: HTMLElement, driver: Driver): Phaser.Game {
+export function mountScene(parent: HTMLElement, driver: Driver, onHover?: HoverFn): Phaser.Game {
   return new Phaser.Game({
     type: Phaser.AUTO,
     parent,
     backgroundColor: '#0f1720',
     scale: { mode: Phaser.Scale.RESIZE },
-    scene: new HospitalScene(driver),
+    scene: new HospitalScene(driver, onHover),
     banner: false,
   });
 }
