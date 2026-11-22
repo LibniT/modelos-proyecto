@@ -51,7 +51,7 @@ Estados: `pendiente` · `en curso (agente, fecha)` · `hecha` · `bloqueada (por
 
 | ID | Tarea | Agente sugerido | Carpetas | Estado |
 |---|---|---|---|---|
-| T14 | Experimento de escenarios con números aleatorios comunes: 4, 5, 6, 7 médicos → espera Triage II y % cumplimiento, con IC (gráfica para póster/informe) | Claude | `src/batch`, `tools/`, `docs/` | pendiente |
+| T14 | Experimento de escenarios con números aleatorios comunes: 4, 5, 6, 7 médicos → espera Triage II y % cumplimiento, con IC (gráfica para póster/informe) | Claude | `src/batch`, `tools/`, `docs/` | hecha (Claude, 22 nov) |
 | T15 | Gráfica de Welch para justificar el calentamiento | Claude | `tools/`, `docs/` | pendiente |
 | T16 | Seguir a mi personaje + tarjeta de recorrido (`DEPARTURE.data.journey`) | Codex B | `src/render`, `src/ui` | pendiente |
 | T17 | Botón accidente masivo en la UI + tiempo de recuperación | Codex A | `src/ui` | pendiente |
