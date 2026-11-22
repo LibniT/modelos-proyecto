@@ -10,7 +10,9 @@ import { mountValidationPanel } from './ui/validation/panel';
 import { mountPanel } from './ui/panel';
 import { describe } from './ui/tooltip';
 import { mountCreator } from './ui/creator/creator';
+import { journeyCard } from './ui/journey';
 import type { Hit } from './render/hit';
+import type { SimEvent } from './engine/events';
 import { mountScene, TRIAGE_COLOR } from './render/scene';
 import { LiveDriver, MockDriver } from './render/drivers';
 
@@ -28,6 +30,9 @@ app.innerHTML = `
   button:disabled { opacity: .4; cursor: not-allowed; }
   #tip { position: absolute; pointer-events: none; background: rgba(15, 23, 32, .94); border: 1px solid #334155; border-radius: 6px; padding: 6px 10px; font-size: 12px; line-height: 1.45; max-width: 280px; z-index: 5; }
   #tip b { display: block; font-size: 13px; margin-bottom: 2px; }
+  #card { position: absolute; top: 8px; left: 8px; z-index: 6; max-width: 360px; background: rgba(15, 23, 32, .96); border: 1px solid #334155; border-radius: 8px; padding: 10px 12px; font-size: 13px; line-height: 1.5; }
+  #card b { display: block; font-size: 14px; margin-bottom: 4px; }
+  #card button { margin-top: 8px; padding: 4px 10px; }
   .stage { display: grid; grid-template-columns: 1fr 320px; gap: 12px; align-items: start; }
   @media (max-width: 900px) { .stage { grid-template-columns: 1fr; } }
 </style>
@@ -43,6 +48,7 @@ app.innerHTML = `
     <button data-speed="1">×1</button><button data-speed="60">×60</button><button data-speed="120">×120</button><button data-speed="600">×600</button>
     <button id="mass">Accidente masivo (8)</button>
     <button id="create" style="background:#16a34a">Crear mi paciente</button>
+    <button id="follow" style="background:#a16207">Seguir a mi paciente</button>
     <span id="clock"></span>
   </div>
   <section id="tab-scene">
@@ -50,11 +56,13 @@ app.innerHTML = `
       <div style="position: relative; min-width: 0">
         <div id="scene" style="height: 680px; border-radius: 8px; overflow: hidden"></div>
         <div id="tip" hidden></div>
+        <div id="card" role="dialog" aria-label="Recorrido del paciente" hidden></div>
       </div>
       <aside id="panel"></aside>
     </div>
     <p class="row" id="legend"></p>
     <p id="toast" role="status" style="color:#facc15; min-height: 1em; margin: 4px 0"></p>
+    <p id="following" class="row" style="margin: 0"></p>
     <p style="font-size: 12px; opacity: .75" id="source"></p>
   </section>
   <section id="tab-sim" hidden><pre id="state"></pre></section>
@@ -98,9 +106,9 @@ const onHover = (hit: Hit | undefined, x: number, y: number) => {
   tip.style.left = `${x + 16 + tip.offsetWidth > w ? x - 16 - tip.offsetWidth : x + 16}px`;
   tip.style.top = `${y + 12}px`;
 };
-mountScene($('scene'), driver, live ? onHover : undefined);
+const scene = mountScene($('scene'), driver, live ? onHover : undefined);
 // Solo en desarrollo (npm run dev): inspeccionar el estado desde la consola. No existe en el build de la feria.
-if (import.meta.env.DEV) Object.assign(window, { __sim: { driver, live } });
+if (import.meta.env.DEV) Object.assign(window, { __sim: { driver, live, scene } });
 if (live) mountPanel($('panel'), live, makeEd);
 
 $('source').textContent = mockMode
@@ -126,7 +134,30 @@ $('pause').onclick = () => {
 };
 $('mass').hidden = mockMode;
 $('create').hidden = mockMode;
-if (live) mountCreator($('create') as HTMLButtonElement, () => live.ed, (msg) => ($('toast').textContent = msg));
+// T16: al crear un paciente, la cámara lo sigue en cuanto llega.
+let followNextVisitor = false;
+if (live)
+  mountCreator($('create') as HTMLButtonElement, () => live.ed, (msg) => {
+    $('toast').textContent = msg;
+    followNextVisitor = true;
+  });
+$('follow').hidden = mockMode;
+const newestVisitor = () =>
+  [...driver.pb.figures.values()].filter((f) => f.isVisitor).sort((a, b) => Number(b.id.slice(1)) - Number(a.id.slice(1)))[0];
+$('follow').onclick = () => (scene.follow = newestVisitor()?.id);
+
+// T16: tarjeta de recorrido al salir un paciente seguido (o cualquier visitante).
+const watched = new Set<string>();
+function showCard(e: SimEvent): void {
+  const c = journeyCard(e, live ? live.ed.metrics()['doorToDoctor'] : NaN);
+  const b = document.createElement('b');
+  b.textContent = c.title;
+  b.style.color = `#${TRIAGE_COLOR[c.level].toString(16).padStart(6, '0')}`;
+  const close = Object.assign(document.createElement('button'), { textContent: 'Cerrar' });
+  close.onclick = () => ($('card').hidden = true);
+  $('card').replaceChildren(b, ...c.lines.map((l) => Object.assign(document.createElement('div'), { textContent: l })), close);
+  $('card').hidden = false;
+}
 $('mass').onclick = () => live?.ed.triggerMassCasualty(8);
 
 function fmtClock(t: number): string {
@@ -139,6 +170,19 @@ function fmtClock(t: number): string {
 // Textos: 5 veces por segundo basta (la escena se dibuja en cada cuadro).
 setInterval(() => {
   $('clock').textContent = `${fmtClock(driver.pb.t)} · ×${driver.speed}${driver.paused ? ' (pausa)' : ''} · pacientes: ${driver.pb.figures.size}`;
+  // T16: seguir, vigilar y mostrar la tarjeta de recorrido.
+  if (followNextVisitor && newestVisitor()) {
+    scene.follow = newestVisitor()!.id;
+    followNextVisitor = false;
+  }
+  if (scene.follow) watched.add(scene.follow);
+  for (const e of driver.pb.departures.splice(0)) {
+    if (watched.has(e.patientId!) || (e.data as { isVisitor?: boolean }).isVisitor) showCard(e);
+    watched.delete(e.patientId!);
+  }
+  ($('follow') as HTMLButtonElement).disabled = !newestVisitor();
+  const f = scene.follow ? driver.pb.figures.get(scene.follow) : undefined;
+  $('following').textContent = f ? `Siguiendo a ${f.name} (anillo amarillo). Arrastra la escena o haz clic en el piso para soltar.` : 'Haz clic sobre un paciente para seguirlo con la cámara.';
   if (!live) return;
   const ed = live.ed;
   // El motor rechaza el accidente masivo y los visitantes en validación (cambiarían el proceso de llegadas).

@@ -49,6 +49,8 @@ export class HospitalScene extends Phaser.Scene {
   private staffImgs: Phaser.GameObjects.Image[] = [];
   private staticKey = '';
   private pointerOver = false;
+  /** T16: paciente que sigue la cámara (clic sobre él o botón "Seguir a mi paciente") */
+  follow: string | undefined;
 
   constructor(
     private readonly driver: Driver,
@@ -83,8 +85,16 @@ export class HospitalScene extends Phaser.Scene {
     // Cámara: arrastrar para mover, rueda para acercar.
     this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
       if (!p.isDown) return;
+      if (Phaser.Math.Distance.Between(p.downX, p.downY, p.x, p.y) > 6) this.follow = undefined; // arrastrar = tomar la cámara
       cam.scrollX -= (p.x - p.prevPosition.x) / cam.zoom;
       cam.scrollY -= (p.y - p.prevPosition.y) / cam.zoom;
+    });
+    // Clic (sin arrastrar) sobre un paciente: seguirlo; sobre otra cosa: dejar de seguir.
+    this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
+      if (Phaser.Math.Distance.Between(p.downX, p.downY, p.upX, p.upY) > 6) return;
+      p.updateWorldPoint(cam);
+      const hit = hitTest(this.driver.pb, { x: p.worldX, y: p.worldY }, this.driver.speed > SNAP_SPEED);
+      this.follow = hit?.kind === 'patient' ? hit.id : undefined;
     });
     this.input.on('gameover', () => (this.pointerOver = true));
     this.input.on('gameout', () => {
@@ -103,6 +113,7 @@ export class HospitalScene extends Phaser.Scene {
       this.drawStatic(pb);
     }
     this.drawPeople(pb);
+    this.followCamera(pb);
     if (this.onHover && this.pointerOver) {
       // Cada cuadro: el paciente bajo el puntero puede moverse aunque el puntero esté quieto.
       const p = this.input.activePointer;
@@ -209,6 +220,7 @@ export class HospitalScene extends Phaser.Scene {
         g.fillStyle(0x000000, 0.25).fillEllipse(q.x, q.y, 16, 7);
         top = q.y - (H - 1) * scale;
       }
+      if (f.id === this.follow) m.lineStyle(2.5, 0xfacc15).strokeEllipse(q.x, q.y, 30, 14); // anillo del paciente seguido
       // Burbuja con el color del triage (gris antes de clasificar); los visitantes llevan además una flecha amarilla.
       m.fillStyle(TRIAGE_COLOR[f.triage ?? 0]).fillCircle(q.x, top - 6, 5).lineStyle(1.5, 0x1f2937).strokeCircle(q.x, top - 6, 5);
       if (f.isVisitor) m.fillStyle(0xfacc15).fillTriangle(q.x - 6, top - 22, q.x + 6, top - 22, q.x, top - 13).strokeTriangle(q.x - 6, top - 22, q.x + 6, top - 22, q.x, top - 13);
@@ -219,6 +231,24 @@ export class HospitalScene extends Phaser.Scene {
         this.sprites.delete(id);
         if (!pb.figures.has(id)) this.lastDir.delete(id);
       }
+  }
+
+  /** La cámara acompaña al paciente seguido (o a su ambulancia); si ya salió, deja de seguir. */
+  private followCamera(pb: Playback): void {
+    if (!this.follow) return;
+    const f = pb.figures.get(this.follow);
+    if (!f) {
+      this.follow = undefined;
+      return;
+    }
+    const amb = [...pb.transfers].find(([, tr]) => tr.patientId === f.id)?.[0];
+    const p = amb && this.driver.speed <= SNAP_SPEED ? pb.ambulancePosition(amb, pb.t)! : pb.position(f, pb.t, this.driver.speed > SNAP_SPEED);
+    const q = iso(p);
+    const cam = this.cameras.main;
+    // Suavizado solo de la cámara (no es un objeto del modelo); salta si el objetivo está lejos.
+    const cx = cam.midPoint.x, cy = cam.midPoint.y;
+    const k = Math.hypot(q.x - cx, q.y - cy) > 400 ? 1 : 0.15;
+    cam.centerOn(cx + (q.x - cx) * k, cy + (q.y - 20 - cy) * k);
   }
 
   /** Hacia dónde mira: al caminar, según el avance del MOVE; en un puesto, hacia el personal; si no, como venía. */
@@ -259,13 +289,15 @@ export class HospitalScene extends Phaser.Scene {
 }
 
 /** Crea el juego de Phaser dentro de `parent` (debe tener alto definido). */
-export function mountScene(parent: HTMLElement, driver: Driver, onHover?: HoverFn): Phaser.Game {
-  return new Phaser.Game({
+export function mountScene(parent: HTMLElement, driver: Driver, onHover?: HoverFn): HospitalScene {
+  const scene = new HospitalScene(driver, onHover);
+  new Phaser.Game({
     type: Phaser.AUTO,
     parent,
     backgroundColor: '#0f1720',
     scale: { mode: Phaser.Scale.RESIZE },
-    scene: new HospitalScene(driver, onHover),
+    scene,
     banner: false,
   });
+  return scene;
 }

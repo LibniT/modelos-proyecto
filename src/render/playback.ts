@@ -35,6 +35,8 @@ export class Playback {
   readonly ambulancesAway = new Set<string>();
   /** T12: traslados en curso por ambulancia (TRANSFER_START → TRANSFER_END), con su duración del motor */
   readonly transfers = new Map<string, { patientId: string; t0: number; dur: number; clinic: string }>();
+  /** T16: salidas aplicadas (DEPARTURE con su `journey`); la interfaz las va consumiendo */
+  readonly departures: SimEvent[] = [];
   /** reloj: instante del último avance */
   t: number;
   private readonly pending: SimEvent[] = [];
@@ -179,6 +181,7 @@ export class Playback {
         if (e.resourceId) this.transfers.delete(e.resourceId);
         break;
       case 'DEPARTURE':
+        this.departures.push(e);
         this.free(f);
         this.figures.delete(f.id);
         break;
