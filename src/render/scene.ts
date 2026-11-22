@@ -1,43 +1,11 @@
 /**
  * T05 — Escena isométrica dibujada por código (Phaser Graphics, sin imágenes).
- * Dibuja lo que dice el `Playback`; el `Driver` decide de dónde salen los eventos
- * (mock grabado aquí; el motor en vivo en T06).
+ * Dibuja lo que dice el `Playback`; el `Driver` (drivers.ts) decide de dónde salen los eventos.
  */
 import Phaser from 'phaser';
-import type { SimEvent } from '../engine/events';
-import type { Snapshot } from '../model/ed';
 import { AREAS, GRID, MAX, iso, slotPos, stationPos, type Vec } from './layout';
-import { Playback } from './playback';
-import mock from './mock/events.json';
-
-export interface Driver {
-  pb: Playback;
-  /** velocidad: minutos simulados por minuto real (×60 → 1 min simulado por segundo) */
-  speed: number;
-  paused: boolean;
-  /** avanza el reloj del render dt segundos reales */
-  tick(dt: number): void;
-}
-
-/** Reproduce src/render/mock/events.json en bucle. */
-export class MockDriver implements Driver {
-  pb!: Playback;
-  speed = 60;
-  paused = false;
-  private readonly end = (mock.events as SimEvent[]).at(-1)!.t;
-  constructor() {
-    this.reset();
-  }
-  reset(): void {
-    this.pb = new Playback(mock.initial as unknown as Snapshot);
-    this.pb.push(mock.events as SimEvent[]);
-  }
-  tick(dt: number): void {
-    if (this.paused) return;
-    this.pb.advance(this.pb.t + (dt * this.speed) / 60);
-    if (this.pb.t > this.end + 5) this.reset();
-  }
-}
+import type { Playback } from './playback';
+import type { Driver } from './drivers';
 
 export const TRIAGE_COLOR = [0x9ca3af, 0xdc2626, 0xf97316, 0xeab308, 0x16a34a, 0x2563eb];
 const SNAP_SPEED = 120;

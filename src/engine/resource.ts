@@ -49,6 +49,10 @@ export class Resource<T> {
   get queueLength(): number {
     return this.queue.length;
   }
+  /** ¿El servidor `id` está libre? (la escena lo usa para saber qué ambulancia regresó) */
+  isFree(id: number): boolean {
+    return this.freeServers.includes(id);
+  }
   queued(): readonly T[] {
     return this.queue.map((w) => w.item);
   }
