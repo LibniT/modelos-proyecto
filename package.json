@@ -12,7 +12,8 @@
     "validate": "vitest run tests/validation",
     "report": "vite-node tools/validation-report.ts",
     "mock": "vite-node tools/export-mock-events.ts",
-    "experiment": "vite-node tools/doctor-experiment.ts"
+    "experiment": "vite-node tools/doctor-experiment.ts",
+    "welch": "vite-node tools/welch.ts"
   },
   "author": "Libni Jahzeel Torres Castro",
   "license": "UNLICENSED",
