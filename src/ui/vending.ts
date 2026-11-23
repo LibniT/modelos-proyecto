@@ -55,8 +55,9 @@ export class VendingPanel {
   ) {
     host.setAttribute('role', 'dialog');
     host.setAttribute('aria-labelledby', 'vend-title');
-    host.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
+    // En todo el documento: el foco puede haber quedado fuera del panel (p. ej. en un botón que se deshabilitó).
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.isOpen && !document.querySelector('dialog[open]')) {
         e.preventDefault();
         this.close();
       }
@@ -85,7 +86,7 @@ export class VendingPanel {
       <ul class="vend-products" aria-label="Productos y códigos"></ul>
       <div class="vend-pad">
         <label for="vend-code">Escribe el código del producto</label>
-        <input id="vend-code" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="8" placeholder="${products[2].code}">
+        <input id="vend-code" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="8" placeholder="p. ej. ${products[2].code}">
         <div class="vend-keys" role="group" aria-label="Teclado en pantalla"></div>
         <button type="button" class="vend-ok">Confirmar código</button>
         <p class="vend-msg" role="status" aria-live="polite"></p>
@@ -131,7 +132,7 @@ export class VendingPanel {
     this.cancelBtn.onclick = () => {
       const s = this.o.social();
       const o = s.myOrder;
-      if (s.cancel() && o) this.say(`Solicitud cancelada: ${label(o)}. No se entregó nada.`);
+      if (s.cancel() && o) this.o.notify(`Solicitud cancelada: ${label(o)}. No se entregó nada.`);
       this.update();
     };
     const otherBtn = $<HTMLButtonElement>('.vend-other');
@@ -159,6 +160,7 @@ export class VendingPanel {
     }
     this.boughtHere = true;
     this.input.value = '';
+    this.input.focus(); // «Confirmar código» queda deshabilitado mientras dura la solicitud
     this.update();
   }
 
@@ -185,7 +187,7 @@ export class VendingPanel {
     this.cancelBtn.hidden = !(active && o && (o.state === 'en camino' || o.state === 'en fila'));
     if (this.msg.dataset.kind === 'error' && !active) return; // deja leer el error hasta el próximo intento
     if (!o) return this.say('Elige un producto y escribe su código.');
-    const where = o.site !== this.site || o.machine !== this.kind ? `En ${this.o.siteName(o.site)}, ${MACHINE_NAME[o.machine].toLowerCase()}: ` : '';
+    const where = active && (o.site !== this.site || o.machine !== this.kind) ? `En ${this.o.siteName(o.site)}, ${MACHINE_NAME[o.machine].toLowerCase()}: ` : '';
     const text = where + orderText(s, o, this.o.paused());
     if (this.msg.textContent !== text) this.say(active && where ? text + '. Espera la entrega o cancela para pedir aquí.' : text);
   }

@@ -95,8 +95,16 @@ export class ClinicScene extends Phaser.Scene {
   enter(j: number): void {
     this.index = j;
     const m = this.game.scene;
-    if (m.isActive('clinic')) return this.build();
-    m.switch(m.isActive('hospital') ? 'hospital' : 'city', 'clinic');
+    // Un fundido pendiente (hospital ↔ mapa) despertaría otra escena después: se cancela.
+    for (const key of ['hospital', 'city']) {
+      const cam = m.getScene(key)?.cameras?.main;
+      if (!cam) continue;
+      cam.off('camerafadeoutcomplete');
+      cam.fadeEffect.reset();
+    }
+    if (m.isActive('clinic')) this.build();
+    else m.switch(m.isActive('hospital') ? 'hospital' : 'city', 'clinic');
+    for (const key of ['hospital', 'city']) if (m.isActive(key)) m.sleep(key); // una sola escena despierta = un solo reloj
   }
 
   /** Sale al mapa (o al hospital) sin fundido: la otra escena despierta en el mismo cuadro. */

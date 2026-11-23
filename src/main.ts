@@ -537,7 +537,9 @@ setInterval(() => {
   soc.advance(driver.pb.t);
   for (const o of soc.inbox.splice(0)) if (o.state === 'entregado') $('toast').textContent = `Mi acompañante recibió ${o.product.name} · ${o.product.code}`;
   $('companion-state').textContent = soc.myOrder
-    ? 'Mi acompañante · ' + (soc.orderActive ? `${siteName(soc.myOrder.site)} · ` : '') + orderText(soc, soc.myOrder, driver.paused)
+    ? soc.orderActive
+      ? `Mi acompañante · ${siteName(soc.myOrder.site)} · ${orderText(soc, soc.myOrder, driver.paused)}`
+      : orderText(soc, soc.myOrder, driver.paused)
     : 'Mi acompañante · compra en la cafetería: haz clic en una máquina y escribe el código del producto.';
   vending.update();
   const pb = driver.pb;

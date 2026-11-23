@@ -183,12 +183,13 @@ export class Social {
     const plan = this.plans.get(site);
     const m = plan?.machines.findIndex((x) => x.kind === machine) ?? -1;
     if (!plan || m < 0) return { ok: false, reason: 'Esta sede no tiene esa máquina.' };
-    const check = checkCode(machine, raw);
-    if (!check.ok) return check;
     if (this.orderActive) {
+      // Doble clic, Enter repetido u otra máquina: nunca se crea una segunda solicitud.
       const o = this.myOrder!;
       return { ok: false, reason: `Mi acompañante ya tiene una solicitud en curso: ${o.product.name} · ${o.product.code} en ${this.plans.get(o.site)!.name} (${o.state}).` };
     }
+    const check = checkCode(machine, raw);
+    if (!check.ok) return check;
     let me = this.mine;
     if (me && me.site !== site) {
       this.release(me);
