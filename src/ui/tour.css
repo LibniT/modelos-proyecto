@@ -51,7 +51,14 @@
 .vend-more { display:flex; flex-wrap:wrap; gap:8px }
 .vend-cancel { color:#974d36; background:#f9ebe0 }
 .vend-note { color:#677b74; font-size:.82em; margin:8px 0 0 }
-@media(max-width:700px){ .vend { left:6px; right:6px; top:6px; width:auto } #ward { left:6px; top:6px; width:calc(100% - 12px); font-size:13px } .ward-legend { display:none } }
+@media(max-height:860px){ .vend { padding:10px 12px } .vend h3 { margin-bottom:4px } .vend-products { gap:6px; margin-bottom:8px } .vend-products li { padding:4px } .vend-products i { width:16px; height:20px } .vend-products b { font-size:24px } .vend-pad input { font-size:22px; padding:3px 10px } .vend-keys button { min-height:38px; font-size:17px } .vend-ok { min-height:40px } .vend-note { display:none } }
+@media(max-width:900px){
+  #ward { left:6px; top:6px; width:calc(100% - 12px); padding:8px 10px; font-size:13px }
+  .ward-legend,.ward-receipt { display:none }
+  .ward-count { margin:4px 0 }
+  .canvas-wrap:has(.vend:not([hidden])) #ward { display:none }
+  .vend { left:6px; right:6px; top:6px; width:auto }
+}
 .graph-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px }
 .staff-load { display:flex; align-items:center; flex-wrap:wrap; gap:8px 24px; margin:0 0 14px; padding:8px 16px; background:#e3eee3; border-radius:8px }
 .staff-load label { display:flex; gap:5px; align-items:center }
@@ -61,3 +68,5 @@
 .graph-summary p { max-width:62ch } .graph-summary output { display:block; font-size:1.35em; font-weight:700; color:#245f57 }
 .plot { height:clamp(210px,26vh,320px); position:relative }
 @media(max-width:800px){.graph-grid {grid-template-columns:1fr} nav {flex-wrap:wrap}}
+.view-group { flex-wrap:wrap; justify-content:flex-end }
+@media(max-width:650px){ #cafe-group button { padding:4px 7px; font-size:13px } }
