@@ -13,6 +13,16 @@ import { hitTest, type Hit } from './hit';
 import type { AppearanceSpec } from '../engine/events';
 import type { Figure } from './playback';
 import { H, SKIN, STAFF, appearanceFor, characterPixels, paint, type Pose, type View } from './characters/pixels';
+import { ClinicScene, type ClinicSceneOptions } from './clinic-scene';
+import { PlanView, hospitalCafeFloor } from './companions/view';
+import type { Social } from './companions/social';
+import type { MachineKind } from './companions/plans';
+
+/** T24: cafetería del hospital con acompañantes del modelo social (fuera del motor clínico). */
+export interface CafeOptions {
+  social: () => Social;
+  onMachine: (site: number, kind: MachineKind) => void;
+}
 
 /** Dirección isométrica del personaje: SE y NE se dibujan; SW y NW son su reflejo. */
 type Dir = 'SE' | 'SW' | 'NE' | 'NW';
@@ -46,10 +56,12 @@ export class HospitalScene extends Phaser.Scene {
   private manualCamera = false;
   readonly minZoom = 0.15;
   readonly maxZoom = 3;
+  private cafeView?: PlanView;
 
   constructor(
     private readonly driver: Driver,
     private readonly onHover?: HoverFn,
+    private readonly cafe?: CafeOptions,
   ) {
     super('hospital');
   }
@@ -57,6 +69,12 @@ export class HospitalScene extends Phaser.Scene {
   create(): void {
     const base = stamp(this, 'planta-hospital', 1472, 868, 580, 156, floorPlan);
     this.add.image(-580, -156, base).setOrigin(0);
+    if (this.cafe) {
+      const plan = this.cafe.social().plan(-1)!;
+      const floor = stamp(this, 'cafeteria-hospital', 520, 290, 560, -290, (g) => hospitalCafeFloor(g, plan));
+      this.add.image(-560, 290, floor).setOrigin(0).setDepth(0.5);
+      this.cafeView = new PlanView(this, plan);
+    }
     for (let i = 0; i < MAX.amb; i++) {
       const key = stamp(this, 'ambulancia-hospital', 140, 100, 70, 65, (g) => ambulance(g, { x: -1, y: 0 }));
       const p = iso(stationPos('amb-' + i)!);
@@ -72,8 +90,10 @@ export class HospitalScene extends Phaser.Scene {
     this.marks = this.add.graphics().setDepth(2900);
     for (const a of AREAS) {
       if (!a.label) continue;
-      const q = iso(a.label);
-      q.y += a.label.y < 1 ? -64 : 23;
+      // T24: los rótulos del frente que caerían sobre la cafetería pasan al fondo de su área.
+      const spot = this.cafe && a.label.y > 15 && a.label.x < 15 ? { x: a.label.x, y: a.y0 + 0.6 } : a.label;
+      const q = iso(spot);
+      q.y += spot.y < 1 ? -64 : spot !== a.label ? -10 : 23;
       this.add
         .text(q.x, q.y, a.name, {
           fontFamily: 'system-ui, sans-serif',
@@ -98,8 +118,9 @@ export class HospitalScene extends Phaser.Scene {
       if (cam.width < 2 || cam.height < 2) return;
       this.manualCamera = false;
       cam.zoomEffect.reset();
-      cam.setZoom(Math.min(cam.width / 1460, cam.height / 864));
-      cam.centerOn(c.x, c.y - 50);
+      // T24: la cafetería añade una franja delante de triage y admisión.
+      cam.setZoom(Math.min(cam.width / 1520, cam.height / 880));
+      cam.centerOn(c.x - 16, c.y - 44);
     };
     fit();
     this.fitCamera = fit;
@@ -113,10 +134,17 @@ export class HospitalScene extends Phaser.Scene {
       cam.scrollX -= (p.x - p.prevPosition.x) / cam.zoom;
       cam.scrollY -= (p.y - p.prevPosition.y) / cam.zoom;
     });
+    this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
+      if (!this.cafeView) return;
+      p.updateWorldPoint(cam);
+      this.cafeView.hover(p.isDown ? undefined : this.cafeView.machineAt(p.worldX, p.worldY));
+    });
     // Clic (sin arrastrar) sobre un paciente: seguirlo; sobre otra cosa: dejar de seguir.
     this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
       if (Phaser.Math.Distance.Between(p.downX, p.downY, p.upX, p.upY) > 6) return;
       p.updateWorldPoint(cam);
+      const kind = this.cafeView?.machineAt(p.worldX, p.worldY);
+      if (kind) return this.cafe!.onMachine(-1, kind);
       const hit = hitTest(this.driver.pb, { x: p.worldX, y: p.worldY }, this.driver.speed > SNAP_SPEED);
       this.follow = hit?.kind === 'patient' ? hit.id : undefined;
     });
@@ -137,6 +165,11 @@ export class HospitalScene extends Phaser.Scene {
       this.drawStatic(pb);
     }
     this.drawPeople(pb);
+    if (this.cafe && this.cafeView) {
+      const social = this.cafe.social();
+      social.advance(pb.t);
+      this.cafeView.drawCompanions(social, this.driver.speed > SNAP_SPEED);
+    }
     this.followCamera(pb);
     if (this.onHover && this.pointerOver) {
       // Cada cuadro: el paciente bajo el puntero puede moverse aunque el puntero esté quieto.
@@ -376,17 +409,20 @@ export function mountScene(
   driver: Driver,
   onHover?: HoverFn,
   city?: CityOptions,
-): { hospital: HospitalScene; city?: CityScene } {
-  const hospital = new HospitalScene(driver, onHover);
+  extras?: { cafe: CafeOptions; clinic: ClinicSceneOptions },
+): { hospital: HospitalScene; city?: CityScene; clinic?: ClinicScene } {
+  const hospital = new HospitalScene(driver, onHover, extras?.cafe);
   // T19: el mapa de la ciudad es una segunda escena del mismo juego; empieza dormida.
   const cityScene = city ? new CityScene(driver, city) : undefined;
+  // T24: el interior de las clínicas es una tercera escena; también empieza dormida.
+  const clinic = extras ? new ClinicScene(driver, extras.clinic) : undefined;
   new Phaser.Game({
     type: Phaser.AUTO,
     parent,
     transparent: true,
     scale: { mode: Phaser.Scale.RESIZE, parent },
-    scene: cityScene ? [hospital, cityScene] : hospital,
+    scene: ([hospital, cityScene, clinic] as (Phaser.Scene | undefined)[]).filter((s): s is Phaser.Scene => !!s),
     banner: false,
   });
-  return { hospital, city: cityScene };
+  return { hospital, city: cityScene, clinic };
 }

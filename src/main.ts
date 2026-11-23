@@ -23,6 +23,9 @@ import { DemoMode } from './render/demo';
 import { SessionDriver, rehearse, type Visitor } from './render/rehearsal';
 import { ClinicInterior } from './ui/clinic-interior';
 import { mountLiveCharts } from './ui/live-charts';
+import { Social } from './render/companions/social';
+import { clinicPlan, hospitalCafe, type MachineKind } from './render/companions/plans';
+import { VendingPanel, orderText } from './ui/vending';
 import './ui/expo.css';
 import './ui/tour.css';
 
@@ -61,17 +64,17 @@ app.innerHTML = `
       <section class="trip-strip" id="trip-strip" hidden><div><strong id="trip-label"></strong><span id="trip-state"></span></div><div><button id="ride">Seguir ambulancia</button><button id="enter-destination" hidden>Entrar a la clínica</button><button id="repeat" hidden>Repetir demostración</button></div></section>
       <div class="map-card">
         <div class="map-head"><div><span class="map-symbol" aria-hidden="true">◇</span><b id="map-heading">Plano del hospital</b></div>
-          <div class="view-group" role="group" aria-label="Vista y cámara"><button id="view">Ver ciudad</button><button id="minus" aria-label="Alejar">−</button><button id="plus" aria-label="Acercar">+</button><button id="fit">Ver todo</button></div>
+          <div class="view-group" role="group" aria-label="Vista y cámara"><span id="cafe-group" role="group" aria-label="Cafetería"><button id="buy-drink">Máquina de refrescos</button><button id="buy-snack">Máquina de papas</button></span><button id="view">Ver ciudad</button><button id="minus" aria-label="Alejar">−</button><button id="plus" aria-label="Acercar">+</button><button id="fit">Ver todo</button></div>
         </div>
         <div class="canvas-wrap">
-          <div id="scene"></div><section id="ward" hidden></section><div id="tip" hidden></div>
+          <div id="scene"></div><section id="ward" hidden></section><section id="vending" hidden></section><div id="tip" hidden></div>
           <div id="card" role="dialog" aria-label="Información de la simulación" hidden></div>
           <div id="subs" aria-live="polite" hidden></div>
           <div id="demo-banner" hidden>Demostración · mueve el puntero para tomar el control</div>
         </div>
         <div class="map-foot"><div id="legend"></div><div id="city-key" hidden>Ocupación de camas <span>● &lt; 70 %</span><span>● 70–89 %</span><span>● ≥ 90 %</span></div></div>
       </div>
-      <p id="toast" role="status"></p><p id="recovery" role="status"></p><p id="following"></p><p id="source"></p>
+      <p id="companion-state" role="status"></p><p id="toast" role="status"></p><p id="recovery" role="status"></p><p id="following"></p><p id="source"></p>
       </div>
       <aside id="panel"></aside>
     </div>
@@ -127,12 +130,40 @@ let ride: Ride | undefined;
 let savedView: { city: boolean; follow?: string; amb?: string; ride?: Ride; ward?: number } | undefined;
 let requestedCity: boolean | undefined;
 const button = (id: string) => $(id) as HTMLButtonElement;
+/**
+ * T24: un modelo social por sesión (corrida principal, cada ensayo, registro grabado). Avanza con el reloj
+ * de esa sesión y usa su propio generador: no toca el motor ni sus aleatorios.
+ */
+const socials = new WeakMap<object, Social>();
+function social(): Social {
+  const d = driver.current;
+  let s = socials.get(d);
+  if (!s) {
+    const beds = (d instanceof LiveDriver ? d.ed.params : realisticParams()).clinics.map((c) => c.beds);
+    s = new Social([hospitalCafe(), ...beds.map((b, j) => clinicPlan(j, b))], 2026);
+    socials.set(d, s);
+  }
+  return s;
+}
+const siteName = (site: number) => (site < 0 ? 'Hospital Regional' : clinicParams()[site].name);
+const vending = new VendingPanel($('vending'), {
+  social,
+  siteName,
+  paused: () => driver.paused,
+  notify: (msg) => ($('toast').textContent = msg),
+});
+const openMachine = (site: number, kind: MachineKind) => {
+  $('card').hidden = true;
+  vending.open(site, kind);
+};
 const destination = $('destination') as HTMLSelectElement;
 destination.replaceChildren(...realisticParams().clinics.map((c, i) => new Option(c.name, String(i))));
-const ward = new ClinicInterior($('ward'), () => {
-  ward.close();
-  if (!scene.inCity) scene.goCity();
-});
+const ward: ClinicInterior = new ClinicInterior(
+  $('ward'),
+  () => ward.close('city'),
+  undefined,
+  (j) => social().plan(j),
+);
 const updateGraphs = primary ? mountLiveCharts($('tab-graphs')) : undefined;
 document.querySelector<HTMLButtonElement>('[data-tab="graphs"]')!.hidden = mockMode;
 $('visit-strip').hidden = mockMode;
@@ -174,7 +205,17 @@ const onHover = (hit: Hit | undefined, x: number, y: number) => {
 // T19: mapa de la ciudad (segunda escena). Distancias ∝ tiempo medio de viaje; ocupación del snapshot del motor.
 const clinicParams = () => (live ? live.ed.params : realisticParams()).clinics;
 const clinicState = () => (live ? live.ed.snapshot().clinics : (original as MockDriver).initialClinics);
-const { hospital: scene, city } = mountScene($('scene'), driver, live ? onHover : undefined, {
+/** Camas reservadas ahora para traslados que van en camino a la clínica j (ya incluidas en `occupied`). */
+const reservedFor = (j: number) => Array.from(driver.pb.transfers.values()).filter((tr) => tr.clinicId === j).length;
+const {
+  hospital: scene,
+  city,
+  clinic: clinicScene,
+} = mountScene(
+  $('scene'),
+  driver,
+  live ? onHover : undefined,
+  {
   travelMeans: clinicParams().map((c) => distMean(c.travel)),
   clinics: clinicState,
   onClinic: (j) => {
@@ -184,20 +225,35 @@ const { hospital: scene, city } = mountScene($('scene'), driver, live ? onHover 
     if (mockMode) c.lines[0] += ' · al inicio del registro';
     showInfoCard(c.title, '#e6edf3', c.lines, () => openWard(j));
   },
-});
+  },
+  {
+    cafe: { social, onMachine: openMachine },
+    clinic: {
+      social,
+      onMachine: openMachine,
+      state: (j) => ({ occupied: clinicState()[j].occupied, reserved: reservedFor(j) }),
+      // La tarjeta de la clínica va a la izquierda en pantallas anchas y arriba en las estrechas.
+      inset: () =>
+        $('scene').clientWidth > 900 ? { left: $('ward').offsetWidth + 16, top: 0 } : { left: 0, top: $('ward').offsetHeight + 8 },
+    },
+  },
+);
+ward.scene = clinicScene;
 function openWard(j: number) {
   $('card').hidden = true;
   ward.open(j);
-  ward.update(clinicState(), mockMode, arrivalNotice(j));
+  ward.update(clinicState(), mockMode, arrivalNotice(j), reservedFor(j));
 }
 function arrivalNotice(j: number) {
   return ride?.arrived && ride.destination === j ? 'Traslado recibido · ' + ride.name : undefined;
 }
 $('view').onclick = () => {
-  ward.close();
+  if (ward.index !== undefined) return ward.close('hospital');
   if (scene.inCity) city?.goHospital();
   else scene.goCity();
 };
+button('buy-drink').onclick = () => openMachine(ward.index ?? -1, 'refrescos');
+button('buy-snack').onclick = () => openMachine(ward.index ?? -1, 'papas');
 // Solo en desarrollo (npm run dev): inspeccionar el estado desde la consola. No existe en el build de la feria.
 if (import.meta.env.DEV)
   Object.assign(window, {
@@ -208,10 +264,16 @@ if (import.meta.env.DEV)
       },
       primary,
       scene,
+      clinicScene,
+      social,
+      vending,
+      openWard: (j: number) => openWard(j),
+      ward,
     },
   });
 $('fit').onclick = () => {
-  if (scene.inCity) {
+  if (ward.index !== undefined) clinicScene?.fit();
+  else if (scene.inCity) {
     if (city) city.followedAmbulance = undefined;
     city?.fit();
   } else {
@@ -223,7 +285,7 @@ for (const [id, factor] of [
   ['minus', 0.8],
   ['plus', 1.25],
 ] as const)
-  $(id).onclick = () => (scene.inCity ? city?.zoomBy(factor) : scene.zoomBy(factor));
+  $(id).onclick = () => (ward.index !== undefined ? clinicScene?.zoomBy(factor) : scene.inCity ? city?.zoomBy(factor) : scene.zoomBy(factor));
 $('visitor-tools').hidden = $('mass-tools').hidden = mockMode;
 $('panel').hidden = mockMode;
 if (mockMode) $('city-key').prepend('Registro inicial · ');
@@ -272,7 +334,13 @@ new DemoMode({
   epsName: (id) => live?.ed.params.eps.find((e) => e.id === id)?.name ?? id,
   idleSeconds: Number(new URLSearchParams(location.search).get('demo')) || 60,
   suspend: () =>
-    !!practice || (!!ride && !ride.arrived) || ward.index !== undefined || !$('tab-graphs').hidden || !!document.querySelector('dialog[open]'),
+    !!practice ||
+    (!!ride && !ride.arrived) ||
+    ward.index !== undefined ||
+    vending.isOpen ||
+    social().orderActive ||
+    !$('tab-graphs').hidden ||
+    !!document.querySelector('dialog[open]'),
   onStart: () => {
     document.querySelector<HTMLButtonElement>('[data-tab="scene"]')!.click();
     if (scene.inCity) city?.goHospital(); // la demo cuenta la historia dentro del hospital
@@ -353,6 +421,7 @@ function startPractice() {
   if (!practice) {
     savedView = { city: scene.inCity, follow: scene.follow, amb: city?.followedAmbulance, ride, ward: ward.index };
   }
+  vending.close();
   practice = next;
   driver.current = next.driver;
   live = next.driver;
@@ -375,6 +444,7 @@ function startPractice() {
 }
 function exitPractice() {
   if (!practice) return;
+  vending.close();
   practice = undefined;
   driver.current = original;
   live = primary;
@@ -439,7 +509,7 @@ function fmtClock(t: number): string {
 // Textos: 5 veces por segundo basta (la escena se dibuja en cada cuadro).
 setInterval(() => {
   const showing = scene.inCity ? city : scene;
-  if (requestedCity !== undefined && showing?.cameras?.main && !showing.cameras.main.fadeEffect.isRunning) {
+  if (requestedCity !== undefined && ward.index === undefined && showing?.cameras?.main && !showing.cameras.main.fadeEffect.isRunning) {
     if (requestedCity === scene.inCity) requestedCity = undefined;
     else if (requestedCity) scene.goCity();
     else city?.goHospital();
@@ -452,15 +522,24 @@ setInterval(() => {
   $('map-heading').textContent = scene.inCity ? 'Red de clínicas' : 'Plano del hospital';
   $('legend').hidden = scene.inCity;
   $('city-key').hidden = !scene.inCity;
-  const camera = scene.inCity ? city : scene;
+  const camera = ward.index !== undefined ? clinicScene : scene.inCity ? city : scene;
   const zoom = camera?.cameras?.main?.zoom;
-  button('minus').disabled = ward.index !== undefined || !camera || zoom === undefined || zoom <= camera.minZoom + 1e-6;
-  button('plus').disabled = ward.index !== undefined || !camera || zoom === undefined || zoom >= camera.maxZoom - 1e-6;
-  button('fit').disabled = ward.index !== undefined;
+  button('minus').disabled = !camera || zoom === undefined || zoom <= camera.minZoom + 1e-6;
+  button('plus').disabled = !camera || zoom === undefined || zoom >= camera.maxZoom - 1e-6;
+  $('cafe-group').hidden = scene.inCity && ward.index === undefined;
   if (ward.index !== undefined) {
-    ward.update(clinicState(), mockMode, arrivalNotice(ward.index));
+    ward.update(clinicState(), mockMode, arrivalNotice(ward.index), reservedFor(ward.index));
     $('map-heading').textContent = 'Interior de la clínica';
+    $('city-key').hidden = true;
   }
+  // T24: el modelo social sigue el reloj de la sesión visible (también en el mapa) y avisa las entregas.
+  const soc = social();
+  soc.advance(driver.pb.t);
+  for (const o of soc.inbox.splice(0)) if (o.state === 'entregado') $('toast').textContent = `Mi acompañante recibió ${o.product.name} · ${o.product.code}`;
+  $('companion-state').textContent = soc.myOrder
+    ? 'Mi acompañante · ' + (soc.orderActive ? `${siteName(soc.myOrder.site)} · ` : '') + orderText(soc, soc.myOrder, driver.paused)
+    : 'Mi acompañante · compra en la cafetería: haz clic en una máquina y escribe el código del producto.';
+  vending.update();
   const pb = driver.pb;
   const visitorId = practice?.patientId ?? tracked?.id;
   const visitor = visitorId ? pb.figures.get(visitorId) : undefined;
@@ -501,7 +580,9 @@ setInterval(() => {
   button('practice').disabled = !tracked?.id || !!practice || primary?.ed.params.mode !== 'realista';
   destination.disabled = !!practice && !ride?.arrived;
   const f = scene.follow ? driver.pb.figures.get(scene.follow) : undefined;
-  $('following').textContent = scene.inCity
+  $('following').textContent = ward.index !== undefined
+    ? 'Arrastra para recorrer la clínica; haz clic en una máquina de la cafetería para comprar con Mi acompañante.'
+    : scene.inCity
     ? 'Selecciona una clínica para consultar sus camas y convenios, o el hospital para entrar.'
     : f
       ? `Siguiendo a ${f.name} (anillo amarillo). Arrastra la escena o haz clic en el piso para soltar.`
