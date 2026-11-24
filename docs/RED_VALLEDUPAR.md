@@ -90,6 +90,7 @@ Secuencia en el motor (`src/model/ed.ts`, solo cuando `params.network` existe): 
 ## Parte 2 (T26, P1 del PDF)
 - **Indicadores de la red** (pestaña «Gráficas en vivo», solo en `?red`): traslados completados, espera media en el pasillo para remitir, % de llegadas remitidas fuera de la red, uso de ambulancias y tabla por sede (ocupadas ahora, ocupación media, remitidos recibidos). La ocupación de camas se grafica en porcentaje para comparar sedes de 21 a 173 camas.
 - **Seguimiento en 4 pasos** (figura C): `src/ui/referral-steps.ts` reconstruye cada remisión desde los eventos del motor (fin de consulta, pasillo, aceptación del destino en `TRANSFER_START.data.acceptedAt`, salida, llegada) y la liberación de la ambulancia desde el estado del recurso.
+- **Ficha completa de cada sede** (`src/ui/site-card.ts`): dirección, naturaleza y código REPS, rol, ubicación verificada o aproximada con su método, ruta vial desde el origen (vial y recta), capacidad documentada con su fuente, servicios, qué atiende según la matriz (agrupado en AD / C / ER / NH / SI), notas y fuentes con fecha. En las sedes simuladas va debajo de la ocupación simulada.
 - **Filtro por condición** en el mapa: anillo verde = atención definitiva documentada, ámbar = condicionada; el resto se atenúa (matriz del informe, sin disponibilidad).
 
 ## Pendiente

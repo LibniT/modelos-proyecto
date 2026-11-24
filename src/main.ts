@@ -7,8 +7,9 @@
 import { EmergencyDepartment } from './model/ed';
 import { networkParams, realisticParams, validationParams, type Mode } from './model/params';
 import { geoMap, HIRES_ATTRIBUTION, OSM_ATTRIBUTION, SATELLITE_ATTRIBUTION, type MapStyle } from './render/map/geo';
-import { SITES } from './model/valledupar/sites';
-import { CONDITION_LABEL, RECEPTION_LABEL, reception, type ConditionId } from './model/valledupar/capabilities';
+import { SITES, type SiteId } from './model/valledupar/sites';
+import { siteLines } from './ui/site-card';
+import { CONDITION_LABEL, type ConditionId } from './model/valledupar/capabilities';
 import { ReferralLog, referralSteps } from './ui/referral-steps';
 import { mountValidationPanel } from './ui/validation/panel';
 import { mountPanel } from './ui/panel';
@@ -245,7 +246,9 @@ const {
     const occ = clinicState()[j].occupied;
     const c = clinicCard(j, p, occ, driver.pb.receivedByClinic.get(j) ?? 0);
     if (mockMode) c.lines[0] += ' · al inicio del registro';
-    showInfoCard(c.title, '#e6edf3', c.lines, () => openWard(j));
+    // T26: en la red real, debajo de la ocupación simulada va la ficha documentada de la sede.
+    const site = networkMode ? p.network?.sites[j] : undefined;
+    showInfoCard(c.title, '#e6edf3', site ? [...c.lines, ...siteLines(site, true)] : c.lines, () => openWard(j));
   },
   ...(networkMode ? { geo: geoMap(networkParams().network!.sites), onSite: (id: string) => showSiteCard(id) } : {}),
   },
@@ -545,19 +548,7 @@ function showCard(e: SimEvent): void {
 /** Tarjeta sobre la escena (recorrido de un paciente o clínica del mapa). Solo textContent. */
 /** T25: ficha de una sede real que no entra a la simulación (hechos documentados y por qué no se simula). */
 function showSiteCard(id: string): void {
-  const s = SITES.find((x) => x.id === id)!;
-  const facts = Object.entries(s.capacity)
-    .filter(([, f]) => f)
-    .map(([k, f]) => `${k}: ${f!.value}${f!.note ? ' (' + f!.note + ')' : ''} · ${f!.source}`);
-  showInfoCard(s.name, '#d7ddd1', [
-    s.address + ' · ' + (s.ownership === 'publica' ? 'pública' : 'privada'),
-    s.role,
-    s.emergency ? 'No se simula: sin camas documentadas en las fuentes revisadas (no se inventan).' : 'No se simula: no recibe urgencias.',
-    'Servicios: ' + s.services.join(', '),
-    ...(facts.length ? ['Capacidad documentada:', ...facts] : ['Capacidad documentada: ninguna cifra en el informe.']),
-    ...s.notes,
-    'Ejemplo, infarto con posible angioplastia: ' + RECEPTION_LABEL[reception('iam', s.id).level] + '.',
-  ]);
+  showInfoCard(SITES.find((x) => x.id === id)!.name, '#d7ddd1', siteLines(id as SiteId, false));
 }
 function showInfoCard(title: string, color: string, lines: string[], enter?: () => void): void {
   const b = document.createElement('b');

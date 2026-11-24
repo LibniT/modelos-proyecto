@@ -307,3 +307,8 @@ Hecho (T26, parte 2 de la red, P1 del PDF): (1) indicadores de la red en «Gráf
 Verificado: pruebas nuevas en `tests/referral-steps.test.ts` (orden de tiempos con el motor real, estados de los pasos, cama del hospital, fuera de la red); TypeScript; navegador: los 4 pasos avanzan, filtro «Quemadura grave» deja solo Alta Complejidad en verde, panel de indicadores con 5 sedes; modo original sin cambios visibles.
 A medias: T26 (4) ficha completa de institución y (5) verificación de sedes ⚠ (necesita a la autora).
 Siguiente paso: (4) ficha; integrar T26 en main cuando la autora lo apruebe.
+
+## 2026-11-24 · Claude · feat/T26-red-p1 (ficha de sede)
+Hecho: T26 (4) ficha completa de sede (`src/ui/site-card.ts`, `siteLines`, sin DOM) usada en el mapa para sedes simuladas (bajo la ocupación) y no simuladas; la demanda propia de la tarjeta de clínica se redondea a 2 decimales. 133 pruebas (3 nuevas en `tests/site-card.test.ts`), TypeScript; navegador: ficha de Alta Complejidad con «Entrar a la clínica».
+A medias: T26 (5) verificar sedes ⚠ y la Clínica de Fracturas (necesita a la autora).
+Siguiente paso: integrar T26 en main cuando la autora lo apruebe.
