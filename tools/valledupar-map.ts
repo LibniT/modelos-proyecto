@@ -398,3 +398,109 @@ console.log(`OSM base ${base}: ${ways.length} vías, ${roads.length} dibujadas.`
 for (const [id, g] of Object.entries(sites)) console.log(`${g.verify ? '⚠' : '✓'} ${id.padEnd(20)} ${g.method.padEnd(9)} ${g.lat}, ${g.lon}  ${g.checkM !== undefined ? `control ${g.checkM} m` : ''}`);
 console.log(`Control del método por dirección (sedes con objeto OSM): ${checks.map((c) => c + ' m').join(', ')}`);
 for (const [id, r] of Object.entries(routes)) console.log(`${id.padEnd(20)} ${r ? `${(r.distanceM / 1000).toFixed(2)} km vial · ${(r.straightM / 1000).toFixed(2)} km recta · ${r.minutes} min · regreso ${(r.backM / 1000).toFixed(2)} km` : 'SIN RUTA'}`);
+
+// ---------- T28: grafo vial para rutas desde cualquier punto (lo lee el navegador, sin internet) ----------
+// Solo intersecciones y extremos como nodos; cada arista guarda longitud, clase de vía, sentido y geometría.
+// Se descartan vías con access=private/no y todo lo que no esté en la componente fuertemente conexa principal
+// (desde ahí se puede ir y volver a cualquier punto: no se proponen calles aisladas).
+const CLASS: Record<string, number> = { trunk: 0, trunk_link: 0, primary: 1, primary_link: 1, secondary: 2, secondary_link: 2, tertiary: 3, tertiary_link: 3, unclassified: 4, residential: 5, living_street: 5, service: 6 };
+const routable = ways.filter((w) => CLASS[w.tags!.highway] !== undefined && !['private', 'no'].includes(w.tags!.access ?? ''));
+const uses = new Map<number, number>();
+for (const w of routable) w.nodes!.forEach((n, i) => uses.set(n, (uses.get(n) ?? 0) + (i === 0 || i === w.nodes!.length - 1 ? 2 : 1)));
+const gpos = new Map<number, P>();
+const raw: { a: number; b: number; cls: number; oneway: number; pts: P[] }[] = [];
+for (const w of routable) {
+  const ow = w.tags!.oneway;
+  const rev = ow === '-1';
+  const oneway = rev || ow === 'yes' || ow === 'true' || ow === '1' || w.tags!.junction === 'roundabout' ? 1 : 0;
+  let ns = w.nodes!.map((n, i) => [n, proj(w.geometry![i].lat, w.geometry![i].lon)] as const);
+  if (rev) ns = [...ns].reverse();
+  let start = 0;
+  for (let i = 1; i < ns.length; i++) {
+    if (i < ns.length - 1 && (uses.get(ns[i][0]) ?? 0) < 2) continue;
+    raw.push({ a: ns[start][0], b: ns[i][0], cls: CLASS[w.tags!.highway], oneway, pts: ns.slice(start, i + 1).map((x) => x[1]) });
+    gpos.set(ns[start][0], ns[start][1]);
+    gpos.set(ns[i][0], ns[i][1]);
+    start = i;
+  }
+}
+// Componente fuertemente conexa más grande (Kosaraju iterativo).
+function largestScc(): Set<number> {
+  const fwd = new Map<number, number[]>(),
+    bwd = new Map<number, number[]>();
+  const link = (m: Map<number, number[]>, u: number, v: number) => (m.get(u) ?? m.set(u, []).get(u)!).push(v);
+  for (const e of raw) {
+    link(fwd, e.a, e.b);
+    link(bwd, e.b, e.a);
+    if (!e.oneway) {
+      link(fwd, e.b, e.a);
+      link(bwd, e.a, e.b);
+    }
+  }
+  const order: number[] = [];
+  const seen = new Set<number>();
+  for (const s of gpos.keys()) {
+    if (seen.has(s)) continue;
+    seen.add(s);
+    const stack: [number, number][] = [[s, 0]];
+    while (stack.length) {
+      const top = stack[stack.length - 1];
+      const nb = fwd.get(top[0]) ?? [];
+      if (top[1] < nb.length) {
+        const v = nb[top[1]++];
+        if (!seen.has(v)) {
+          seen.add(v);
+          stack.push([v, 0]);
+        }
+      } else order.push(stack.pop()![0]);
+    }
+  }
+  const comp = new Map<number, number>();
+  let best = -1,
+    bestSize = 0;
+  for (let i = order.length - 1; i >= 0; i--) {
+    const s = order[i];
+    if (comp.has(s)) continue;
+    const id = i;
+    let size = 0;
+    const stack = [s];
+    comp.set(s, id);
+    while (stack.length) {
+      const u = stack.pop()!;
+      size++;
+      for (const v of bwd.get(u) ?? []) if (!comp.has(v)) (comp.set(v, id), stack.push(v));
+    }
+    if (size > bestSize) [best, bestSize] = [id, size];
+  }
+  return new Set([...comp].filter(([, c]) => c === best).map(([n]) => n));
+}
+const scc = largestScc();
+const index = new Map<number, number>();
+const gNodes: number[] = [];
+const gEdges: number[][] = [];
+const nodeIdx = (n: number) => {
+  if (!index.has(n)) {
+    index.set(n, index.size);
+    gNodes.push(Math.round(gpos.get(n)![0]), Math.round(gpos.get(n)![1]));
+  }
+  return index.get(n)!;
+};
+for (const e of raw) {
+  if (!scc.has(e.a) || !scc.has(e.b)) continue;
+  const len = e.pts.slice(1).reduce((s, p, i) => s + dist(p, e.pts[i]), 0);
+  if (len < 0.5) continue;
+  gEdges.push([nodeIdx(e.a), nodeIdx(e.b), Math.round(len * 10) / 10, e.cls, e.oneway, ...flat(simplify(e.pts, 2).slice(1, -1))]);
+}
+writeFileSync(
+  'src/model/valledupar/grafo.json',
+  JSON.stringify({
+    generated: meta.generated,
+    osmBase: base,
+    attribution,
+    format: 'nodes = [x0,y0,x1,y1,…] en metros; edges = [a, b, longitud m, clase, sentido único (1 = solo a→b), …puntos intermedios x,y]',
+    classes: ['troncal', 'primaria', 'secundaria', 'terciaria', 'sin clasificar', 'residencial', 'servicio'],
+    nodes: gNodes,
+    edges: gEdges,
+  }),
+);
+console.log(`Grafo (T28): ${gNodes.length / 2} nodos, ${gEdges.length} aristas en la componente principal (${scc.size} de ${gpos.size} nodos).`);

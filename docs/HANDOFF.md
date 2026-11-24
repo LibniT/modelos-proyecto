@@ -322,3 +322,9 @@ Hecho: T27 (mejoras del modelo de la red, adelantadas a pedido de la autora). (1
 Verificado: 137 pruebas (nuevas: aceptación, unidades con capacidad documentada, tipo de cama de cada traslado, aceptación nula/total), TypeScript; la huella del registro de los escenarios originales no cambió. Navegador: tarjeta y tabla con 17 unidades, interior de Alta Complejidad, sin errores.
 Resultado del experimento: las ambulancias no limitan (10 % de uso); la espera para remitir baja 15 min con las sedes al 70 % y sube 12 min con el CRUE a 60 min.
 Siguiente paso: integrar en main si la autora lo aprueba; repetir el ensayo de la guía.
+
+## 2026-11-24 · Claude · feat/T28-rutas
+Hecho: plan de la fase 2 (`docs/PLAN_FASE2.md`, con las decisiones de la autora). T28: `npm run red-vial` exporta además `src/model/valledupar/grafo.json` (388 kB: 8 292 intersecciones y 12 952 aristas de la componente fuertemente conexa principal; sin vías `access=private/no`). `src/model/valledupar/router.ts`: `place()` rechaza puntos fuera del área, en el agua (polígonos y ±20 m de la línea del río) o a más de 150 m de una vía, y propone la vía más cercana; `routesFrom()` hace un Dijkstra por tiempo desde un punto a mitad de cuadra hasta todos los destinos, respetando sentidos, con velocidades por clase y factores de tráfico (supuestos).
+Verificado: 6 pruebas nuevas (sedes ajustadas, fuera del área, río, rutas por vías existentes de punta a punta, contravía, tráfico); 143 en total; TypeScript. Dos rutas desde el HRPL: 42 ms.
+A medias: el motor y el mapa todavía usan `rutas.json` (T30 los pasa al router).
+Siguiente paso: T29 (EPS, investigación en curso) y T30.
