@@ -83,4 +83,6 @@ Secuencia en el motor (`src/model/ed.ts`, solo cuando `params.network` existe): 
 - El ensayo con destino elegido (T23) se oculta en este escenario: usa las clínicas ficticias.
 
 ## Pendiente
-- F5: prueba con `npm run preview` sin red y guía de demostración.
+- F6: entrar a las sedes (planta representativa), pantalla completa y vistas del mapa (ver `docs/TAREAS.md`).
+
+Guía del stand: `docs/GUIA_DEMO_RED.md`.

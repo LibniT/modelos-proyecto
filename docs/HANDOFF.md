@@ -271,3 +271,9 @@ Verificado: 124 pruebas, TypeScript, `npm run build`; en el navegador (panel ocu
 A medias: F5 (preview sin red con recarga, guía de demostración, capturas).
 Siguiente paso: F5.
 Preguntas para la autora: las placas del centro usan desplazamientos fijos (`LABEL` en geo.ts); si en el monitor de la feria se tapan, se ajustan ahí.
+
+## 2026-11-24 · Claude · feat/T25-red-valledupar (F5)
+Hecho: F5 de T25 (adelantada a F6 por pedido de la autora). `npm run build` + `npm run preview` con `?red` y recarga: solo carga archivos de localhost, cero errores de consola; la autora también lo probó sin internet. Guía del stand en `docs/GUIA_DEMO_RED.md`. Entrada `preview` en `.claude/launch.json`.
+A medias: F6 (entrar a las sedes con planta representativa, pantalla completa con F, vistas del mapa: ríos y parques, satélite Sentinel-2). Capturas de la red: se toman al terminar F6.
+Siguiente paso: F6, luego repetir la prueba sin red y actualizar la guía.
+Preguntas para la autora: ninguna nueva.
