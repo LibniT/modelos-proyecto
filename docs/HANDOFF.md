@@ -257,3 +257,10 @@ Hecho: F2 de T25. `npm run red-vial` (`tools/valledupar-map.ts`) genera `src/mod
 A medias: F3–F5.
 Siguiente paso: F3, `src/model/referral.ts` y escenario de red en `params.ts`. Ojo: los viajes son de 1–6 min; el ciclo de la ambulancia necesita un supuesto de alistamiento y entrega.
 Preguntas para la autora: ¿conoces la ubicación de la Clínica de Fracturas (Diagonal 20B #18D-76) o de las sedes marcadas ⚠ en `docs/RED_VALLEDUPAR.md`? Overpass estuvo saturado; si hay que regenerar, `npm run red-vial` reintenta en tres espejos.
+
+## 2026-11-24 · Claude · feat/T25-red-valledupar (F3)
+Hecho: F3 de T25. `src/model/referral.ts` (selector puro con motivo de cada descarte) y `networkParams()` en `params.ts` (sedes con camas REPS, ocupación supuesta 90 %, mezcla de condiciones, CRUE 30 min, entrega 15 min, espera máxima 12 h). En `ed.ts`, solo con `params.network`: condición → coordinación → reserva → ambulancia → `TRANSFER_START` con `data.condition`, `data.reason`, `data.discarded` → entrega → regreso (`travelBack`). Nuevos: `Journey.condition/referralReason`, `PatientSnapshot.condition/decision`, métrica `remit.outOfNetwork`. Contrato de eventos sin cambios (todo va en `data`).
+Verificado: 119 pruebas (6 en `tests/referral.test.ts`, 7 en `tests/network.test.ts`: regresión del registro de T24 por huella, compatibilidad de cada traslado, conservación de pacientes/camas/ambulancias, sin ambulancias, red saturada → fuera de la red, reproducibilidad) y TypeScript.
+A medias: F4 (mapa real en `CityScene`, selector de escenario, tarjeta del motivo) y F5.
+Siguiente paso: F4. `main.ts` aún no ofrece el escenario; `clinic-scene` tiene 3 plantas y la red tiene 5 sedes simuladas.
+Preguntas para la autora: las crisis psiquiátricas salen siempre «fuera de la red» porque San Lucas no tiene capacidad documentada. ¿Lo dejamos así (es el dato honesto) o agregamos un supuesto explícito de camas para San Lucas?

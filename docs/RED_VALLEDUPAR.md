@@ -28,7 +28,25 @@ La prueba `tests/valledupar.test.ts` compara la matriz **celda a celda** con la 
 ## Supuestos de modelado (no son hechos)
 1. **Celdas combinadas**: se toma la clase más débil (`AD/C` → C, `ER/C` → ER, `NH/ER` → NH) y cualquier `SI` → información insuficiente.
 2. **«AD adulto»**: para un paciente menor de 18 años se trata como ER.
-3. Los demás supuestos (mezcla de condiciones de los remitidos, camas que cada sede ofrece a la red, demanda propia, retardo de coordinación del CRUE, velocidad de la ambulancia, espera máxima antes de remitir fuera de la red) se documentan aquí cuando se implementen (F2–F3).
+3. **Velocidad de la ambulancia**: 30 km/h urbano; tiempo de viaje Lognormal con media = distancia vial / 30 km/h y CV 0,3 (ida y regreso por separado).
+4. **Escenario de red** (`networkParams()` en `src/model/params.ts`, parte del realista):
+   - Sedes simuladas: las que reciben urgencias, tienen ruta y **camas de adulto documentadas en REPS**: Alta Complejidad (173), ICVC (114), OHI (123), Clínica del Cesar (92), Erasmo (21). Sus camas simuladas = las documentadas.
+   - Demanda propia de cada sede: Poisson con ocupación media del **90 %** y estancia Exp(48 h) (supuesto). Sin cama, la demanda propia se pierde (Erlang B, como en el escenario ficticio).
+   - Condición de quien se remite (supuesto): IAM 20 %, UCI adulto 20 %, TCE grave 10 %, politrauma 10 %, diálisis aguda 10 %, niño crítico 8 %, crisis psiquiátrica 7 %, emergencia cardiovascular quirúrgica 5 %, quemadura grave 5 %, recién nacido crítico 5 %.
+   - Búsqueda y aceptación del destino (CRUE): Lognormal media 30 min, CV 1.
+   - Alistamiento, cargue y entrega: Lognormal media 15 min, CV 0,5; la ambulancia sigue ocupada y luego regresa.
+   - Espera máxima sin destino: 12 h; después, «remisión fuera de la red».
+   - Una sede «C» (condicionada) solo se pide si ninguna «AD» tiene cupo.
+   - Sin restricción EPS.
+
+## Motor de remisión (F3)
+`src/model/referral.ts` (función pura) evalúa cada sede y devuelve la elegida y el motivo de cada descarte: no recibe urgencias · recepción ER/NH/SI · sin ubicación o sin ruta · capacidad no documentada · saturada. Entre las elegibles gana la AD con la ruta más corta (empate: menor ocupación); si no hay AD con cupo, la C más cercana; si no hay ninguna, el paciente espera y se reevalúa en cada liberación de cama.
+
+Secuencia en el motor (`src/model/ed.ts`, solo cuando `params.network` existe): consulta → pasillo → condición → coordinación CRUE → selección y **reserva de cama** → espera de ambulancia → `TRANSFER_START` (con condición, motivo y alternativas descartadas en `data`) → viaje por la ruta → `TRANSFER_END` → entrega → regreso. Los escenarios de validación y realista no cambian: una prueba compara su registro de eventos con el de T24.
+
+**Corrida de referencia** (semilla 1, 30 días tras 1 de calentamiento): 496 traslados (ICVC 299, Alta Complejidad 192, OHI 5); 0,4 % de las llegadas se remiten fuera de la red, todas por crisis psiquiátrica: San Lucas es la única sede AD aparte del origen y su capacidad no está documentada, así que el modelo no la usa. Clínica del Cesar y Erasmo casi no reciben remisiones porque ICVC y Alta Complejidad, a 1 min de ruta, tienen cupo casi siempre.
+
+**Limitaciones:** un solo grupo de camas por sede (sin separar UCI adulto, pediátrica y neonatal); la aceptación de una sede C es automática; la ocupación del 90 % es la misma en todas las sedes.
 
 ## Cartografía y rutas (F2)
 `npm run red-vial` (`tools/valledupar-map.ts`) toma de OpenStreetMap las vías del casco urbano y las sedes de salud (Overpass, solo durante la preparación; la descarga queda en `tools/.cache/`, fuera de Git) y genera:
@@ -56,5 +74,4 @@ La prueba `tests/valledupar.test.ts` compara la matriz **celda a celda** con la 
 **Supuesto:** tiempo base = distancia vial / 30 km/h. Las sedes están concentradas en el centro, así que el viaje es de 1–6 min, mucho menor que los 12–25 min del escenario ficticio. El ciclo de la ambulancia en F3 debe sumar alistamiento, cargue y entrega del paciente (supuesto aparte), no solo el viaje.
 
 ## Pendiente
-- F3: selección del destino por compatibilidad, capacidad simulada y ruta.
 - F4: mapa real en `CityScene` con la atribución de OSM visible.

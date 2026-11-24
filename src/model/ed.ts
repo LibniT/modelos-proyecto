@@ -6,6 +6,10 @@ import { TimeAverage, Tally } from '../engine/stats';
 import type { PatientInfo, SimEvent, SimEventType, TriageLevel, Zone } from '../engine/events';
 import { NAMES } from './catalog';
 import type { Params } from './params';
+import { chooseDestination, type Decision, type SiteState } from './referral';
+import { CONDITION_LABEL, type ConditionId } from './valledupar/capabilities';
+import type { SiteId } from './valledupar/sites';
+import rutas from './valledupar/rutas.json';
 
 /**
  * MODELO DEL SERVICIO DE URGENCIAS (docs/SPEC.md §2).
@@ -46,6 +50,9 @@ export interface Journey {
   hallwayWait?: number;
   clinic?: string;
   outcome?: Outcome;
+  /** T25: condición que motivó la remisión y por qué se eligió el destino */
+  condition?: string;
+  referralReason?: string;
 }
 
 interface Patient {
@@ -63,6 +70,10 @@ interface Patient {
   hallwaySince?: number;
   reservedClinic?: number;
   massCasualty?: boolean;
+  /** T25 (red): condición clínica, coordinación con el CRUE terminada, última evaluación de destinos */
+  condition?: ConditionId;
+  coordinated?: boolean;
+  decision?: Decision;
 }
 
 interface Clinic {
@@ -86,6 +97,9 @@ export interface PatientSnapshot {
   arrival: number;
   isVisitor: boolean;
   symptom?: string;
+  /** T25 (red): condición de remisión y evaluación de destinos más reciente */
+  condition?: string;
+  decision?: Decision;
 }
 
 export interface ResourceSnapshot {
@@ -133,6 +147,9 @@ export class EmergencyDepartment {
   private obsCapacity: number;
   private obsOccupied = 0;
   private readonly clinics: Clinic[];
+  /** flujos solo del escenario de red (no alteran los flujos de los escenarios originales) */
+  private readonly net?: { condition: Rng; crue: Rng; handover: Rng };
+  private remitOutOfNetwork = 0;
   private nextId = 1;
   private readonly visitorQueue: PatientInfo[] = [];
 
@@ -170,6 +187,7 @@ export class EmergencyDepartment {
     this.record = opts.recordEvents ?? false;
     const names = ['arrivals', 'mix', 'triage', 'admission', 'doctor', 'routing', 'patience', 'observation', 'ambulance', 'eps', 'names', 'clinicChoice', 'mass'];
     this.r = Object.fromEntries(names.map((n) => [n, this.rngs.stream(n)]));
+    if (this.params.network) this.net = { condition: this.rngs.stream('condicion'), crue: this.rngs.stream('crue'), handover: this.rngs.stream('entrega') };
 
     const c = this.params.capacity;
     this.triage = new Resource(this.sim, 'triage', c.triage, 'fifo');
@@ -269,6 +287,7 @@ export class EmergencyDepartment {
         arrival: p.journey.arrival,
         isVisitor: p.info.isVisitor,
         symptom: p.info.symptom,
+        ...(p.condition ? { condition: CONDITION_LABEL[p.condition], decision: p.decision } : {}),
       })),
       triage: res(this.triage),
       admission: res(this.admission),
@@ -318,6 +337,7 @@ export class EmergencyDepartment {
     m['renege.frac'] = this.renegeEligible > 0 ? this.reneges / this.renegeEligible : NaN;
     m['amb.rho'] = this.ambulances.capacity > 0 ? this.ambulances.busy.mean(t) / this.ambulances.capacity : NaN;
     m['transfers'] = this.transfers;
+    if (this.net) m['remit.outOfNetwork'] = this.arrivals > 0 ? this.remitOutOfNetwork / this.arrivals : NaN;
     m['departures'] = this.departures;
     this.clinics.forEach((c, j) => {
       m[`clinic${j}.bgBlockProb`] = c.bgArrivals > 0 ? c.bgBlocked / c.bgArrivals : NaN;
@@ -345,6 +365,7 @@ export class EmergencyDepartment {
     this.remitComplexity = 0;
     this.remitCapacity = 0;
     this.transfers = 0;
+    this.remitOutOfNetwork = 0;
     this.hallwayWait.reset();
     this.hallwayN.reset(t);
     this.reneges = 0;
@@ -607,7 +628,43 @@ export class EmergencyDepartment {
     this.hallway.push(p);
     this.hallwayN.set(this.sim.now, this.hallway.length);
     this.emit('HALLWAY_WAIT', { p, data: { reason } });
-    this.tryDispatchHallway();
+    if (this.net) this.startCoordination(p);
+    else this.tryDispatchHallway();
+  }
+
+  /**
+   * T25 · red: condición del remitido → búsqueda y aceptación del destino (CRUE) → reserva de cama y
+   * ambulancia. Si en `maxWait` no hubo destino elegible, se remite fuera de la red.
+   */
+  private startCoordination(p: Patient): void {
+    const n = this.params.network!;
+    p.condition ??= n.conditionMix[this.net!.condition.weighted(n.conditionMix.map((c) => c.p))].id;
+    p.journey.condition = CONDITION_LABEL[p.condition];
+    const waiting = () => this.hallway.includes(p) && p.reservedClinic === undefined;
+    this.sim.schedule(sample(n.coordination, this.net!.crue), () => {
+      if (!waiting()) return;
+      p.coordinated = true;
+      this.tryDispatchHallway();
+    });
+    this.sim.schedule(n.maxWait, () => {
+      if (!waiting()) return;
+      this.hallway.splice(this.hallway.indexOf(p), 1);
+      this.leaveHallway(p);
+      this.remitOutOfNetwork++;
+      p.journey.clinic = 'fuera de la red';
+      p.journey.referralReason = `sin destino elegible en ${Math.round(n.maxWait / 60)} h`;
+      this.move(p, 'exit', () => this.depart(p, 'remitido'));
+    });
+  }
+
+  /** Estado de cada sede para el selector (red): camas simuladas y tiempo de ruta. */
+  private networkState(): Partial<Record<SiteId, SiteState>> {
+    const n = this.params.network!;
+    const routes = rutas.routes as Record<string, { minutes: number } | null>;
+    const st: Partial<Record<SiteId, SiteState>> = {};
+    for (const [id, r] of Object.entries(routes)) st[id as SiteId] = { minutes: r ? r.minutes : null };
+    n.sites.forEach((id, j) => (st[id] = { clinic: j, beds: this.params.clinics[j].beds, occupied: this.clinics[j].occupied, minutes: st[id]?.minutes ?? null }));
+    return st;
   }
 
   private leaveHallway(p: Patient): void {
@@ -624,6 +681,18 @@ export class EmergencyDepartment {
     // Copia: startTransfer puede sacar pacientes del pasillo durante el recorrido.
     for (const p of [...this.hallway]) {
       if (p.reservedClinic !== undefined) continue;
+      if (this.net) {
+        if (!p.coordinated) continue;
+        const pediatric = p.condition === 'nino_critico' || p.condition === 'recien_nacido_critico';
+        p.decision = chooseDestination(p.condition!, !pediatric && p.info.ageRange !== '0-17', this.params.network!.origin, this.networkState());
+        const c = p.decision.chosen;
+        if (!c) continue; // sin destino elegible: espera y se reevalúa en la próxima liberación de cama
+        p.journey.referralReason = c.reason;
+        p.reservedClinic = c.clinic;
+        this.clinicOccupy(c.clinic);
+        this.ambulances.request(p, 0, (aid) => this.startTransfer(p, aid));
+        continue;
+      }
       const eps = this.params.eps.find((e) => e.id === p.info.eps);
       const network = eps ? eps.network : this.params.clinics.map((c) => c.id);
       let best = -1;
@@ -657,7 +726,12 @@ export class EmergencyDepartment {
     p.state = 'en traslado';
     p.resourceId = `amb-${ambId}`;
     p.journey.clinic = cl.name;
-    this.emit('TRANSFER_START', { p, resourceId: p.resourceId, from: 'ambulance_bay', to: `clinic_${j}`, duration: trip, data: { clinic: cl.name } });
+    const why = p.decision && {
+      condition: p.journey.condition,
+      reason: p.journey.referralReason,
+      discarded: p.decision.evaluated.filter((e) => e.site !== p.decision!.chosen?.site).map((e) => ({ site: e.name, reason: e.reason })),
+    };
+    this.emit('TRANSFER_START', { p, resourceId: p.resourceId, from: 'ambulance_bay', to: `clinic_${j}`, duration: trip, data: { clinic: cl.name, ...why } });
     p.zone = 'ambulance_bay';
     this.sim.schedule(trip, () => {
       this.transfers++;
@@ -666,9 +740,10 @@ export class EmergencyDepartment {
       this.depart(p, 'remitido');
       // Estancia en la clínica (fuera del hospital, pero ocupa su cama).
       this.sim.schedule(sample(cl.los, this.r.observation), () => this.clinicRelease(j));
-      // Regreso de la ambulancia vacía.
-      const back = sample(cl.travel, this.r.ambulance);
-      this.sim.schedule(back, () => this.ambulances.release(ambId));
+      // Entrega del paciente (red) y regreso de la ambulancia vacía.
+      const handover = this.net ? sample(this.params.network!.handover, this.net.handover) : 0;
+      const back = sample(cl.travelBack ?? cl.travel, this.r.ambulance);
+      this.sim.schedule(handover + back, () => this.ambulances.release(ambId));
     });
   }
 

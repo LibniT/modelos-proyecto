@@ -16,6 +16,8 @@ export interface ClinicParams {
   los: Dist;
   /** viaje de ida en ambulancia desde el hospital */
   travel: Dist;
+  /** viaje de regreso (red real: los sentidos únicos lo hacen distinto); por defecto = `travel` */
+  travelBack?: Dist;
 }
 
 export interface EpsParams {
