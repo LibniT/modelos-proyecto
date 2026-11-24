@@ -277,3 +277,10 @@ Hecho: F5 de T25 (adelantada a F6 por pedido de la autora). `npm run build` + `n
 A medias: F6 (entrar a las sedes con planta representativa, pantalla completa con F, vistas del mapa: ríos y parques, satélite Sentinel-2). Capturas de la red: se toman al terminar F6.
 Siguiente paso: F6, luego repetir la prueba sin red y actualizar la guía.
 Preguntas para la autora: ninguna nueva.
+
+## 2026-11-24 · Claude · feat/T25-red-valledupar (F6)
+Hecho: F6 de T25. (1) Entrar a las sedes de la red: `sitePlan()` en `main.ts` reutiliza las plantas de T24 (j % 3, hasta 30/40/50 camas) con `site = j` y el nombre real; la escena recibe la ocupación escalada y `ClinicInterior` lo explica. (2) Pantalla completa de `.map-column` con botón y tecla F (Fullscreen API; aviso si el navegador la niega). (3) Vistas del mapa: `setStyle('mapa' | 'satelite' | 'simple')` en `CityScene`; `npm run red-vial` ahora agrega agua, ríos, zonas verdes y nombres de vías a `calles.json` (corregido: los anillos cerrados se simplificaban a 2 puntos); `npm run satelite` descarga 42 teselas Sentinel-2 cloudless 2023 (EOX, CC BY-NC-SA 4.0) a `public/satelite/`. Proyección compartida en `src/model/valledupar/proj.ts`.
+Verificado: 126 pruebas, TypeScript, build; navegador (dev): vistas Mapa/Satélite alineadas con la ciudad, interior de Alta Complejidad con 30 camas dibujadas, diseño de pantalla completa (reglas aplicadas a mano: el lienzo ocupa el resto). Preview: las teselas se sirven desde localhost y no hay peticiones externas. No se pudo activar la pantalla completa real en el panel del navegador de Claude (lo bloquea el panel); probarla en Chrome.
+A medias: capturas de la red.
+Siguiente paso: la autora prueba F/Esc en su navegador y en el monitor; capturas para el póster.
+Preguntas para la autora: ninguna.

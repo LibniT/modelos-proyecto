@@ -4,7 +4,7 @@ import { ambulance, stamp } from '../art';
 import type { Driver } from '../drivers';
 import { cityLayout, type CityLayout } from './layout';
 import { neighborhood, facility } from './neighborhood';
-import type { GeoMap } from './geo';
+import type { GeoMap, MapStyle } from './geo';
 
 export interface ClinicView {
   name: string;
@@ -57,6 +57,9 @@ export class CityScene extends Phaser.Scene {
   private screen = (v: Vec): Vec => (this.o.geo ? v : iso(v));
   private routeGfx?: Phaser.GameObjects.Graphics;
   private zoomedFor?: string;
+  /** capas del mapa real por vista */
+  private layers?: { ground: Phaser.GameObjects.Graphics; nature: Phaser.GameObjects.Graphics; roads: Phaser.GameObjects.Graphics; labels: Phaser.GameObjects.Text[]; sat?: Phaser.GameObjects.Image[] };
+  style: MapStyle = 'mapa';
   private geoZoom = 0;
   private hover?: Landmark;
 
@@ -119,10 +122,25 @@ export class CityScene extends Phaser.Scene {
   private buildGeo(m: GeoMap): void {
     const xs = m.roads.flatMap((r) => r.p.map((p) => p.x)),
       ys = m.roads.flatMap((r) => r.p.map((p) => p.y));
-    const g = this.add.graphics();
-    g.fillStyle(0xe7eadf).fillRect(Math.min(...xs) - 400, Math.min(...ys) - 400, Math.max(...xs) - Math.min(...xs) + 800, Math.max(...ys) - Math.min(...ys) + 800);
+    const ground = this.add.graphics().setDepth(0);
+    ground.fillStyle(0xe7eadf).fillRect(Math.min(...xs) - 400, Math.min(...ys) - 400, Math.max(...xs) - Math.min(...xs) + 800, Math.max(...ys) - Math.min(...ys) + 800);
+    const nature = this.add.graphics().setDepth(2);
+    for (const p of m.green) nature.fillStyle(0xbfe0b1).fillPoints(p, true);
+    for (const p of m.water) nature.fillStyle(0x8cc6e8).fillPoints(p, true);
+    // Ríos más anchos que el cauce real para que se vean a la escala de la ciudad.
+    for (const r of m.rivers) nature.lineStyle(r.big ? 70 : 24, 0x8cc6e8).strokePoints(r.p);
+    const g = this.add.graphics().setDepth(4);
     for (const major of [false, true])
       for (const r of m.roads) if (r.major === major) g.lineStyle(major ? 22 : 9, major ? 0xf2d38c : 0xffffff).strokePoints(r.p);
+    const labels = m.labels.map((l) =>
+      this.add
+        .text(l.at.x, l.at.y, l.name, { fontFamily: 'Segoe UI, sans-serif', fontSize: '13px', color: '#4a5f5c', stroke: '#ffffff', strokeThickness: 3 })
+        .setOrigin(0.5)
+        .setAngle(l.deg)
+        .setDepth(6),
+    );
+    this.layers = { ground, nature, roads: g, labels };
+    this.setStyle(this.style);
     this.roads = m.routes;
     this.routeGfx = this.add.graphics().setDepth(10);
     for (const s of m.sites) {
@@ -135,6 +153,29 @@ export class CityScene extends Phaser.Scene {
       this.places.push({ j, image: marker, outline, panel, value, bar, footprint: new Phaser.Geom.Polygon(), site: s.id, label: s.label, leader, fixed: s.origin ? 0x236e6b : j === -2 ? 0x8a9590 : undefined });
       this.paintMarker(this.places.at(-1)!, j === -2 ? 0x8a9590 : 0x328366);
     }
+  }
+
+  /** Cambia la vista del mapa real. El satélite se carga la primera vez (teselas locales, sin internet). */
+  setStyle(style: MapStyle): void {
+    this.style = style;
+    const L = this.layers;
+    const m = this.o.geo;
+    if (!L || !m) return;
+    const sat = style === 'satelite';
+    L.ground.setVisible(!sat);
+    L.nature.setVisible(style === 'mapa');
+    L.roads.setAlpha(sat ? 0.45 : 1);
+    for (const t of L.labels) t.setVisible(style !== 'simple').setColor(sat ? '#ffffff' : '#4a5f5c').setStroke(sat ? '#1d2b2a' : '#ffffff', 3);
+    if (!sat) return L.sat?.forEach((i) => i.setVisible(false));
+    if (L.sat) return L.sat.forEach((i) => i.setVisible(true));
+    L.sat = [];
+    for (const t of m.tiles) this.load.image(t.key, t.url);
+    this.load.once('complete', () => {
+      L.sat = m.tiles.filter((t) => this.textures.exists(t.key)).map((t) =>
+        this.add.image(t.x0, t.y0, t.key).setOrigin(0).setDisplaySize(t.x1 - t.x0, t.y1 - t.y0).setDepth(1).setVisible(this.style === 'satelite'),
+      );
+    });
+    this.load.start();
   }
 
   /** Marcador de sede: círculo de color con cruz blanca, tamaño constante en pantalla. */
@@ -291,6 +332,7 @@ export class CityScene extends Phaser.Scene {
     if (this.o.geo && zoom !== this.geoZoom) {
       this.geoZoom = zoom;
       for (const p of this.places) this.placeGeo(p, zoom);
+      for (const t of this.layers?.labels ?? []) t.setScale(1 / zoom);
     }
     for (const [id, img] of this.fleet)
       if (!pb.transfers.has(id)) {

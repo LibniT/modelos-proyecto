@@ -15,7 +15,8 @@
     "experiment": "vite-node tools/doctor-experiment.ts",
     "welch": "vite-node tools/welch.ts",
     "accidente": "vite-node tools/mass-casualty.ts",
-    "red-vial": "vite-node tools/valledupar-map.ts"
+    "red-vial": "vite-node tools/valledupar-map.ts",
+    "satelite": "vite-node tools/valledupar-satelite.ts"
   },
   "author": "Libni Jahzeel Torres Castro",
   "license": "UNLICENSED",

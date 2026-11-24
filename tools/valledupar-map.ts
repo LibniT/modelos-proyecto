@@ -15,12 +15,15 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { MinHeap } from '../src/engine/heap';
 import { SITES, type SiteId } from '../src/model/valledupar/sites';
+import { LAT0, LON0, proj, unproj, type P } from '../src/model/valledupar/proj';
 
 const BBOX = '10.41,-73.31,10.52,-73.19';
 const BASE = `(way["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|motorway_link|trunk_link|primary_link|secondary_link|tertiary_link|service)$"](${BBOX});nwr["amenity"~"^(hospital|clinic)$"](${BBOX});nwr["healthcare"~"^(hospital|clinic)$"](${BBOX}););out body geom;`;
 /** Dos consultas: calles + sedes etiquetadas como salud, y sedes que en OSM solo son edificios con nombre. */
 const QUERIES = {
   'tools/.cache/osm-valledupar.json': `[out:json][timeout:120];${BASE}`,
+  // F6: agua, ríos y zonas verdes para la vista «Mapa».
+  'tools/.cache/osm-entorno.json': `[out:json][timeout:90][bbox:${BBOX}];(way["natural"~"^(water|wood|scrub|grassland)$"];way["waterway"~"^(river|riverbank|stream|canal)$"];way["leisure"~"^(park|garden|recreation_ground)$"];way["landuse"~"^(grass|forest|meadow|recreation_ground|village_green|reservoir)$"];);out geom;`,
   'tools/.cache/osm-nombres.json': `[out:json][timeout:90][bbox:${BBOX}];(nwr["name"~"Cardiovascular|OHI|Humana|Isabel|Bol[ií]var|Erasmo|Fractura|Lucas|SOHEC|Oncolog|Mental|Cl[ií]nica|CL[IÍ]NICA|Instituto"]["highway"!~"."];);out tags center;`,
 };
 const MIRRORS = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
@@ -76,13 +79,6 @@ async function load(): Promise<{ base: string; elements: El[] }> {
 }
 
 // ---------- proyección local (equirrectangular, error < 0,1 % en 10 km) ----------
-const LAT0 = 10.465,
-  LON0 = -73.25;
-const KX = 111320 * Math.cos((LAT0 * Math.PI) / 180),
-  KY = 110574;
-type P = [number, number];
-const proj = (lat: number, lon: number): P => [(lon - LON0) * KX, (lat - LAT0) * KY];
-const unproj = ([x, y]: P) => ({ lat: +(LAT0 + y / KY).toFixed(6), lon: +(LON0 + x / KX).toFixed(6) });
 const dist = (a: P, b: P) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 
 /** Douglas–Peucker. */
@@ -109,6 +105,12 @@ function densify(pts: P[], step: number): P[] {
   }
   if (pts.length) out.push(pts[pts.length - 1]);
   return out;
+}
+/** Douglas–Peucker para un anillo cerrado (primer punto = último): se parte en el vértice más lejano del inicio. */
+function simplifyRing(pts: P[], tol: number): P[] {
+  let k = 0;
+  pts.forEach((p, i) => dist(p, pts[0]) > dist(pts[k], pts[0]) && (k = i));
+  return [...simplify(pts.slice(0, k + 1), tol).slice(0, -1), ...simplify(pts.slice(k), tol)];
 }
 const flat = (pts: P[]) => pts.flatMap(([x, y]) => [Math.round(x), Math.round(y)]);
 
@@ -320,7 +322,43 @@ const MAJOR = new Set(['trunk', 'primary', 'secondary', 'tertiary', 'trunk_link'
 const roads = ways
   .filter((w) => w.tags!.highway !== 'service')
   .map((w) => ({ major: MAJOR.has(w.tags!.highway) ? 1 : 0, p: flat(simplify(w.geometry!.map((g) => proj(g.lat, g.lon)), 3)) }));
-writeFileSync('src/model/valledupar/calles.json', JSON.stringify({ ...meta, roads }));
+// Entorno (F6): polígonos cerrados de agua y zonas verdes; ríos como líneas (se dibujan anchos).
+const closed = (w: El) => w.geometry!.length > 3 && w.nodes![0] === w.nodes!.at(-1);
+const area = (pred: (t: Record<string, string>) => boolean) =>
+  elements.filter((e) => e.type === 'way' && e.geometry && !e.tags?.highway && closed(e) && pred(e.tags ?? {})).map((w) => flat(simplifyRing(w.geometry!.map((g) => proj(g.lat, g.lon)), 4)));
+const water = area((t) => t.natural === 'water' || t.waterway === 'riverbank' || t.landuse === 'reservoir');
+const green = area((t) => ['wood', 'scrub', 'grassland'].includes(t.natural) || ['park', 'garden', 'recreation_ground'].includes(t.leisure) || ['grass', 'forest', 'meadow', 'recreation_ground', 'village_green'].includes(t.landuse));
+const rivers = elements
+  .filter((e) => e.type === 'way' && e.geometry && ['river', 'stream', 'canal'].includes(e.tags?.waterway ?? ''))
+  .map((w) => ({ big: w.tags!.waterway === 'river' ? 1 : 0, p: flat(simplify(w.geometry!.map((g) => proj(g.lat, g.lon)), 4)) }));
+// Nombres de las vías principales: uno por nombre, a mitad del tramo más largo, girado como la vía.
+const longest = new Map<string, P[]>();
+const len = (q: P[]) => q.slice(1).reduce((s, p, i) => s + Math.hypot(p[0] - q[i][0], p[1] - q[i][1]), 0);
+for (const w of ways) {
+  const name = w.tags!.name;
+  if (!name || !MAJOR.has(w.tags!.highway)) continue;
+  const q = w.geometry!.map((g) => proj(g.lat, g.lon));
+  if (len(q) > len(longest.get(name) ?? [])) longest.set(name, q);
+}
+const labels = [...longest]
+  .filter(([, q]) => len(q) > 400)
+  .map(([name, q]) => {
+    let d = len(q) / 2,
+      i = 0;
+    for (; i < q.length - 2; i++) {
+      const s = Math.hypot(q[i + 1][0] - q[i][0], q[i + 1][1] - q[i][1]);
+      if (d <= s) break;
+      d -= s;
+    }
+    const [a, b] = [q[i], q[i + 1]];
+    const s = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    let deg = (Math.atan2(-(b[1] - a[1]), b[0] - a[0]) * 180) / Math.PI; // pantalla: y hacia abajo
+    if (deg > 90) deg -= 180;
+    if (deg < -90) deg += 180;
+    return { name, x: Math.round(a[0] + ((b[0] - a[0]) * d) / s), y: Math.round(a[1] + ((b[1] - a[1]) * d) / s), deg: Math.round(deg) };
+  });
+writeFileSync('src/model/valledupar/calles.json', JSON.stringify({ ...meta, roads, water, green, rivers, labels }));
+console.log(`Entorno: ${water.length} polígonos de agua, ${green.length} zonas verdes, ${rivers.length} ríos y arroyos, ${labels.length} nombres de vías.`);
 
 console.log(`OSM base ${base}: ${ways.length} vías, ${roads.length} dibujadas.`);
 for (const [id, g] of Object.entries(sites)) console.log(`${g.verify ? '⚠' : '✓'} ${id.padEnd(20)} ${g.method.padEnd(9)} ${g.lat}, ${g.lon}  ${g.checkM !== undefined ? `control ${g.checkM} m` : ''}`);

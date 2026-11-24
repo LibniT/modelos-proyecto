@@ -16,7 +16,8 @@ Comprobado el 24 nov: `npm run preview` sin conexión, con recarga, solo carga a
 2. **La red real (mapa).** Pulsa **Ver ciudad**. «Las calles salen de OpenStreetMap y las sedes, del registro oficial de prestadores (REPS). El color de cada sede es su ocupación **simulada**, no la real.» Señala una sede gris: «Esta no se simula porque no encontramos su número de camas, y no lo inventamos.»
 3. **Una remisión.** Espera a que aparezca la franja **Remisión de la corrida** (en promedio una cada 1–2 min a ×60; a ×600 sale más rápido) y pulsa **Seguir ambulancia**. El mapa se acerca, baja a ×6 y la ambulancia recorre la ruta vial azul.
 4. **Por qué ese destino.** Despliega la línea de la franja: condición del paciente, motivo («atención definitiva, camas libres, ruta más corta») y por qué se descartó cada sede (ruta más larga, saturada, capacidad no documentada, no habilitada para esa condición).
-5. **Una ficha.** Clic en una sede: ocupación, viaje y probabilidad de encontrarla llena (Erlang B). En una gris: los datos documentados y el motivo de no simularla.
+5. **Una ficha y su interior.** Clic en una sede: ocupación, viaje y probabilidad de encontrarla llena (Erlang B); «Entrar a la clínica» muestra su planta representativa (aclarar que no es el edificio real). En una gris: los datos documentados y el motivo de no simularla.
+   **Vistas:** cambia el selector a «Satélite» para mostrar la ciudad real y vuelve a «Mapa». Tecla **F** para pantalla completa (Esc sale).
 6. **Validación.** Pestaña **Validación**: el modelo original pasa 16 de 16 comparaciones con la teoría de colas. «La red real es un escenario aparte; el modelo validado no cambió.»
 
 ## Cifras para conversar (corrida de 30 días, semilla 1)
@@ -34,5 +35,3 @@ Comprobado el 24 nov: `npm run preview` sin conexión, con recarga, solo carga a
 - Sin remisiones a la vista: subir a ×600 un momento y volver a ×60.
 - Plan B: el escenario original sin `?red` (probado desde T13) y el video de respaldo.
 
-## Pendiente (F6, después de esta guía)
-Entrar a las sedes de la red (planta representativa), pantalla completa con la tecla F y vistas del mapa (ríos y parques, satélite). Cuando esté, se actualiza esta guía.

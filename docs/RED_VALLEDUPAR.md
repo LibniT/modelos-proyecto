@@ -82,7 +82,12 @@ Secuencia en el motor (`src/model/ed.ts`, solo cuando `params.network` existe): 
 - La franja «Remisión de la corrida» muestra la condición, el motivo del destino y, desplegable, la evaluación de cada sede. «Seguir ambulancia» acerca el mapa y baja la velocidad a ×6 (los viajes reales son de 1–6 min).
 - El ensayo con destino elegido (T23) se oculta en este escenario: usa las clínicas ficticias.
 
+## Entrar a las sedes, pantalla completa y vistas (F6)
+- **Entrar a una sede**: clic en la sede → «Entrar a la clínica». Cada sede reutiliza una de las plantas isométricas de T24 como **planta representativa** (no es la arquitectura real), con su nombre real y a lo sumo 30–50 camas dibujadas; la ocupación dibujada se escala (Alta Complejidad: 30 camas dibujadas, cada una ≈ 5,8 camas). El contador muestra siempre las cifras reales del motor.
+- **Pantalla completa**: botón «Pantalla completa» o tecla F (no se activa mientras se escribe en un campo o en la máquina); Esc sale. Incluye las franjas de «Mi paciente» y de la remisión.
+- **Vistas del mapa** (selector junto a «Ver todo», solo en la red): «Mapa» (calles, ríos, zonas verdes y nombres de las vías principales, de OSM), «Satélite» (Sentinel-2 cloudless 2023, 10 m por píxel, calles semitransparentes encima) y «Solo calles». El río se dibuja más ancho que su cauce para que se vea a la escala de la ciudad.
+
 ## Pendiente
-- F6: entrar a las sedes (planta representativa), pantalla completa y vistas del mapa (ver `docs/TAREAS.md`).
+- Capturas de la red para el póster y el README.
 
 Guía del stand: `docs/GUIA_DEMO_RED.md`.

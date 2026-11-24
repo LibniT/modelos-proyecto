@@ -66,7 +66,12 @@ export class ClinicInterior {
     this.last = key;
     this.title.textContent = c.name;
     const free = c.beds - c.occupied;
-    this.count.textContent = `${mock ? 'Registro inicial' : 'Ocupación actual'} · ${c.occupied} ${c.occupied === 1 ? 'ocupada' : 'ocupadas'} · ${free} ${free === 1 ? 'disponible' : 'disponibles'} · ${c.beds} en total`;
+    const drawn = this.plan?.(this.index)?.beds.length ?? c.beds;
+    this.count.textContent =
+      `${mock ? 'Registro inicial' : 'Ocupación actual'} · ${c.occupied} ${c.occupied === 1 ? 'ocupada' : 'ocupadas'} · ${free} ${free === 1 ? 'disponible' : 'disponibles'} · ${c.beds} en total` +
+      (drawn < c.beds
+        ? ` · Planta representativa (no es la arquitectura real): ${drawn} camas dibujadas, cada una ≈ ${(c.beds / drawn).toFixed(1).replace('.', ',')} camas`
+        : '');
     this.receipt.textContent =
       received ??
       (reserved

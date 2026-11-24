@@ -5,9 +5,15 @@
 import calles from '../../model/valledupar/calles.json';
 import rutas from '../../model/valledupar/rutas.json';
 import { SITES, type SiteId } from '../../model/valledupar/sites';
+import satelite from '../../model/valledupar/satelite.json';
+import { proj, tileBounds } from '../../model/valledupar/proj';
 import type { Vec } from '../layout';
 
 export const OSM_ATTRIBUTION = calles.attribution;
+export const SATELLITE_ATTRIBUTION = satelite.attribution;
+
+/** Vistas del mapa real: calles con ríos, parques y nombres; imagen satelital; o solo calles. */
+export type MapStyle = 'mapa' | 'satelite' | 'simple';
 
 /** Nombres cortos para las placas del mapa (el nombre completo va en la ficha). */
 const SHORT: Record<SiteId, string> = {
@@ -65,6 +71,12 @@ export interface GeoMap {
   /** ruta de ida a cada clínica simulada, en el orden de `params.clinics` */
   routes: Vec[][];
   missing: string[];
+  water: Vec[][];
+  green: Vec[][];
+  rivers: { big: boolean; p: Vec[] }[];
+  labels: { name: string; at: Vec; deg: number }[];
+  /** teselas satelitales (en public/), con su rectángulo en metros de pantalla */
+  tiles: { key: string; url: string; x0: number; y0: number; x1: number; y1: number }[];
 }
 
 const pts = (flat: number[]): Vec[] => {
@@ -100,5 +112,16 @@ export function geoMap(simulated: SiteId[]): GeoMap {
     sites,
     routes: simulated.map((id) => pts(routes[id]?.path ?? [])),
     missing: Object.keys(rutas.missing).map((id) => SITES.find((s) => s.id === id)?.name ?? id),
+    water: calles.water.map(pts),
+    green: calles.green.map(pts),
+    rivers: calles.rivers.map((r) => ({ big: r.big === 1, p: pts(r.p) })),
+    labels: calles.labels.map((l) => ({ name: l.name, at: { x: l.x, y: -l.y }, deg: l.deg })),
+    tiles: satelite.tiles.map(({ x, y }) => {
+      const b = tileBounds(satelite.z, x, y);
+      const [x0, n] = proj(b.north, b.west),
+        [x1, s] = proj(b.south, b.east);
+      const name = `${satelite.z}_${x}_${y}`;
+      return { key: 'sat-' + name, url: `satelite/${name}.jpg`, x0, y0: -n, x1, y1: -s };
+    }),
   };
 }

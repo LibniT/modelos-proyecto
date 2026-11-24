@@ -3,6 +3,7 @@ import { geoMap, OSM_ATTRIBUTION } from '../../src/render/map/geo';
 import { networkParams } from '../../src/model/params';
 import { EmergencyDepartment } from '../../src/model/ed';
 import { erlangB } from '../../src/validation/analytic';
+import { tileBounds, tileOf } from '../../src/model/valledupar/proj';
 
 describe('T25 · mapa real de Valledupar', () => {
   const p = networkParams();
@@ -41,5 +42,22 @@ describe('T25 · mapa real de Valledupar', () => {
     for (let seed = 1; seed <= n; seed++) sum += new EmergencyDepartment(p, { seed }).snapshot().clinics[j].occupied;
     // Media de la Poisson truncada en K = a·(1 − B(K, a)); desviación típica ≤ √a, error estándar ≤ √(a/n).
     expect(Math.abs(sum / n - a * (1 - erlangB(c.beds, a)))).toBeLessThan(4 * Math.sqrt(a / n));
+  });
+
+  it('F6: la tesela que contiene un punto lo encierra, y el satélite cubre todas las sedes', () => {
+    const { x, y } = tileOf(14, 10.4693, -73.2545);
+    const b = tileBounds(14, x, y);
+    expect(10.4693).toBeLessThanOrEqual(b.north);
+    expect(10.4693).toBeGreaterThanOrEqual(b.south);
+    expect(-73.2545).toBeGreaterThanOrEqual(b.west);
+    expect(-73.2545).toBeLessThanOrEqual(b.east);
+    for (const s of m.sites) expect(m.tiles.some((t) => s.at.x >= t.x0 && s.at.x <= t.x1 && s.at.y >= t.y0 && s.at.y <= t.y1), s.id).toBe(true);
+  });
+
+  it('F6: zonas verdes y agua son polígonos de verdad (la simplificación no los colapsa) y hay nombres de vías', () => {
+    for (const p of [...m.green, ...m.water]) expect(p.length).toBeGreaterThanOrEqual(4);
+    expect(m.rivers.some((r) => r.big)).toBe(true);
+    expect(m.labels.length).toBeGreaterThan(10);
+    for (const l of m.labels) expect(Math.abs(l.deg)).toBeLessThanOrEqual(90); // nunca al revés
   });
 });

@@ -6,7 +6,7 @@
  */
 import { EmergencyDepartment } from './model/ed';
 import { networkParams, realisticParams, validationParams, type Mode } from './model/params';
-import { geoMap, OSM_ATTRIBUTION } from './render/map/geo';
+import { geoMap, OSM_ATTRIBUTION, SATELLITE_ATTRIBUTION, type MapStyle } from './render/map/geo';
 import { SITES } from './model/valledupar/sites';
 import { RECEPTION_LABEL, reception } from './model/valledupar/capabilities';
 import { mountValidationPanel } from './ui/validation/panel';
@@ -27,7 +27,7 @@ import { SessionDriver, rehearse, type Visitor } from './render/rehearsal';
 import { ClinicInterior } from './ui/clinic-interior';
 import { mountLiveCharts } from './ui/live-charts';
 import { Social } from './render/companions/social';
-import { clinicPlan, hospitalCafe, type MachineKind } from './render/companions/plans';
+import { clinicPlan, hospitalCafe, type MachineKind, type SitePlan } from './render/companions/plans';
 import { VendingPanel, orderText } from './ui/vending';
 import './ui/expo.css';
 import './ui/tour.css';
@@ -67,7 +67,7 @@ app.innerHTML = `
       <section class="trip-strip" id="trip-strip" hidden><div><strong id="trip-label"></strong><span id="trip-state"></span></div><div id="trip-why" hidden></div><div><button id="ride">Seguir ambulancia</button><button id="enter-destination" hidden>Entrar a la clínica</button><button id="repeat" hidden>Repetir demostración</button></div></section>
       <div class="map-card">
         <div class="map-head"><div><span class="map-symbol" aria-hidden="true">◇</span><b id="map-heading">Plano del hospital</b></div>
-          <div class="view-group" role="group" aria-label="Vista y cámara"><span id="cafe-group" role="group" aria-label="Cafetería"><button id="buy-drink">Máquina de refrescos</button><button id="buy-snack">Máquina de papas</button></span><button id="view">Ver ciudad</button><button id="minus" aria-label="Alejar">−</button><button id="plus" aria-label="Acercar">+</button><button id="fit">Ver todo</button></div>
+          <div class="view-group" role="group" aria-label="Vista y cámara"><span id="cafe-group" role="group" aria-label="Cafetería"><button id="buy-drink">Máquina de refrescos</button><button id="buy-snack">Máquina de papas</button></span><button id="view">Ver ciudad</button><button id="minus" aria-label="Alejar">−</button><button id="plus" aria-label="Acercar">+</button><button id="fit">Ver todo</button><select id="map-style" aria-label="Vista del mapa" hidden><option value="mapa">Mapa</option><option value="satelite">Satélite</option><option value="simple">Solo calles</option></select><button id="fullscreen" title="Tecla F">Pantalla completa</button></div>
         </div>
         <div class="canvas-wrap">
           <div id="scene"></div><section id="ward" hidden></section><section id="vending" hidden></section><div id="tip" hidden></div>
@@ -151,11 +151,19 @@ function social(): Social {
   let s = socials.get(d);
   if (!s) {
     const beds = (d instanceof LiveDriver ? d.ed.params : realisticParams()).clinics.map((c) => c.beds);
-    // Red real: las sedes no tienen interior (ficha informativa), solo la cafetería del hospital de origen.
-    s = new Social([hospitalCafe(), ...(networkMode ? [] : beds.map((b, j) => clinicPlan(j, b)))], 2026);
+    s = new Social([hospitalCafe(), ...beds.map((b, j) => sitePlan(j, b))], 2026);
     socials.set(d, s);
   }
   return s;
+}
+/**
+ * T25: en la red real cada sede reutiliza una de las tres plantas de T24 como planta REPRESENTATIVA, con su
+ * nombre real y a lo sumo las camas que esa planta dibuja bien; la ocupación se escala (ver `state`).
+ */
+const DRAWN_BEDS = [30, 40, 50];
+function sitePlan(j: number, beds: number): SitePlan {
+  if (!networkMode) return clinicPlan(j, beds);
+  return { ...clinicPlan(j % 3, Math.min(beds, DRAWN_BEDS[j % 3])), site: j, name: clinicParams()[j].name };
 }
 const siteName = (site: number) => (site < 0 ? (networkMode ? 'Hospital de origen' : 'Hospital Regional') : clinicParams()[site].name);
 const vending = new VendingPanel($('vending'), {
@@ -235,7 +243,7 @@ const {
     const occ = clinicState()[j].occupied;
     const c = clinicCard(j, p, occ, driver.pb.receivedByClinic.get(j) ?? 0);
     if (mockMode) c.lines[0] += ' · al inicio del registro';
-    showInfoCard(c.title, '#e6edf3', c.lines, networkMode ? undefined : () => openWard(j));
+    showInfoCard(c.title, '#e6edf3', c.lines, () => openWard(j));
   },
   ...(networkMode ? { geo: geoMap(networkParams().network!.sites), onSite: (id: string) => showSiteCard(id) } : {}),
   },
@@ -244,7 +252,12 @@ const {
     clinic: {
       social,
       onMachine: openMachine,
-      state: (j) => ({ occupied: clinicState()[j].occupied, reserved: reservedFor(j) }),
+      // Cada cama dibujada representa beds/dibujadas camas del motor (1 fuera de la red real).
+      state: (j) => {
+        const c = clinicState()[j];
+        const drawn = social().plan(j)?.beds.length || c.beds;
+        return { occupied: Math.round((c.occupied * drawn) / c.beds), reserved: Math.min(reservedFor(j), drawn) };
+      },
       // La tarjeta de la clínica va a la izquierda en pantallas anchas y arriba en las estrechas.
       inset: () =>
         $('scene').clientWidth > 900 ? { left: $('ward').offsetWidth + 16, top: 0 } : { left: 0, top: $('ward').offsetHeight + 8 },
@@ -265,6 +278,19 @@ $('view').onclick = () => {
   if (scene.inCity) city?.goHospital();
   else scene.goCity();
 };
+// Pantalla completa (como un video): la columna de la escena con sus franjas. Botón o tecla F; Esc sale.
+const toggleFullscreen = () =>
+  document.fullscreenElement
+    ? document.exitFullscreen()
+    : document.querySelector('.map-column')!.requestFullscreen().catch(() => ($('toast').textContent = 'Este navegador no permitió la pantalla completa; usa F11.'));
+button('fullscreen').onclick = toggleFullscreen;
+document.addEventListener('keydown', (e) => {
+  const typing = e.target instanceof HTMLElement && e.target.closest('input, textarea, select, [contenteditable]');
+  if (e.key.toLowerCase() !== 'f' || e.ctrlKey || e.metaKey || e.altKey || typing || !$('vending').hidden) return;
+  e.preventDefault();
+  toggleFullscreen();
+});
+document.addEventListener('fullscreenchange', () => ($('fullscreen').textContent = document.fullscreenElement ? 'Salir de pantalla completa' : 'Pantalla completa'));
 button('buy-drink').onclick = () => openMachine(ward.index ?? -1, 'refrescos');
 button('buy-snack').onclick = () => openMachine(ward.index ?? -1, 'papas');
 // Solo en desarrollo (npm run dev): inspeccionar el estado desde la consola. No existe en el build de la feria.
@@ -322,6 +348,11 @@ if (primary)
 
 if (networkMode) {
   $('osm-attrib').textContent = OSM_ATTRIBUTION;
+  const style = $('map-style') as HTMLSelectElement;
+  style.onchange = () => {
+    city?.setStyle(style.value as MapStyle);
+    $('osm-attrib').textContent = OSM_ATTRIBUTION + (style.value === 'satelite' ? ' · Imagen: ' + SATELLITE_ATTRIBUTION : '');
+  };
   $('key-net').hidden = false;
   $('practice').parentElement!.hidden = true; // el ensayo usa las clínicas ficticias
 }
@@ -564,7 +595,7 @@ setInterval(() => {
   $('map-heading').textContent = scene.inCity ? (networkMode ? 'Red hospitalaria de Valledupar' : 'Red de clínicas') : 'Plano del hospital';
   $('legend').hidden = scene.inCity;
   $('city-key').hidden = !scene.inCity;
-  $('osm-attrib').hidden = !(networkMode && scene.inCity);
+  $('osm-attrib').hidden = $('map-style').hidden = !(networkMode && scene.inCity && ward.index === undefined);
   const camera = ward.index !== undefined ? clinicScene : scene.inCity ? city : scene;
   const zoom = camera?.cameras?.main?.zoom;
   button('minus').disabled = !camera || zoom === undefined || zoom <= camera.minZoom + 1e-6;
@@ -614,7 +645,7 @@ setInterval(() => {
   $('trip-strip').hidden = !practice && !ride && !first;
   $('trip-label').textContent = practice ? 'Traslado de demostración' : 'Remisión de la corrida';
   button('ride').hidden = !tr;
-  button('enter-destination').hidden = !ride?.arrived || networkMode;
+  button('enter-destination').hidden = !ride?.arrived;
   const amb = ride && !ride.arrived ? ride.amb : first?.[0];
   const w = amb ? why.get(amb) : undefined;
   $('trip-why').hidden = !w?.reason;
