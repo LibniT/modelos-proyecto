@@ -4,6 +4,17 @@ Simulador de eventos discretos (SED) del servicio de urgencias de un hospital de
 
 > EPS, clínicas y parámetros son **ficticios / estimados con fines académicos**. El orden triage → admisión sigue la Resolución 5596 de 2015 (art. 6).
 
+## Capturas
+| Hospital en vivo | Mapa de la ciudad |
+|---|---|
+| ![Plano isométrico del hospital con pacientes](docs/capturas/plano-hospital.jpg) | ![Mapa con el hospital y las tres clínicas](docs/capturas/mapa-ciudad.jpg) |
+| **Interior de una clínica** | **Máquina de la cafetería** |
+| ![Clínica Valle Verde con sus dos alas y el patio](docs/capturas/clinica-valle-verde.jpg) | ![Panel de la máquina de refrescos con el código A3](docs/capturas/maquina-refrescos.jpg) |
+| **Gráficas en vivo** | **Validación contra teoría de colas** |
+| ![Pestaña de gráficas en vivo](docs/capturas/graficas-en-vivo.jpg) | ![Tabla de validación: 16 de 16 dentro del IC 95 %](docs/capturas/validacion.jpg) |
+
+Más capturas en [`docs/capturas`](docs/capturas) (incluida la vista de celular). Los gráficos del póster de Exposoftware 2026-2 están en [`docs/poster`](docs/poster).
+
 ## Uso
 ```bash
 npm install

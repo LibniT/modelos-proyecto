@@ -1,0 +1,166 @@
+<!doctype html>
+<!-- Gráficos del póster Exposoftware 2026-2. Cada bloque con id se exportó como imagen (captura de Chrome headless a escala 3–4) para Canva. -->
+<html lang="es"><head><meta charset="utf-8"><title>SimUrgencias · gráficos del póster</title>
+<style>
+  :root { --g:#01b251; --dk:#0b2e24; --ink:#1f2937; --mut:#5b6670; --r:#e5484d; --o:#f59e0b; --b:#2f6fdf; --p:#7c3aed; --t:#0d9488; --y:#eab308; }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:"Segoe UI", system-ui, sans-serif; color:var(--ink); background:#fff; padding:20px; display:grid; gap:30px; justify-items:start; }
+  .blk { background:#fff; padding:6px; }
+  h4 { font-size:15px; font-weight:800; letter-spacing:.02em; }
+  small { color:var(--mut); }
+  /* Flujo */
+  #flujo { width:615px; }
+  .flow { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; align-items:stretch; position:relative; }
+  .node { border:2.5px solid var(--g); border-radius:14px; padding:9px 8px; text-align:center; background:#f2fbf6; position:relative; }
+  .node b { display:block; font-size:15.5px; color:var(--dk); }
+  .node span { font-size:12px; color:var(--mut); line-height:1.25; display:block; margin-top:2px; }
+  .node .ic { font-size:22px; line-height:1; }
+  .node:not(:last-child)::after { content:"➜"; position:absolute; right:-13px; top:50%; transform:translateY(-50%); color:var(--g); font-size:15px; font-weight:900; }
+  .exits { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:22px; position:relative; }
+  .exits::before { content:""; position:absolute; left:16.6%; right:16.6%; top:-12px; border-top:2.5px solid var(--g); }
+  .exits .node { background:#fff; }
+  .exits .node::before { content:""; position:absolute; left:50%; top:-14px; height:12px; border-left:2.5px solid var(--g); }
+  .exits .node::after { display:none; }
+  .drop { margin-top:10px; font-size:12px; color:var(--r); font-weight:700; text-align:center; }
+  .stem { position:absolute; right:12.5%; bottom:-11px; height:11px; border-left:2.5px solid var(--g); }
+  /* Datos */
+  #datos { width:615px; }
+  .big { border:2.5px solid var(--g); border-radius:14px; padding:12px 16px; display:grid; grid-template-columns:auto 1fr; gap:16px; align-items:center; background:#f2fbf6; }
+  .big .num { font-size:58px; font-weight:900; color:var(--r); line-height:.95; }
+  .big p { font-size:13px; line-height:1.3; }
+  .mix { margin-top:6px; display:flex; height:22px; border-radius:6px; overflow:hidden; font-size:11px; font-weight:800; color:#fff; }
+  .mix div { display:grid; place-items:center; }
+  .tiles { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:10px; }
+  .tile { border-radius:12px; padding:10px 8px; color:#fff; text-align:center; }
+  .tile b { font-size:30px; display:block; line-height:1.05; font-weight:900; }
+  .tile span { font-size:12.5px; font-weight:600; line-height:1.2; display:block; margin-top:3px; }
+  /* Pasos */
+  #pasos { width:615px; }
+  .step { display:grid; grid-template-columns:52px 1fr; align-items:center; margin-bottom:9px; }
+  .step .n { width:52px; height:52px; border-radius:50%; color:#fff; display:grid; place-items:center; font-size:26px; font-weight:900; border:4px solid #fff; box-shadow:0 0 0 3px currentColor; z-index:1; }
+  .step .box { margin-left:-14px; padding:8px 12px 8px 24px; border-radius:0 12px 12px 0; border:2.5px solid; border-left:0; }
+  .step .box b { font-size:14.5px; text-transform:uppercase; letter-spacing:.02em; display:block; }
+  .step .box span { font-size:12.5px; color:var(--ink); line-height:1.25; display:block; }
+  .stack { margin-top:12px; display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .card { border-radius:10px; padding:7px 10px; border:2px solid; }
+  .card h5 { font-size:12.5px; margin-bottom:3px; }
+  .card ul { padding:0; }
+  .card li { font-size:12px; list-style:none; line-height:1.35; }
+  .card li::before { content:"• "; font-weight:900; }
+  /* Objetivos */
+  #objetivos { width:615px; }
+  .arrow { position:relative; padding:12px 54px 12px 16px; color:#fff; clip-path:polygon(0 0, calc(100% - 34px) 0, 100% 50%, calc(100% - 34px) 100%, 0 100%); margin-bottom:9px; display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:center; }
+  .arrow.gen { background:#e9f8ef; color:var(--ink); border-left:8px solid var(--g); }
+  .arrow .k { font-size:40px; font-weight:900; line-height:1; }
+  .arrow p { font-size:14px; line-height:1.3; }
+  .esp { font-weight:800; font-size:16px; margin:6px 0 8px; }
+  /* KPIs de resultados */
+  #kpis { width:1290px; display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  #kpis .tile { padding:14px 10px; }
+  #kpis .tile b { font-size:44px; }
+  #kpis .tile span { font-size:15px; }
+  #kpis .tile small { color:#fffd; font-size:12.5px; display:block; margin-top:4px; }
+  /* Gráfica */
+  #grafica { width:615px; border:2px solid #d8dee4; border-radius:12px; padding:12px 14px 8px; }
+  #grafica h4 { font-size:16px; }
+  /* Mockups */
+  #mockups { width:1290px; height:870px; position:relative; }
+  .mon { position:absolute; background:#1d2327; border-radius:14px; padding:12px 12px 22px; box-shadow:0 10px 24px #0003; }
+  .mon img, .lap img, .ph img { display:block; width:100%; }
+  .mon::after { content:""; position:absolute; left:50%; transform:translateX(-50%); bottom:-46px; width:22%; height:46px; background:linear-gradient(#2b3237,#1d2327); clip-path:polygon(25% 0,75% 0,100% 100%,0 100%); }
+  .lap { position:absolute; background:#1d2327; border-radius:12px 12px 0 0; padding:10px 10px 14px; box-shadow:0 10px 24px #0003; }
+  .lap::after { content:""; position:absolute; left:-7%; right:-7%; bottom:-20px; height:20px; background:linear-gradient(#c9cfd4,#8d959c); border-radius:0 0 14px 14px; }
+  .ph { position:absolute; background:#111; border-radius:30px; padding:12px 8px; box-shadow:0 10px 24px #0004; overflow:hidden; }
+  .ph img { border-radius:18px; }
+  .tag { position:absolute; background:var(--g); color:#fff; font-weight:800; font-size:15px; padding:5px 12px; border-radius:999px; white-space:nowrap; box-shadow:0 4px 10px #0002; }
+</style></head><body>
+
+<section id="flujo" class="blk">
+  <h4 style="margin-bottom:10px">Red de colas del servicio <small>(Res. 5596 de 2015: primero triage, luego admisión)</small></h4>
+  <div class="flow">
+    <div class="node"><div class="ic">🚶</div><b>Llegada</b><span>λ media = 12 pac/h<br>perfil por hora</span></div>
+    <div class="node"><div class="ic">🩺</div><b>Triage</b><span>2 enfermeras<br>niveles I a V</span></div>
+    <div class="node"><div class="ic">🗂️</div><b>Admisión</b><span>2 auxiliares</span></div>
+    <div class="node"><div class="ic">👩‍⚕️</div><b>Médico</b><span>6 médicos<br>prioridad por nivel</span><div class="stem"></div></div>
+  </div>
+  <div class="exits">
+    <div class="node"><b>Alta</b><span>sale a casa</span></div>
+    <div class="node"><b>Observación</b><span>18 camas</span></div>
+    <div class="node"><b>Remisión</b><span>2 ambulancias · 3 clínicas</span></div>
+  </div>
+  <p class="drop">Los niveles IV y V pueden abandonar si la espera se alarga</p>
+</section>
+
+<section id="datos" class="blk">
+  <div class="big"><div class="num">≤ 30<br><span style="font-size:30px">min</span></div>
+    <div><p><b>Tiempo máximo para que un paciente Triage II vea al médico</b> (Res. 5596 de 2015). ¿Cuántos médicos, auxiliares y camas hacen falta para cumplirlo?</p>
+      <div class="mix"><div style="width:2%;background:#d62828"></div><div style="width:13%;background:#f77f00">II</div><div style="width:45%;background:#e9b200">III · 45 %</div><div style="width:30%;background:#2a9d4b">IV · 30 %</div><div style="width:10%;background:#2f6fdf">V</div></div>
+      <small style="font-size:11px">Mezcla de pacientes por nivel de triage (I = 2 %, II = 13 %)</small></div></div>
+  <div class="tiles">
+    <div class="tile" style="background:var(--o)"><b>12</b><span>pacientes por hora en promedio</span></div>
+    <div class="tile" style="background:var(--b)"><b>5</b><span>niveles de triage con prioridad</span></div>
+    <div class="tile" style="background:var(--p)"><b>3</b><span>clínicas para remisiones (30, 40 y 50 camas)</span></div>
+  </div>
+</section>
+
+<section id="pasos" class="blk">
+  <div class="step" style="color:var(--r)"><div class="n" style="background:var(--r)">1</div><div class="box" style="border-color:var(--r);background:#fdecec"><b style="color:#b4232a">Formulación</b><span>¿Qué capacidad cumple el Triage II ≤ 30 min?</span></div></div>
+  <div class="step" style="color:var(--o)"><div class="n" style="background:var(--o)">2</div><div class="box" style="border-color:var(--o);background:#fef4e2"><b style="color:#b86e00">Modelo conceptual</b><span>Red de colas con prioridad por triage</span></div></div>
+  <div class="step" style="color:var(--b)"><div class="n" style="background:var(--b)">3</div><div class="box" style="border-color:var(--b);background:#e8f0fd"><b style="color:#1f4fae">Datos</b><span>Parámetros de la literatura · EPS y clínicas ficticias</span></div></div>
+  <div class="step" style="color:var(--g)"><div class="n" style="background:var(--g)">4</div><div class="box" style="border-color:var(--g);background:#e9f8ef"><b style="color:#027a39">Codificación</b><span>Motor propio de eventos discretos + juego isométrico</span></div></div>
+  <div class="step" style="color:var(--p)"><div class="n" style="background:var(--p)">5</div><div class="box" style="border-color:var(--p);background:#f1ebfd"><b style="color:#5b21b6">Verificación y validación</b><span>30 réplicas contra Erlang C, Cobham, Erlang B y Little</span></div></div>
+  <div class="step" style="color:var(--t)"><div class="n" style="background:var(--t)">6</div><div class="box" style="border-color:var(--t);background:#e5f6f4"><b style="color:#0a6e66">Experimentación</b><span>Escenarios con números aleatorios comunes · Welch · accidente</span></div></div>
+  <div class="stack">
+    <div class="card" style="border-color:var(--b);background:#f3f7fe"><h5 style="color:#1f4fae">Motor</h5><ul><li>TypeScript</li><li>Generador sfc32</li><li>Web Workers</li></ul></div>
+    <div class="card" style="border-color:var(--g);background:#f2fbf6"><h5 style="color:#027a39">Visualización</h5><ul><li>Phaser 3</li><li>Chart.js</li><li>Vite</li></ul></div>
+    <div class="card" style="border-color:var(--p);background:#f7f3fe"><h5 style="color:#5b21b6">Calidad</h5><ul><li>Vitest (96 pruebas)</li><li>IC 95 % t-Student</li><li>Sin internet</li></ul></div>
+  </div>
+</section>
+
+<section id="objetivos" class="blk">
+  <div class="arrow gen" style="clip-path:none;border-radius:10px;grid-template-columns:1fr"><p><b>General:</b> desarrollar un simulador de eventos discretos del servicio de urgencias, validado analíticamente, para evaluar la capacidad necesaria para cumplir los tiempos de la Res. 5596 de 2015.</p></div>
+  <div class="esp">Específicos:</div>
+  <div class="arrow" style="background:var(--r)"><div class="k">1.</div><p><b>Modelar</b> el flujo de pacientes como una red de colas con prioridad por triage.</p></div>
+  <div class="arrow" style="background:var(--o)"><div class="k">2.</div><p><b>Implementar</b> un motor de eventos discretos con visualización interactiva.</p></div>
+  <div class="arrow" style="background:var(--b)"><div class="k">3.</div><p><b>Validar</b> el modelo contra Erlang C, Cobham, Erlang B y la Ley de Little.</p></div>
+  <div class="arrow" style="background:var(--p)"><div class="k">4.</div><p><b>Evaluar</b> escenarios de capacidad: médicos, camas y un accidente masivo.</p></div>
+</section>
+
+<section id="kpis" class="blk">
+  <div class="tile" style="background:var(--g)"><b>16 / 16</b><span>medidas analíticas dentro del IC 95 %</span><small>Erlang C · Cobham · Erlang B · Little</small></div>
+  <div class="tile" style="background:var(--r)"><b>49 % → 1,6 %</b><span>abandono de IV–V de 4 a 7 médicos</span><small>30 réplicas · números aleatorios comunes</small></div>
+  <div class="tile" style="background:var(--b)"><b>96,3 %</b><span>tope de cumplimiento del Triage II</span><small>ni con 20 médicos: limita la admisión</small></div>
+  <div class="tile" style="background:var(--p)"><b>6,5 h</b><span>para recuperarse de 15 heridos</span><small>8 heridos: 4,1 h · 200 réplicas</small></div>
+</section>
+
+<section id="grafica" class="blk">
+  <h4>Abandono de pacientes IV–V según el número de médicos</h4>
+  <small>Media de 30 réplicas · modo realista · el hospital tiene hoy 6 médicos</small>
+  <svg viewBox="0 0 590 270" width="590" height="270" style="display:block;margin-top:6px" font-family="Segoe UI, sans-serif">
+    <g stroke="#e3e7eb"><line x1="50" x2="580" y1="230" y2="230"/><line x1="50" x2="580" y1="180" y2="180"/><line x1="50" x2="580" y1="130" y2="130"/><line x1="50" x2="580" y1="80" y2="80"/><line x1="50" x2="580" y1="30" y2="30"/></g>
+    <g font-size="12" fill="#5b6670" text-anchor="end"><text x="44" y="234">0 %</text><text x="44" y="184">12,5 %</text><text x="44" y="134">25 %</text><text x="44" y="84">37,5 %</text><text x="44" y="34">50 %</text></g>
+    <!-- escala: 50 % = 200 px -->
+    <rect x="80" y="33.6" width="80" height="196.4" rx="5" fill="#e5484d"/>
+    <rect x="210" y="141.6" width="80" height="88.4" rx="5" fill="#f59e0b"/>
+    <rect x="340" y="201.2" width="80" height="28.8" rx="5" fill="#01b251"/>
+    <rect x="470" y="223.6" width="80" height="6.4" rx="3" fill="#01b251"/>
+    <g font-size="17" font-weight="800" text-anchor="middle" fill="#1f2937"><text x="120" y="26">49,1 %</text><text x="250" y="134">22,1 %</text><text x="380" y="193">7,2 %</text><text x="510" y="215">1,6 %</text></g>
+    <g font-size="14" text-anchor="middle" fill="#1f2937"><text x="120" y="252">4 médicos</text><text x="250" y="252">5</text><text x="380" y="252" font-weight="800">6 (actual)</text><text x="510" y="252">7</text></g>
+    <path d="M170 40 C 300 40, 400 110, 470 190" fill="none" stroke="#b4232a" stroke-width="2.5" stroke-dasharray="6 5"/>
+    <text x="330" y="62" font-size="15" font-weight="800" fill="#b4232a">−47,5 puntos</text>
+  </svg>
+</section>
+
+<section id="mockups">
+  <div class="mon" style="left:0;top:0;width:720px"><img src="../capturas/hospital.jpg" alt=""></div>
+  <div class="mon" style="left:760px;top:10px;width:470px"><img src="../capturas/mapa-ciudad.jpg" alt=""></div>
+  <div class="ph" style="left:1160px;top:190px;width:125px"><img src="../capturas/movil.jpg" alt=""></div>
+  <div class="lap" style="left:45px;top:530px;width:510px"><img src="../capturas/graficas-en-vivo.jpg" alt=""></div>
+  <div class="lap" style="left:610px;top:510px;width:630px"><img src="../capturas/clinica-valle-verde.jpg" alt=""></div>
+  <div class="tag" style="left:24px;top:392px">Hospital en vivo</div>
+  <div class="tag" style="left:780px;top:228px">Mapa de la ciudad</div>
+  <div class="tag" style="left:1110px;top:458px">App en el celular</div>
+  <div class="tag" style="left:62px;top:800px">Gráficas en vivo</div>
+  <div class="tag" style="left:632px;top:776px">Interior de una clínica</div>
+</section>
+</body></html>
