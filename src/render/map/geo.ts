@@ -7,6 +7,7 @@ import rutas from '../../model/valledupar/rutas.json';
 import { SITES, type SiteId } from '../../model/valledupar/sites';
 import satelite from '../../model/valledupar/satelite.json';
 import { LAT0, proj, tileBounds, tileOf, unproj } from '../../model/valledupar/proj';
+import { routesFromSite, type Traffic } from '../../model/valledupar/router';
 import type { Vec } from '../layout';
 
 export const OSM_ATTRIBUTION = calles.attribution;
@@ -125,9 +126,10 @@ const pts = (flat: number[]): Vec[] => {
 };
 
 /** `simulated`: sede de cada clínica simulada (params.network.sites). */
-export function geoMap(simulated: SiteId[]): GeoMap {
+export function geoMap(simulated: SiteId[], traffic: Traffic = 'fluido'): GeoMap {
   const located = rutas.sites as Record<string, { x: number; y: number; verify: boolean }>;
-  const routes = rutas.routes as Record<string, { path: number[] } | null>;
+  // T28: la misma ruta (más rápida por tiempo) que usa el motor para la remisión
+  const routes = routesFromSite(rutas.origin, traffic);
   const sites: GeoSite[] = [];
   for (const s of SITES) {
     const g = located[s.id];

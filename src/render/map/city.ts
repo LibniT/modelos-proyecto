@@ -7,6 +7,7 @@ import { neighborhood, facility } from './neighborhood';
 import { hiresTiles, type GeoMap, type MapStyle } from './geo';
 import { reception, type ConditionId, type Reception } from '../../model/valledupar/capabilities';
 import type { SiteId } from '../../model/valledupar/sites';
+import type { PrehospitalCase } from '../../model/ed';
 
 export interface ClinicView {
   name: string;
@@ -22,6 +23,10 @@ export interface CityOptions {
   geo?: GeoMap;
   /** clic en una sede que no se simula (ficha informativa) */
   onSite?: (id: string) => void;
+  /** T31: pacientes colocados en el mapa (escenario de red), punto elegido y ruta de vista previa (metros, y al norte) */
+  prehospital?: () => { cases: PrehospitalCase[]; pending?: { x: number; y: number }; preview?: number[] };
+  /** T31: clic en el mapa en modo «colocar paciente» (metros, y al norte) */
+  onMapPick?: (x: number, y: number) => void;
 }
 
 const occColor = (r: number) => (r < 0.7 ? 0x328366 : r < 0.9 ? 0xc18224 : 0xc95542);
@@ -56,6 +61,10 @@ export class CityScene extends Phaser.Scene {
   private overview = 1;
   private manualCamera = false;
   followedAmbulance?: string;
+  /** T31: el próximo clic en el mapa elige el punto del paciente */
+  placing = false;
+  private preGfx?: Phaser.GameObjects.Graphics;
+  private preFleet = new Map<string, Phaser.GameObjects.Image>();
   get minZoom(): number { return this.overview * .75; }
   get maxZoom(): number {
     if (!this.o.geo) return this.overview * 3;
@@ -112,6 +121,12 @@ export class CityScene extends Phaser.Scene {
     this.input.on('wheel', (_p: unknown, _o: unknown, _dx: number, dy: number) => this.zoomBy(dy > 0 ? .8 : 1.25));
     this.input.on('pointerup', (p: Phaser.Input.Pointer) => {
       if (Phaser.Math.Distance.Between(p.downX, p.downY, p.upX, p.upY) > 6) return;
+      if (this.placing && this.o.geo) {
+        this.placing = false;
+        const w = this.cameras.main.getWorldPoint(p.x, p.y);
+        this.o.onMapPick?.(w.x, -w.y);
+        return;
+      }
       const place = this.pick(p);
       if (place?.j === -1) this.goHospital();
       else if (place?.j === -2) this.o.onSite?.(place.site!);
@@ -161,6 +176,18 @@ export class CityScene extends Phaser.Scene {
     this.setStyle(this.style);
     this.roads = m.routes;
     this.routeGfx = this.add.graphics().setDepth(10);
+    this.preGfx = this.add.graphics().setDepth(11);
+    stamp(this, 'ambulancia-mapa', 46, 32, 23, 16, (g) =>
+      g.fillStyle(0x193f40).fillRoundedRect(-22, -15, 44, 30, 7).fillStyle(0xffffff).fillRoundedRect(-19, -12, 38, 24, 5).fillStyle(0xc95542).fillRect(-3, -9, 6, 18).fillRect(-9, -3, 18, 6),
+    );
+    // Marcador del paciente: personaje propio de SimUrgencias (cabeza, cuerpo y cruz), dibujado por código.
+    stamp(this, 'paciente-mapa', 40, 52, 20, 26, (g) =>
+      g
+        .fillStyle(0x193f40, 0.25).fillEllipse(0, 22, 26, 8)
+        .fillStyle(0xc8442f).fillCircle(0, -12, 13)
+        .fillStyle(0xffffff).fillRect(-2, -19, 4, 14).fillRect(-7, -14, 14, 4)
+        .fillStyle(0xc8442f).fillTriangle(-10, -2, 10, -2, 0, 20),
+    );
     for (const s of m.sites) {
       const marker = this.add.graphics().setPosition(s.at.x, s.at.y).setDepth(20);
       const outline = this.add.graphics().setDepth(19).setVisible(false);
@@ -393,6 +420,65 @@ export class CityScene extends Phaser.Scene {
     cam.setZoom(z).centerOn((x0 + x1) / 2, (y0 + y1) / 2);
   }
 
+  /** T31: punto del mapa (metros, y al norte) bajo una posición de la ventana (para soltar el muñeco). */
+  metersAtClient(clientX: number, clientY: number): { x: number; y: number } {
+    // Con el rectángulo actual del lienzo: los límites que guarda Phaser pueden quedar viejos si la página se desplazó.
+    const r = this.game.canvas.getBoundingClientRect();
+    const w = this.cameras.main.getWorldPoint(((clientX - r.left) * this.scale.width) / r.width, ((clientY - r.top) * this.scale.height) / r.height);
+    return { x: w.x, y: -w.y };
+  }
+
+  /** T31: centra la cámara en un punto (metros, y al norte). */
+  lookAt(x: number, y: number): void {
+    this.manualCamera = true;
+    this.cameras.main.centerOn(x, -y);
+  }
+
+  /** T31: rutas, pacientes y ambulancias prehospitalarias en el reloj de la simulación. */
+  private drawPrehospital(t: number): void {
+    const pre = this.o.prehospital?.();
+    const g = this.preGfx;
+    if (!pre || !g) return;
+    const z = this.cameras.main.zoom;
+    const pts = (flat: number[]): Vec[] => {
+      const out: Vec[] = [];
+      for (let i = 0; i < flat.length; i += 2) out.push({ x: flat[i], y: -flat[i + 1] });
+      return out;
+    };
+    g.clear();
+    if (pre.preview?.length) g.lineStyle(6 / z, 0x2e9d5b, 0.9).strokePoints(pts(pre.preview));
+    const pins: Vec[] = pre.pending ? [{ x: pre.pending.x, y: -pre.pending.y }] : [];
+    const live = new Set<string>();
+    for (const c of pre.cases) {
+      if (c.created > t) continue;
+      // El paciente sigue en su punto hasta que la ambulancia (o él mismo) sale de ahí.
+      const away = c.legs.find((l) => l.kind === 'a-destino');
+      if (!away || away.t0 > t) pins.push({ x: c.point.x, y: -c.point.y });
+      const leg = [...c.legs].reverse().find((l) => l.t0 <= t);
+      if (!leg || t >= leg.t0 + leg.minutes) continue;
+      const path = pts(leg.path);
+      g.lineStyle(7 / z, leg.kind === 'a-escena' ? 0xd98c2b : 0xc8442f, 0.9).strokePoints(path);
+      const key = leg.amb ?? 'propio-' + c.id;
+      live.add(key);
+      let img = this.preFleet.get(key);
+      if (!img) {
+        img = this.add.image(0, 0, leg.amb ? 'ambulancia-mapa' : 'paciente-mapa').setDepth(2600);
+        this.preFleet.set(key, img);
+      }
+      const at = along(path, leg.minutes > 0 ? (t - leg.t0) / leg.minutes : 1);
+      img.setPosition(at.x, at.y).setScale((leg.amb ? 0.8 : 0.7) / z).setVisible(true);
+      if (key === this.followedAmbulance) {
+        if (this.zoomedFor !== key) {
+          this.zoomedFor = key;
+          this.cameras.main.setZoom(Math.min(this.maxZoom, this.overview * 4));
+        }
+        this.cameras.main.centerOn(at.x, at.y);
+      }
+    }
+    for (const [k, img] of this.preFleet) if (!live.has(k)) img.setVisible(false);
+    for (const p of pins) g.fillStyle(0xffffff, 0.9).fillCircle(p.x, p.y, 15 / z).fillStyle(0xc8442f).fillCircle(p.x, p.y, 10 / z).fillStyle(0xffffff).fillRect(p.x - 1.5 / z, p.y - 6 / z, 3 / z, 12 / z).fillRect(p.x - 6 / z, p.y - 1.5 / z, 12 / z, 3 / z);
+  }
+
   /** Mapa real: marcador, placa y línea guía de tamaño constante en pantalla para el zoom `z`. */
   private placeGeo(p: Landmark, z: number): void {
     const { image, panel, footprint, label } = p;
@@ -474,6 +560,7 @@ export class CityScene extends Phaser.Scene {
         .setDepth(this.o.geo ? 2500 : 1000 + p.y)
         .setVisible(true);
     }
+    if (this.o.geo) this.drawPrehospital(pb.t);
     if (time - this.lastRead < 250) return;
     if (this.o.geo) this.updateHires();
     this.lastRead = time;

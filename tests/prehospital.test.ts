@@ -155,3 +155,25 @@ describe('T30 · paciente prehospitalario en el motor', () => {
     expect(JSON.stringify(run())).toBe(JSON.stringify(a));
   });
 });
+
+describe('T32 · seguimiento del paciente (línea de tiempo)', () => {
+  it('etapas en orden; durante el viaje hay exactamente una en curso; al final todas hechas', async () => {
+    const { CaseLog, timeline } = await import('../src/ui/patient-timeline');
+    const ed = new EmergencyDepartment(networkParams(), { seed: 4 });
+    const log = new CaseLog();
+    ed.onEvent((e) => log.onEvent(e));
+    const c = ed.injectPrehospital(req({ condition: 'fractura_aislada', level: 4, stable: true, point: near('hrpl', 60), policy: 'cercana' }))!;
+    log.watch(c.id);
+    ed.step(1);
+    const mid = timeline(c, ed.now, log.trace.get(c.id));
+    expect(mid.filter((s) => s.state === 'en curso')).toHaveLength(1);
+    const firstOpen = mid.findIndex((s) => s.state !== 'hecho');
+    expect(mid.slice(firstOpen + 1).every((s) => s.state === 'pendiente')).toBe(true);
+    ed.step(3 * 1440);
+    const end = timeline(c, ed.now, log.trace.get(c.id));
+    expect(end.every((s) => s.state === 'hecho')).toBe(true);
+    const whens = end.filter((s) => s.key !== 'libre' && s.when !== undefined).map((s) => s.when!);
+    expect(whens).toEqual([...whens].sort((a, b) => a - b));
+    expect(end.map((s) => s.key)).toEqual(expect.arrayContaining(['triage', 'consulta', 'final']));
+  });
+});

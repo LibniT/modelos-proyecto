@@ -33,6 +33,8 @@ import { clinicPlan, hospitalCafe, type MachineKind, type SitePlan } from './ren
 import { VendingPanel, orderText } from './ui/vending';
 import './ui/expo.css';
 import './ui/tour.css';
+import './ui/city.css';
+import { mountPrehospital, type PrehospitalUi } from './ui/prehospital-panel';
 
 const app = document.getElementById('app')!;
 app.innerHTML = `
@@ -74,6 +76,8 @@ app.innerHTML = `
         <div class="canvas-wrap">
           <div id="scene"></div><section id="ward" hidden></section><section id="vending" hidden></section><div id="tip" hidden></div>
           <div id="card" role="dialog" aria-label="Información de la simulación" hidden></div>
+          <aside id="side" class="side" aria-label="Paciente en el mapa" hidden></aside>
+          <button id="doll" class="doll" type="button" hidden aria-label="Paciente: arrástralo al mapa, o haz clic y luego clic en el mapa"><svg viewBox="0 0 44 56" width="44" height="56" aria-hidden="true"><ellipse cx="22" cy="52" rx="13" ry="3.5" fill="#193f40" opacity=".25"/><circle cx="22" cy="12" r="9" fill="#f2c9a0"/><path d="M13 9a9 9 0 0 1 18 0c-3-2-6-3-9-3s-6 1-9 3z" fill="#3b2a20"/><rect x="11" y="22" width="22" height="20" rx="7" fill="#c8442f"/><rect x="20" y="26" width="4" height="12" fill="#fff"/><rect x="16" y="30" width="12" height="4" fill="#fff"/><rect x="14" y="40" width="6" height="11" rx="2" fill="#234e51"/><rect x="24" y="40" width="6" height="11" rx="2" fill="#234e51"/></svg><span>Arrástrame al mapa</span></button>
           <div id="subs" aria-live="polite" hidden></div>
           <div id="demo-banner" hidden>Demostración · mueve el puntero para tomar el control</div>
         </div>
@@ -131,6 +135,8 @@ function makePair(mode: Mode): [EmergencyDepartment, EmergencyDepartment] {
 const primary = mockMode ? undefined : new LiveDriver(...makePair(query.get('modo') === 'validacion' ? 'validacion' : 'realista'));
 /** T26: remisiones de la corrida principal en 4 pasos (todo sale de eventos del motor). */
 const referrals = new ReferralLog();
+/** T31: paciente colocado en el mapa (solo `?red`). */
+let pre: PrehospitalUi | undefined;
 if (networkMode) primary?.ed.onEvent((e) => referrals.onEvent(e));
 const hhmm = (t: number) => `${String(Math.floor((t % 1440) / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 const original = primary ?? new MockDriver();
@@ -256,7 +262,14 @@ const {
       : [];
     showInfoCard(c.title, '#e6edf3', site ? [...c.lines, ...(units.length ? ['Otras camas simuladas — ' + units.join(' · ')] : []), ...siteLines(site, true)] : c.lines, () => openWard(j));
   },
-  ...(networkMode ? { geo: geoMap(networkParams().network!.sites), onSite: (id: string) => showSiteCard(id) } : {}),
+  ...(networkMode
+    ? {
+        geo: geoMap(networkParams().network!.sites),
+        onSite: (id: string) => showSiteCard(id),
+        prehospital: () => pre?.mapState() ?? { cases: [] },
+        onMapPick: (x: number, y: number) => pre?.onPick(x, y),
+      }
+    : {}),
   },
   {
     cafe: { social, onMachine: openMachine },
@@ -276,6 +289,29 @@ const {
   },
 );
 ward.scene = clinicScene;
+if (networkMode && primary) {
+  pre = mountPrehospital({
+    root: $('side'),
+    doll: button('doll'),
+    stage: $('scene'),
+    ed: () => (practice ? undefined : primary.ed),
+    now: () => driver.pb.t,
+    city: () => city,
+    clock: (t) => fmtClock(t),
+    notify: (msg) => ($('toast').textContent = msg),
+    // Los tramos duran pocos minutos simulados: a ×6 se ven en pantalla; la cámara sigue a la ambulancia.
+    onStart: (c) => {
+      $('card').hidden = true;
+      if (c.legs.length || c.requested !== undefined) driver.speed = 6;
+      $('toast').textContent = `${c.name}: ${c.decision.chosen ? 'destino ' + c.decision.chosen.name : 'sin destino en la red'}. Velocidad ×6 para ver el traslado.`;
+    },
+    onFollow: (amb) => {
+      if (!scene.inCity) scene.goCity();
+      if (city) city.followedAmbulance = amb;
+    },
+  });
+  primary.ed.onEvent((e) => pre!.log.onEvent(e));
+}
 function openWard(j: number) {
   $('card').hidden = true;
   ward.open(j);
@@ -410,6 +446,7 @@ new DemoMode({
     vending.isOpen ||
     social().orderActive ||
     !$('tab-graphs').hidden ||
+    !$('side').hidden ||
     !!document.querySelector('dialog[open]'),
   onStart: () => {
     document.querySelector<HTMLButtonElement>('[data-tab="scene"]')!.click();
@@ -425,7 +462,7 @@ $('create').hidden = mockMode;
 // La cola de inyección es FIFO. El id se conoce solamente cuando el motor emite ARRIVAL.
 function observeVisitors() {
   primary?.ed.onEvent((e) => {
-    if (e.type === 'ARRIVAL' && (e.data?.info as { isVisitor?: boolean })?.isVisitor) {
+    if (e.type === 'ARRIVAL' && (e.data?.info as { isVisitor?: boolean })?.isVisitor && !pre?.ids.has(e.patientId!)) {
       const entered = pending.shift();
       if (entered) {
         entered.id = e.patientId;
@@ -590,6 +627,9 @@ setInterval(() => {
     else city?.goHospital();
   }
   markSpeed(); // la demo cambia y restaura la velocidad
+  pre?.update();
+  $('doll').hidden = !(pre && scene.inCity && ward.index === undefined && !practice);
+  $('side').hidden = !(pre?.open() && scene.inCity && ward.index === undefined && !practice);
   $('view').textContent = scene.inCity ? 'Ver hospital' : 'Ver ciudad';
   $('pause').textContent = driver.paused ? 'Continuar' : 'Pausa';
   $('clock').textContent = fmtClock(driver.pb.t);

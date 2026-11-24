@@ -373,6 +373,23 @@ export class EmergencyDepartment {
     return c;
   }
 
+  /**
+   * T31 — Vista previa de la decisión para el punto y los datos del formulario, con el estado actual del motor.
+   * No cambia nada (no reserva camas ni ambulancias ni consume aleatorios).
+   */
+  previewPrehospital(req: PrehospitalRequest): { decision: PrehospitalDecision; routes: Record<string, Route | null>; pickup: Route | null } | null {
+    const n = this.params.network;
+    if (!n) return null;
+    const routes = routesFrom(req.point, sitePoints(), n.traffic);
+    const decision = this.prehospitalDecision(req.condition, req.info.ageRange !== '0-17', req.level <= 2 || !req.stable, req.info.eps, routes, n.origin, req.policy);
+    return { decision, routes, pickup: routesFrom(sitePoints()[n.origin], { p: req.point }, n.traffic).p };
+  }
+
+  /** Ambulancias prehospitalarias ocupadas y en cola. */
+  get prehospitalAmbulances(): { capacity: number; busy: number; queue: number } | undefined {
+    return this.preAmb && { capacity: this.preAmb.capacity, busy: this.preAmb.inService, queue: this.preAmb.queueLength };
+  }
+
   /** Casos prehospitalarios (para el seguimiento en pantalla). */
   prehospitalCases(): PrehospitalCase[] {
     return [...this.preCases.values()];
