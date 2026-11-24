@@ -1,0 +1,5 @@
+# Binarios exportados de Canva: se entregan en el ZIP, no se versionan
+*.pdf
+*.pptx
+*.zip
+SimUrgencias_poster_vista_previa.png
