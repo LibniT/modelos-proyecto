@@ -4,6 +4,8 @@ import { CLINICS, EPS_LIST, type ClinicParams, type EpsParams } from './catalog'
 import type { ConditionId } from './valledupar/capabilities';
 import { SITES, type Capacity, type SiteId } from './valledupar/sites';
 import rutas from './valledupar/rutas.json';
+import { routesFromSite, type Traffic } from './valledupar/router';
+import { NO_EPS, REAL_EPS, UNKNOWN_EPS } from './valledupar/eps';
 
 export type Mode = 'validacion' | 'realista';
 
@@ -69,6 +71,23 @@ export interface NetworkParams {
   handover: Dist;
   /** espera máxima en el pasillo sin destino; después se remite fuera de la red (min) */
   maxWait: number;
+  /** T28: escenario de tráfico (SUPUESTO): pesa el tiempo de cada vía en todas las rutas */
+  traffic: Traffic;
+  /** T30: pacientes colocados en el mapa (atención prehospitalaria; todos SUPUESTOS salvo las rutas) */
+  prehospital: {
+    /** grupo de ambulancias propio con base en el hospital de origen (las de remisión no cambian) */
+    ambulances: number;
+    /** atención en la escena antes de salir */
+    scene: Dist;
+    /** estabilización en una sede que no da la atención definitiva */
+    stabilization: Dist;
+    /** paciente estable: minutos extra aceptados para ir a la red documentada de su EPS */
+    epsSlack: number;
+    /** paciente crítico: minutos extra máximos frente a la urgencia más cercana */
+    criticalSlack: number;
+    /** sin ambulancia (por sus medios): multiplicador del tiempo de ruta */
+    ownMeansFactor: number;
+  };
 }
 
 /** Perfil horario relativo (media = 1): valle nocturno, picos en la mañana y la tarde. */
@@ -172,10 +191,11 @@ export const CONDITION_POOL: Record<ConditionId, PoolId> = {
  * cada unidad se fija para una ocupación media de NETWORK_OCCUPANCY. No hay restricción EPS (la urgencia no se
  * condiciona a convenio).
  */
-export function networkParams(): Params {
+export function networkParams(traffic: Traffic = 'fluido'): Params {
   const p = realisticParams();
   const origin = rutas.origin as SiteId;
-  const routes = rutas.routes as Record<string, { minutes: number; backM: number } | null>;
+  // T28: tiempos de ruta del router (más rápida por tiempo, velocidad por clase de vía y tráfico supuestos)
+  const routes = routesFromSite(origin, traffic);
   const units = SITES.filter((s) => s.id !== origin && s.emergency && routes[s.id]).flatMap((s) =>
     POOLS.filter((k) => s.capacity[k.field]).map((k) => ({ s, k, beds: s.capacity[k.field]!.value })),
   );
@@ -188,12 +208,15 @@ export function networkParams(): Params {
       backgroundRatePerHour: (NETWORK_OCCUPANCY * beds * 60) / k.los,
       los: { kind: 'exp', mean: k.los },
       travel: { kind: 'lognormal', mean: r.minutes, cv: 0.3 },
-      travelBack: { kind: 'lognormal', mean: (r.backM / 1000 / rutas.ambulanceKmh) * 60, cv: 0.3 },
+      travelBack: { kind: 'lognormal', mean: routesFromSite(s.id, traffic)[origin]!.minutes, cv: 0.3 },
     };
   });
   return {
     ...p,
     clinics,
+    // T29: EPS reales de Valledupar. Sin cifras oficiales y completas de afiliados por EPS en el municipio, los
+    // pacientes aleatorios quedan con «EPS no simulada»; la EPS real la elige el visitante en el formulario.
+    eps: [...REAL_EPS.map((e) => ({ id: e.id, name: e.name, share: 0, network: [] })), { ...NO_EPS, share: 0, network: [] }, { ...UNKNOWN_EPS, share: 1, network: [] }],
     network: {
       origin,
       sites: units.map((u) => u.s.id),
@@ -214,6 +237,15 @@ export function networkParams(): Params {
       coordination: { kind: 'lognormal', mean: 30, cv: 1 },
       handover: { kind: 'lognormal', mean: 15, cv: 0.5 },
       maxWait: 720,
+      traffic,
+      prehospital: {
+        ambulances: 2,
+        scene: { kind: 'lognormal', mean: 12, cv: 0.5 },
+        stabilization: { kind: 'lognormal', mean: 60, cv: 0.5 },
+        epsSlack: 15,
+        criticalSlack: 10,
+        ownMeansFactor: 1.5,
+      },
     },
   };
 }

@@ -124,6 +124,8 @@ export class Playback {
 
   private apply(e: SimEvent): void {
     for (const fn of this.listeners) fn(e);
+    // T30: los tramos prehospitalarios los dibuja el mapa (CityScene); no son figuras del hospital.
+    if (e.data?.prehospital) return;
     if (e.type === 'PARAM_CHANGE') {
       for (const [k, v] of Object.entries(e.data ?? {})) if (k in this.capacity && typeof v === 'number') this.capacity[k as keyof Capacity] = v;
       return;

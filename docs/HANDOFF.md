@@ -328,3 +328,9 @@ Hecho: plan de la fase 2 (`docs/PLAN_FASE2.md`, con las decisiones de la autora)
 Verificado: 6 pruebas nuevas (sedes ajustadas, fuera del área, río, rutas por vías existentes de punta a punta, contravía, tráfico); 143 en total; TypeScript. Dos rutas desde el HRPL: 42 ms.
 A medias: el motor y el mapa todavía usan `rutas.json` (T30 los pasa al router).
 Siguiente paso: T29 (EPS, investigación en curso) y T30.
+
+## 2026-11-24 · Claude · feat/T30-prehospital (T29 + T30)
+Hecho: T29: `src/model/valledupar/eps.ts` (8 EPS con presencia confirmada en Valledupar, códigos, NIT, estado; 18 relaciones EPS–IPS con estado y fuente; `epsRelation()` → «insuficiente» si no hay evidencia), `docs/EPS_VALLEDUPAR.md` (investigación con contradicciones y vacíos), `docs/NORMATIVA.md`. En `?red` los pacientes aleatorios quedan con «EPS no simulada» (no hay cifras oficiales completas de afiliados). T30: `src/model/prehospital.ts` (clasificación de sedes, 3 políticas, regla de crítico y de EPS ≤ 15 min) y `EmergencyDepartment.injectPrehospital()` / `prehospitalCases()` (grupo prehospitalario de 2 ambulancias, escena, traslado, ingreso al hospital de origen con reemplazo de la próxima llegada, cama en otra sede, o estabilización + CRUE + segunda ambulancia). Las rutas de remisión de la red salen del router (`networkParams(traffic)`); `params.network.traffic` y `params.network.prehospital`. `docs/MODELO_PREHOSPITALARIO.md`.
+Verificado: 153 pruebas (10 nuevas en `tests/prehospital.test.ts`), TypeScript; huellas de los escenarios originales sin cambio. Playback ignora eventos `data.prehospital` (los dibujará el mapa).
+A medias: `EXPERIMENTO_RED.md` y la corrida de referencia de `RED_VALLEDUPAR.md` quedaron con los tiempos de ruta anteriores (30 km/h fijos): se regeneran en T33.
+Siguiente paso: T31 (muñeco, formulario, alternativas y ambulancia en el mapa).

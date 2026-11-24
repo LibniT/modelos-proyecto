@@ -7,9 +7,11 @@ import type { PatientInfo, SimEvent, SimEventType, TriageLevel, Zone } from '../
 import { NAMES } from './catalog';
 import { CONDITION_POOL, POOLS, type Params, type PoolId } from './params';
 import { chooseDestination, type Decision, type SiteState } from './referral';
-import { CONDITION_LABEL, type ConditionId } from './valledupar/capabilities';
-import type { SiteId } from './valledupar/sites';
-import rutas from './valledupar/rutas.json';
+import { CONDITION_LABEL, reception, type ConditionId } from './valledupar/capabilities';
+import { SITES, type SiteId } from './valledupar/sites';
+import { routesFrom, routesFromSite, sitePoints, type RoadPoint, type Route } from './valledupar/router';
+import { choosePrehospital, type Candidate, type Policy, type PrehospitalDecision } from './prehospital';
+import { epsRelation } from './valledupar/eps';
 
 /**
  * MODELO DEL SERVICIO DE URGENCIAS (docs/SPEC.md §2).
@@ -122,6 +124,59 @@ export interface Snapshot {
   clinics: { id: number; name: string; beds: number; occupied: number }[];
 }
 
+/** T30: paciente colocado en el mapa por el visitante. */
+export interface PrehospitalRequest {
+  info: Omit<PatientInfo, 'id' | 'isVisitor'>;
+  /** triage del escenario (no es una clasificación clínica oficial) */
+  level: TriageLevel;
+  condition: ConditionId;
+  stable: boolean;
+  /** false: llega por sus medios (sin ambulancia) */
+  ambulance: boolean;
+  /** punto ya validado y ajustado a la vía (`place()` del router) */
+  point: RoadPoint;
+  policy?: Policy;
+}
+
+export interface PrehospitalLeg {
+  kind: 'a-escena' | 'a-destino' | 'a-definitiva';
+  to: SiteId | 'paciente';
+  t0: number;
+  minutes: number;
+  meters: number;
+  path: number[];
+  amb?: string;
+}
+
+/** Historia de un paciente prehospitalario, con los tiempos exactos del motor. */
+export interface PrehospitalCase {
+  id: string;
+  name: string;
+  eps: string;
+  ageRange: PatientInfo['ageRange'];
+  level: TriageLevel;
+  condition: ConditionId;
+  critical: boolean;
+  point: { x: number; y: number };
+  created: number;
+  decision: PrehospitalDecision;
+  /** ambulancia pedida (sale de la cola del grupo prehospitalario) */
+  requested?: number;
+  dispatched?: number;
+  atScene?: number;
+  leftScene?: number;
+  destination?: SiteId;
+  arrived?: number;
+  /** estabilización terminada en una sede sin atención definitiva */
+  stabilized?: number;
+  onward?: { site: SiteId; decidedAt: number; minutes: number; requested?: number; departed?: number; arrived?: number };
+  /** cuándo quedó libre cada ambulancia que lo atendió */
+  ambulanceFree: number[];
+  legs: PrehospitalLeg[];
+  outcome?: 'urgencias del hospital de origen' | 'cama en la sede' | 'fuera de la red';
+  status: string;
+}
+
 export interface EdOptions {
   seed: number;
   /** guardar el registro de eventos (escena). Apagado en el modo batch. */
@@ -152,6 +207,11 @@ export class EmergencyDepartment {
   /** flujos solo del escenario de red (no alteran los flujos de los escenarios originales) */
   private readonly net?: { condition: Rng; crue: Rng; handover: Rng; accept: Rng };
   private remitOutOfNetwork = 0;
+  /** T30: grupo de ambulancias prehospitalario, casos y llegadas aleatorias que reemplazan */
+  private readonly preAmb?: Resource<PrehospitalCase>;
+  private readonly preRng?: Rng;
+  private readonly preCases = new Map<string, PrehospitalCase>();
+  private skipArrivals = 0;
   private nextId = 1;
   private readonly visitorQueue: PatientInfo[] = [];
 
@@ -197,6 +257,10 @@ export class EmergencyDepartment {
     this.admission = new Resource(this.sim, 'admission', c.admission, 'fifo');
     this.doctors = new Resource(this.sim, 'doctor', c.doctors, 'priority');
     this.ambulances = new Resource(this.sim, 'amb', c.ambulances, 'fifo');
+    if (this.params.network) {
+      this.preAmb = new Resource(this.sim, 'pre', this.params.network.prehospital.ambulances, 'fifo');
+      this.preRng = this.rngs.stream('prehospital');
+    }
     this.obsCapacity = c.obsBeds;
     for (let i = c.obsBeds - 1; i >= 0; i--) this.obsFree.push(i);
 
@@ -245,6 +309,73 @@ export class EmergencyDepartment {
     if (this.params.mode === 'validacion') return false;
     this.visitorQueue.push({ ...info, id: '', isVisitor: true });
     return true;
+  }
+
+  /**
+   * T30 — Paciente colocado en el mapa (solo escenario de red). Se decide el destino con las rutas desde su punto;
+   * una ambulancia del grupo prehospitalario sale del hospital de origen, lo atiende en la escena y lo lleva.
+   * Si va al hospital de origen, entra al flujo completo de urgencias y REEMPLAZA la próxima llegada aleatoria
+   * (lambda se conserva, como con el visitante); si va a otra sede ocupa una cama del tipo que necesita.
+   */
+  injectPrehospital(req: PrehospitalRequest): PrehospitalCase | null {
+    const n = this.params.network;
+    if (!n || !this.preAmb) return null;
+    const id = `p${this.nextId++}`;
+    const critical = req.level <= 2 || !req.stable;
+    const adult = req.info.ageRange !== '0-17';
+    const routes = routesFrom(req.point, sitePoints(), n.traffic);
+    const decision = this.prehospitalDecision(req.condition, adult, critical, req.info.eps, routes, n.origin, req.policy);
+    const c: PrehospitalCase = {
+      id,
+      name: req.info.name,
+      eps: req.info.eps,
+      ageRange: req.info.ageRange,
+      level: req.level,
+      condition: req.condition,
+      critical,
+      point: { x: req.point.x, y: req.point.y },
+      created: this.sim.now,
+      decision,
+      ambulanceFree: [],
+      legs: [],
+      status: 'evaluando destino',
+    };
+    this.preCases.set(id, c);
+    const dest = decision.chosen;
+    if (!dest) {
+      c.outcome = 'fuera de la red';
+      c.status = 'sin destino en la red';
+      return c;
+    }
+    c.destination = dest.site;
+    const unit = dest.kind === 'definitiva' ? this.unitOf(dest.site, CONDITION_POOL[req.condition]) : -1;
+    if (unit >= 0) this.clinicOccupy(unit); // la cama se reserva al decidir (regulación por el CRUE)
+    const toDest = routes[dest.site]!;
+    const goDest = (amb?: number) => this.preLeg(c, 'a-destino', dest.site, toDest, amb, () => this.preArrive(c, dest.site, unit, req, amb));
+    if (!req.ambulance) {
+      goDest();
+      return c;
+    }
+    c.requested = this.sim.now;
+    c.status = 'esperando ambulancia';
+    this.preAmb.request(c, 0, (aid) => {
+      c.dispatched = this.sim.now;
+      const pick = routesFrom(sitePoints()[n.origin], { p: req.point }, n.traffic).p!;
+      this.preLeg(c, 'a-escena', 'paciente', pick, aid, () => {
+        c.atScene = this.sim.now;
+        c.status = 'atención en la escena';
+        this.sim.schedule(sample(n.prehospital.scene, this.preRng!), () => {
+          c.leftScene = this.sim.now;
+          goDest(aid);
+        });
+      });
+    });
+    return c;
+  }
+
+  /** Casos prehospitalarios (para el seguimiento en pantalla). */
+  prehospitalCases(): PrehospitalCase[] {
+    return [...this.preCases.values()];
   }
 
   /** Accidente masivo: n pacientes Triage I–III llegan a la vez (solo realista). */
@@ -429,6 +560,12 @@ export class EmergencyDepartment {
     const visitor = this.visitorQueue.shift();
     // El nivel se sortea SIEMPRE (consume el mismo número aleatorio con o sin visitante → CRN).
     const drawn = (this.r.mix.weighted(this.params.triageMix) + 1) as TriageLevel;
+    if (!visitor && this.skipArrivals > 0) {
+      // T30: un paciente prehospitalario ya llegó en lugar de esta llegada aleatoria.
+      this.skipArrivals--;
+      this.scheduleNextArrival();
+      return;
+    }
     const level = visitor?.triage ?? drawn;
     this.arrive(visitor, level, false);
     this.scheduleNextArrival();
@@ -446,15 +583,15 @@ export class EmergencyDepartment {
     };
   }
 
-  private arrive(visitor: PatientInfo | undefined, level: TriageLevel, mass: boolean): void {
+  private arrive(visitor: PatientInfo | undefined, level: TriageLevel, mass: boolean, bay = mass): Patient {
     const info: PatientInfo = visitor ? { ...visitor } : this.makeInfo();
-    info.id = `p${this.nextId++}`;
+    info.id = info.id || `p${this.nextId++}`;
     info.triage = undefined; // se revela en el triage
     const p: Patient = {
       info,
       level,
       state: 'llegando',
-      zone: mass ? 'ambulance_bay' : 'entrance',
+      zone: bay ? 'ambulance_bay' : 'entrance',
       waitingSince: this.sim.now,
       journey: { arrival: this.sim.now },
       massCasualty: mass,
@@ -465,6 +602,7 @@ export class EmergencyDepartment {
     this.inSystem.add(this.sim.now, 1);
     this.emit('ARRIVAL', { p, to: p.zone, data: { info: { ...info }, massCasualty: mass } });
     this.move(p, 'triage_queue', () => this.joinTriage(p));
+    return p;
   }
 
   // =====================================================================
@@ -664,7 +802,7 @@ export class EmergencyDepartment {
   /** Estado de cada sede para el selector (red): camas simuladas del tipo `pool` y tiempo de ruta. */
   private networkState(pool: PoolId): Partial<Record<SiteId, SiteState>> {
     const n = this.params.network!;
-    const routes = rutas.routes as Record<string, { minutes: number } | null>;
+    const routes = routesFromSite(n.origin, n.traffic);
     const st: Partial<Record<SiteId, SiteState>> = {};
     for (const [id, r] of Object.entries(routes)) st[id as SiteId] = { minutes: r ? r.minutes : null };
     n.sites.forEach((id, j) => {
@@ -771,6 +909,148 @@ export class EmergencyDepartment {
     });
   }
 
+  // ---------- T30: atención prehospitalaria ----------
+
+  /** Unidad simulada de la sede para el tipo de cama (-1 si no está documentada). */
+  private unitOf(site: SiteId, pool: PoolId): number {
+    const n = this.params.network!;
+    return n.sites.findIndex((id, k) => id === site && n.pools[k] === pool);
+  }
+
+  /** Mejor sede definitiva con cama libre desde `from` (para estabilizar y remitir). */
+  private bestOnward(from: SiteId, condition: ConditionId, adult: boolean): { site: SiteId; minutes: number } | null {
+    const n = this.params.network!;
+    const pool = CONDITION_POOL[condition];
+    const routes = routesFromSite(from, n.traffic);
+    let best = null as { site: SiteId; minutes: number } | null;
+    for (const s of SITES) {
+      if (s.id === from || !s.emergency || !routes[s.id]) continue;
+      const level = reception(condition, s.id, adult).level;
+      if (level !== 'AD' && level !== 'C') continue;
+      const j = this.unitOf(s.id, pool);
+      const free = s.id === n.origin || (j >= 0 && this.clinics[j].occupied < this.params.clinics[j].beds);
+      if (free && (!best || routes[s.id]!.minutes < best.minutes)) best = { site: s.id, minutes: routes[s.id]!.minutes };
+    }
+    return best;
+  }
+
+  private prehospitalDecision(condition: ConditionId, adult: boolean, critical: boolean, eps: string, routes: Record<string, Route | null>, origin: SiteId, policy?: Policy): PrehospitalDecision {
+    const n = this.params.network!;
+    const pool = CONDITION_POOL[condition];
+    const label = POOLS.find((k) => k.id === pool)!.label;
+    const candidates: Candidate[] = SITES.map((s) => {
+      const r = routes[s.id] ?? null;
+      const j = this.unitOf(s.id, pool);
+      return {
+        site: s.id,
+        minutes: r ? r.minutes : null,
+        ...(r ? { meters: r.meters } : {}),
+        ...(j >= 0 ? { beds: { free: this.params.clinics[j].beds - this.clinics[j].occupied, total: this.params.clinics[j].beds, label } } : {}),
+        ...(s.id === origin ? { fullED: true } : {}),
+        onward: s.emergency && r ? this.bestOnward(s.id, condition, adult) : null,
+        eps: epsRelation(eps, s.id),
+      };
+    });
+    const epsName = this.params.eps.find((e) => e.id === eps)?.name;
+    return choosePrehospital(
+      {
+        condition,
+        adult,
+        critical,
+        ...(epsName ? { epsName } : {}),
+        candidates,
+        stabilization: sampleMean(n.prehospital.stabilization),
+        coordination: sampleMean(n.coordination),
+        epsSlack: n.prehospital.epsSlack,
+        criticalSlack: n.prehospital.criticalSlack,
+      },
+      policy,
+    );
+  }
+
+  /** Un tramo en ambulancia (o por sus medios): TRANSFER_START -> TRANSFER_END con la geometría de la ruta. */
+  private preLeg(c: PrehospitalCase, kind: PrehospitalLeg['kind'], to: PrehospitalLeg['to'], r: Route, amb: number | undefined, done: () => void): void {
+    const own = amb === undefined;
+    const minutes = own ? r.minutes * this.params.network!.prehospital.ownMeansFactor : r.minutes;
+    const leg: PrehospitalLeg = { kind, to, t0: this.sim.now, minutes, meters: r.meters, path: r.path, ...(own ? {} : { amb: `pre-${amb}` }) };
+    c.legs.push(leg);
+    c.status = kind === 'a-escena' ? 'ambulancia en camino' : own ? 'en camino por sus medios' : 'en traslado';
+    const data = { prehospital: true, leg: kind, site: to, meters: r.meters, path: r.path };
+    this.emit('TRANSFER_START', { id: c.id, ...(own ? {} : { resourceId: leg.amb }), duration: minutes, data });
+    this.sim.schedule(minutes, () => {
+      this.emit('TRANSFER_END', { id: c.id, ...(own ? {} : { resourceId: leg.amb }), data: { prehospital: true, leg: kind, site: to } });
+      done();
+    });
+  }
+
+  /** La ambulancia entrega y vuelve a su base (el hospital de origen). */
+  private preReturn(c: PrehospitalCase, from: SiteId, amb: number | undefined): void {
+    if (amb === undefined) return;
+    const n = this.params.network!;
+    const back = from === n.origin ? 0 : routesFromSite(from, n.traffic)[n.origin]!.minutes;
+    this.sim.schedule(sample(n.handover, this.preRng!) + back, () => {
+      c.ambulanceFree.push(this.sim.now);
+      this.preAmb!.release(amb);
+    });
+  }
+
+  private preArrive(c: PrehospitalCase, site: SiteId, unit: number, req: PrehospitalRequest, amb: number | undefined): void {
+    const n = this.params.network!;
+    c.arrived ??= this.sim.now;
+    if (c.onward) c.onward.arrived = this.sim.now;
+    this.preReturn(c, site, amb);
+    if (site === n.origin) {
+      c.outcome = 'urgencias del hospital de origen';
+      c.status = 'en urgencias del hospital de origen';
+      this.skipArrivals++;
+      const p = this.arrive({ ...req.info, id: c.id, isVisitor: true }, req.level, false, true);
+      p.condition = req.condition; // si después se remite, conserva su condición
+      return;
+    }
+    if (unit >= 0) {
+      c.outcome = 'cama en la sede';
+      c.status = 'hospitalizado en la sede';
+      this.emit('BED_ASSIGNED', { id: c.id, resourceId: `clinic_${unit}`, data: { prehospital: true, site } });
+      this.sim.schedule(sample(this.params.clinics[unit].los, this.preRng!), () => this.clinicRelease(unit));
+      return;
+    }
+    // Sede de estabilización: después se busca la atención definitiva (CRUE).
+    c.status = 'en estabilización';
+    this.sim.schedule(sample(n.prehospital.stabilization, this.preRng!), () => {
+      c.stabilized = this.sim.now;
+      this.preOnward(c, site, req);
+    });
+  }
+
+  private preOnward(c: PrehospitalCase, from: SiteId, req: PrehospitalRequest): void {
+    const n = this.params.network!;
+    c.status = 'esperando remisión (CRUE)';
+    this.sim.schedule(sample(n.coordination, this.preRng!), () => {
+      const best = this.bestOnward(from, req.condition, req.info.ageRange !== '0-17');
+      if (!best) {
+        if (this.sim.now - c.stabilized! >= n.maxWait) {
+          c.outcome = 'fuera de la red';
+          c.status = 'remitido fuera de la red';
+        } else this.preOnward(c, from, req); // el CRUE vuelve a buscar
+        return;
+      }
+      const unit = best.site === n.origin ? -1 : this.unitOf(best.site, CONDITION_POOL[req.condition]);
+      if (unit >= 0) this.clinicOccupy(unit);
+      c.onward = { site: best.site, decidedAt: this.sim.now, minutes: best.minutes, requested: this.sim.now };
+      c.status = 'esperando ambulancia para la remisión';
+      this.preAmb!.request(c, 0, (aid) => {
+        const pick = routesFromSite(n.origin, n.traffic)[from]!;
+        this.preLeg(c, 'a-escena', from, pick, aid, () => {
+          c.onward!.departed = this.sim.now;
+          this.preLeg(c, 'a-definitiva', best.site, routesFromSite(from, n.traffic)[best.site]!, aid, () => {
+            c.destination = best.site;
+            this.preArrive(c, best.site, unit, req, aid);
+          });
+        });
+      });
+    });
+  }
+
   private clinicOccupy(j: number): void {
     const c = this.clinics[j];
     c.occupied++;
@@ -874,10 +1154,11 @@ export class EmergencyDepartment {
     this.emit('DEPARTURE', { p, data: { outcome, journey: { ...p.journey }, level: p.level, name: p.info.name, isVisitor: p.info.isVisitor } });
   }
 
-  private emit(type: SimEventType, o: { p?: Patient; resourceId?: string; from?: Zone; to?: Zone; duration?: number; data?: Record<string, unknown> }): void {
+  private emit(type: SimEventType, o: { p?: Patient; id?: string; resourceId?: string; from?: Zone; to?: Zone; duration?: number; data?: Record<string, unknown> }): void {
     if (!this.record && this.listeners.length === 0) return;
     const e: SimEvent = { t: this.sim.now, seq: this.evSeq++, type };
     if (o.p) e.patientId = o.p.info.id;
+    else if (o.id) e.patientId = o.id;
     if (o.resourceId !== undefined) e.resourceId = o.resourceId;
     if (o.from !== undefined) e.from = o.from;
     if (o.to !== undefined) e.to = o.to;

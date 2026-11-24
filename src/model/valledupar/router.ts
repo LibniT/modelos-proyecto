@@ -11,6 +11,7 @@
 import { MinHeap } from '../../engine/heap';
 import calles from './calles.json';
 import grafo from './grafo.json';
+import rutas from './rutas.json';
 
 export type Traffic = 'fluido' | 'moderado' | 'congestionado';
 export const TRAFFIC_LABEL: Record<Traffic, string> = { fluido: 'Tráfico fluido', moderado: 'Tráfico moderado', congestionado: 'Tráfico congestionado' };
@@ -245,4 +246,18 @@ export function routesFrom<K extends string>(from: RoadPoint, targets: Record<K,
     result[key] = { meters: Math.round(meters), minutes: +best.t.toFixed(2), path: pts.flatMap(([x, y]) => [Math.round(x), Math.round(y)]) };
   }
   return result;
+}
+
+// ---------- sedes de la red sobre la vía (para el motor) ----------
+let SITE_POINTS: Record<string, RoadPoint> | undefined;
+/** Punto vial de cada sede ubicada (`rutas.json`). */
+export function sitePoints(): Record<string, RoadPoint> {
+  return (SITE_POINTS ??= Object.fromEntries(Object.entries(rutas.sites as Record<string, { x: number; y: number }>).map(([id, s]) => [id, nearestRoad(s.x, s.y)!])));
+}
+const fromSite = new Map<string, Record<string, Route | null>>();
+/** Rutas desde una sede a todas las demás (en caché por sede y tráfico). */
+export function routesFromSite(id: string, traffic: Traffic = 'fluido'): Record<string, Route | null> {
+  const key = `${id}|${traffic}`;
+  if (!fromSite.has(key)) fromSite.set(key, routesFrom(sitePoints()[id], sitePoints(), traffic));
+  return fromSite.get(key)!;
 }
