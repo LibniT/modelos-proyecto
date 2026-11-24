@@ -86,6 +86,7 @@ const LABEL: Partial<Record<SiteId, Vec>> = {
   'ohi-santa-isabel': { x: 140, y: 60 },
   'simon-bolivar': { x: 0, y: 34 },
   erasmo: { x: -60, y: -48 },
+  fracturas: { x: -150, y: 70 },
 };
 
 export interface GeoSite {

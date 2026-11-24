@@ -312,3 +312,7 @@ Siguiente paso: (4) ficha; integrar T26 en main cuando la autora lo apruebe.
 Hecho: T26 (4) ficha completa de sede (`src/ui/site-card.ts`, `siteLines`, sin DOM) usada en el mapa para sedes simuladas (bajo la ocupación) y no simuladas; la demanda propia de la tarjeta de clínica se redondea a 2 decimales. 133 pruebas (3 nuevas en `tests/site-card.test.ts`), TypeScript; navegador: ficha de Alta Complejidad con «Entrar a la clínica».
 A medias: T26 (5) verificar sedes ⚠ y la Clínica de Fracturas (necesita a la autora).
 Siguiente paso: integrar T26 en main cuando la autora lo apruebe.
+
+## 2026-11-24 · Claude · feat/T26-red-p1 (verificación de sedes)
+Hecho: T26 (5). Cada sede se contrastó a mano con su ficha de Google Maps (24 nov). En `tools/valledupar-map.ts`, `CHECKED`: si la ubicación propia (OSM o dirección) queda a ≤ 100 m se conserva y se marca verificada; si no, se usa la de Google Maps. ICVC se movió 167 m; la Clínica de Fracturas, que OSM no ubicaba, ahora tiene posición y ruta y entra a la simulación (4 camas REPS: ahora son 6 sedes simuladas). Ninguna sede queda con ⚠. Corrida de referencia actualizada en `RED_VALLEDUPAR.md` y en la guía (464 traslados, 0,36 % fuera de la red). T26 hecha.
+Verificado: 133 pruebas (actualizadas las que esperaban la Clínica de Fracturas sin ubicar) y TypeScript.

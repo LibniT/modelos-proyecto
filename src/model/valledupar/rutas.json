@@ -34,14 +34,14 @@
    "note": "Objeto OSM node/6456494546 (\"Rosario Pumarejo Lopez\")"
   },
   "icvc": {
-   "lat": 10.471358,
-   "lon": -73.253093,
-   "x": -339,
-   "y": 703,
-   "method": "direccion",
+   "lat": 10.470061,
+   "lon": -73.252307,
+   "x": -252,
+   "y": 560,
+   "method": "google",
    "ref": "Carrera 16 #16A-42",
-   "verify": true,
-   "note": "Nomenclatura sobre calles OSM: cruce Carrera 16 × Calle 16 (OSM no tiene el cruce con Calle 16A; error ≤ 1 cuadra)"
+   "verify": false,
+   "note": "Google Maps, consulta manual del 24 nov 2026; la ubicación anterior (Nomenclatura sobre calles OSM: cruce Carrera 16 × Calle 16 (OSM no tiene el cruce con Calle 16A; error ≤ 1 cuadra)) quedaba a 167 m"
   },
   "ohi": {
    "lat": 10.471058,
@@ -50,8 +50,8 @@
    "y": 670,
    "method": "direccion",
    "ref": "Carrera 19 #14-47",
-   "verify": true,
-   "note": "Nomenclatura sobre calles OSM: cruce Carrera 19 × Calle 14 (sin cruce siguiente; error ≤ 1 cuadra)"
+   "verify": false,
+   "note": "Nomenclatura sobre calles OSM: cruce Carrera 19 × Calle 14 (sin cruce siguiente; error ≤ 1 cuadra); contrastada con Google Maps, consulta manual del 24 nov 2026 (44 m)"
   },
   "ohi-santa-isabel": {
    "lat": 10.462169,
@@ -61,7 +61,7 @@
    "method": "direccion",
    "ref": "Carrera 18D #22-33",
    "verify": false,
-   "note": "Nomenclatura sobre calles OSM: Carrera 18D, 33 m desde Calle 22"
+   "note": "Nomenclatura sobre calles OSM: Carrera 18D, 33 m desde Calle 22; contrastada con Google Maps, consulta manual del 24 nov 2026 (18 m)"
   },
   "simon-bolivar": {
    "lat": 10.456503,
@@ -72,7 +72,7 @@
    "ref": "way/1317710511",
    "checkM": 37,
    "verify": false,
-   "note": "Objeto OSM way/1317710511 (\"Clinica Simon Bolivar\")"
+   "note": "Objeto OSM way/1317710511 (\"Clinica Simon Bolivar\"); contrastada con Google Maps, consulta manual del 24 nov 2026 (43 m)"
   },
   "clinica-cesar": {
    "lat": 10.472254,
@@ -103,8 +103,18 @@
    "y": 2512,
    "method": "direccion",
    "ref": "Carrera 19 #4C-72",
-   "verify": true,
-   "note": "Nomenclatura sobre calles OSM: cruce Carrera 19 × Calle 5 (OSM no tiene el cruce con Calle 4C; error ≤ 1 cuadra)"
+   "verify": false,
+   "note": "Nomenclatura sobre calles OSM: cruce Carrera 19 × Calle 5 (OSM no tiene el cruce con Calle 4C; error ≤ 1 cuadra); contrastada con Google Maps, consulta manual del 24 nov 2026 (79 m)"
+  },
+  "fracturas": {
+   "lat": 10.463614,
+   "lon": -73.254595,
+   "x": -503,
+   "y": -153,
+   "method": "google",
+   "ref": "Diagonal 20B #18D-76",
+   "verify": false,
+   "note": "Sin objeto OSM ni cruce de calles OSM para «Diagonal 20B #18D-76»; ubicada con Google Maps, consulta manual del 24 nov 2026"
   },
   "san-lucas": {
    "lat": 10.475381,
@@ -114,7 +124,7 @@
    "method": "direccion",
    "ref": "Calle 15 #10-28",
    "verify": false,
-   "note": "Nomenclatura sobre calles OSM: Calle 15, 28 m desde Carrera 10"
+   "note": "Nomenclatura sobre calles OSM: Calle 15, 28 m desde Carrera 10; contrastada con Google Maps, consulta manual del 24 nov 2026 (10 m)"
   },
   "sohec": {
    "lat": 10.473626,
@@ -123,13 +133,11 @@
    "y": 954,
    "method": "direccion",
    "ref": "Carrera 15 #14-91 (radioterapia: Diagonal 21 #30-55)",
-   "verify": true,
-   "note": "Nomenclatura sobre calles OSM: cruce Carrera 15 × Calle 14 (sin cruce siguiente; error ≤ 1 cuadra)"
+   "verify": false,
+   "note": "Nomenclatura sobre calles OSM: cruce Carrera 15 × Calle 14 (sin cruce siguiente; error ≤ 1 cuadra); contrastada con Google Maps, consulta manual del 24 nov 2026 (93 m)"
   }
  },
- "missing": {
-  "fracturas": "Sin objeto OSM y sin cruce de calles OSM para «Diagonal 20B #18D-76»: ubicación por verificar"
- },
+ "missing": {},
  "routes": {
   "alta-complejidad": {
    "distanceM": 571,
@@ -158,10 +166,10 @@
    ]
   },
   "icvc": {
-   "distanceM": 514,
-   "backM": 341,
-   "straightM": 273,
-   "minutes": 1.03,
+   "distanceM": 366,
+   "backM": 695,
+   "straightM": 256,
+   "minutes": 0.73,
    "path": [
     -504,
     482,
@@ -169,16 +177,14 @@
     482,
     -475,
     531,
-    -475,
-    584,
-    -471,
-    602,
-    -251,
-    748,
-    -255,
-    754,
-    -339,
-    703
+    -329,
+    529,
+    -348,
+    557,
+    -271,
+    613,
+    -262,
+    599
    ]
   },
   "ohi": {
@@ -445,7 +451,44 @@
     2512
    ]
   },
-  "fracturas": null,
+  "fracturas": {
+   "distanceM": 1119,
+   "backM": 1125,
+   "straightM": 632,
+   "minutes": 2.24,
+   "path": [
+    -504,
+    482,
+    -481,
+    482,
+    -475,
+    531,
+    -329,
+    529,
+    -213,
+    359,
+    -299,
+    69,
+    -312,
+    54,
+    -343,
+    44,
+    -354,
+    32,
+    -357,
+    15,
+    -356,
+    6,
+    -346,
+    -8,
+    -362,
+    -8,
+    -438,
+    13,
+    -492,
+    -161
+   ]
+  },
   "san-lucas": {
    "distanceM": 1358,
    "backM": 1368,

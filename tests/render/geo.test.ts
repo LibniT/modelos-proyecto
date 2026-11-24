@@ -21,10 +21,10 @@ describe('T25 · mapa real de Valledupar', () => {
     });
   });
 
-  it('las sedes no simuladas dicen por qué; las faltantes no se dibujan', () => {
+  it('las sedes no simuladas dicen por qué y todas están ubicadas y verificadas', () => {
     for (const s of m.sites) if (s.clinic === undefined && !s.origin) expect(s.note).toBeTruthy();
-    expect(m.sites.some((s) => s.id === 'fracturas')).toBe(false);
-    expect(m.missing).toContain('Clínica de Fracturas Valledupar');
+    expect(m.missing).toEqual([]); // T26: todas ubicadas (la Clínica de Fracturas, con Google Maps)
+    expect(m.sites.every((s) => !s.verify)).toBe(true);
     expect(OSM_ATTRIBUTION).toMatch(/OpenStreetMap/);
   });
 

@@ -13,10 +13,10 @@ describe('T26 · ficha completa de sede', () => {
     expect(l).not.toMatch(/No se simula/);
   });
 
-  it('sede no simulada, aproximada o sin ubicar: lo dice sin inventar', () => {
+  it('sede no simulada y origen de cada ubicación: lo dice sin inventar', () => {
     expect(siteLines('san-lucas', false).join('\n')).toMatch(/No se simula: sin camas documentadas/);
-    expect(siteLines('icvc', true).join('\n')).toMatch(/Ubicación APROXIMADA \(verificar\)/);
-    expect(siteLines('fracturas', false).join('\n')).toMatch(/no se pudo ubicar/);
+    expect(siteLines('icvc', true).join('\n')).toMatch(/Ubicación verificada: Google Maps/);
+    expect(siteLines('erasmo', true).join('\n')).toMatch(/contrastada con Google Maps, .* \(\d+ m\)/);
     expect(siteLines('clinica-valledupar', false).join('\n')).toMatch(/Sin información suficiente: /);
   });
 

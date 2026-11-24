@@ -23,7 +23,7 @@ La prueba `tests/valledupar.test.ts` compara la matriz **celda a celda** con la 
 | Sedes fuera de la matriz (Santa Isabel – OHI, Clínica Valledupar, SOHEC) | Recepción «SI» (información insuficiente) para toda condición |
 | Contratos EPS por sede | El informe no halló una fuente confiable; además la urgencia no se condiciona a convenio. **El escenario de red no usa restricción EPS** |
 | Disponibilidad en tiempo real (camas libres, especialista, quirófano) | No existe en fuentes públicas; la simula el modelo con supuestos explícitos (F3) |
-| Coordenadas | Objeto OSM con el nombre de la sede; si no existe, nomenclatura de la dirección sobre las calles OSM. Si OSM no tiene el cruce exacto se usa el vecino y se marca «verificar». Sin ninguna de las dos, la sede queda en `missing` sin posición ni ruta (hoy: Clínica de Fracturas) |
+| Coordenadas | Objeto OSM con el nombre de la sede o nomenclatura de la dirección sobre las calles OSM, y **contraste manual con Google Maps (24 nov 2026)**: si la diferencia es ≤ 100 m se conserva la ubicación propia; si no, o si no había, se usa la de Google Maps (ICVC a 167 m; Clínica de Fracturas, que OSM no ubicaba). Las 12 sedes quedan ubicadas y verificadas |
 
 ## Supuestos de modelado (no son hechos)
 1. **Celdas combinadas**: se toma la clase más débil (`AD/C` → C, `ER/C` → ER, `NH/ER` → NH) y cualquier `SI` → información insuficiente.
@@ -44,7 +44,7 @@ La prueba `tests/valledupar.test.ts` compara la matriz **celda a celda** con la 
 
 Secuencia en el motor (`src/model/ed.ts`, solo cuando `params.network` existe): consulta → pasillo → condición → coordinación CRUE → selección y **reserva de cama** → espera de ambulancia → `TRANSFER_START` (con condición, motivo y alternativas descartadas en `data`) → viaje por la ruta → `TRANSFER_END` → entrega → regreso. Los escenarios de validación y realista no cambian: una prueba compara su registro de eventos con el de T24.
 
-**Corrida de referencia** (semilla 1, 30 días tras 1 de calentamiento): 496 traslados (ICVC 299, Alta Complejidad 192, OHI 5); 0,4 % de las llegadas se remiten fuera de la red, todas por crisis psiquiátrica: San Lucas es la única sede AD aparte del origen y su capacidad no está documentada, así que el modelo no la usa. Clínica del Cesar y Erasmo casi no reciben remisiones porque ICVC y Alta Complejidad, a 1 min de ruta, tienen cupo casi siempre.
+**Corrida de referencia** (semilla 1, 30 días tras 1 de calentamiento; 6 sedes simuladas desde T26, con la Clínica de Fracturas y sus 4 camas): 464 traslados (ICVC 274, Alta Complejidad 178, OHI 11, Clínica del Cesar 1); 0,36 % de las llegadas se remiten fuera de la red, todas por crisis psiquiátrica: San Lucas es la única sede AD aparte del origen y su capacidad no está documentada, así que el modelo no la usa. Clínica del Cesar y Erasmo casi no reciben remisiones porque ICVC y Alta Complejidad, a 1 min de ruta, tienen cupo casi siempre.
 
 **Arranque en equilibrio:** las sedes no empiezan vacías. Su ocupación inicial se sortea de la distribución estacionaria del sistema de pérdida M/M/K/K con su demanda propia (Poisson truncada en K); como la estancia es exponencial, a cada cama ocupada le queda Exp(48 h). Una prueba verifica que la media inicial coincide con a·(1 − B) de Erlang B.
 
@@ -60,18 +60,18 @@ Secuencia en el motor (`src/model/ed.ts`, solo cuando `params.network` existe): 
 | Sede | Ubicación | Vial (km) | Recta (km) | Tiempo base (min) |
 |---|---|---|---|---|
 | Alta Complejidad | OSM | 0,57 | 0,30 | 1,1 |
-| ICVC | dirección ⚠ | 0,51 | 0,27 | 1,0 |
-| OHI principal | dirección ⚠ | 0,62 | 0,38 | 1,2 |
-| Santa Isabel – OHI | dirección | 1,21 | 0,87 | 2,4 |
-| Simón Bolívar | OSM | 2,22 | 1,59 | 4,4 |
+| ICVC | Google Maps | 0,37 | 0,26 | 0,7 |
+| OHI principal | dirección (Google a 44 m) | 0,62 | 0,38 | 1,2 |
+| Santa Isabel – OHI | dirección (Google a 18 m) | 1,21 | 0,87 | 2,4 |
+| Simón Bolívar | OSM (Google a 43 m) | 2,22 | 1,59 | 4,4 |
 | Clínica del Cesar | OSM | 0,81 | 0,41 | 1,6 |
 | Clínica Valledupar | OSM | 0,41 | 0,33 | 0,8 |
-| Erasmo | dirección ⚠ | 2,96 | 2,29 | 5,9 |
-| San Lucas | dirección | 1,36 | 0,92 | 2,7 |
-| SOHEC | dirección ⚠ | 0,66 | 0,49 | 1,3 |
-| Clínica de Fracturas | sin ubicación | — | — | — |
+| Erasmo | dirección (Google a 79 m) | 2,96 | 2,29 | 5,9 |
+| Clínica de Fracturas | Google Maps | 1,12 | 0,63 | 2,2 |
+| San Lucas | dirección (Google a 10 m) | 1,36 | 0,92 | 2,7 |
+| SOHEC | dirección (Google a 93 m) | 0,66 | 0,49 | 1,3 |
 
-⚠ = cruce aproximado (error ≤ 1 cuadra), verificar.
+Distancia entre la ubicación propia y la de Google Maps entre paréntesis; detalle en la ficha de cada sede y en `rutas.json`.
 
 **Supuesto:** tiempo base = distancia vial / 30 km/h. Las sedes están concentradas en el centro, así que el viaje es de 1–6 min, mucho menor que los 12–25 min del escenario ficticio. El ciclo de la ambulancia en F3 debe sumar alistamiento, cargue y entrega del paciente (supuesto aparte), no solo el viaje.
 

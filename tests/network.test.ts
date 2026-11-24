@@ -46,7 +46,7 @@ describe('T25 · escenario de red de Valledupar', () => {
       expect(s.emergency).toBe(true);
     }
     expect(p.network!.sites).not.toContain('san-lucas'); // capacidad no documentada
-    expect(p.network!.sites).not.toContain('fracturas'); // sin ubicación ni ruta
+    expect(p.network!.sites).toContain('fracturas'); // T26: ubicada; 4 camas de adulto en REPS
   });
 
   it('cada traslado va a una sede compatible, con motivo y alternativas descartadas', () => {

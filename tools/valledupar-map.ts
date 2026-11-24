@@ -42,6 +42,22 @@ const OSM_MATCH: Partial<Record<SiteId, string>> = {
   'simon-bolivar': 'way/1317710511',
 };
 
+/**
+ * Contraste manual (T26): ficha de cada sede en Google Maps, consultada el 24 nov 2026. Si la ubicación por OSM o
+ * por dirección queda a ≤ 100 m, se conserva y se marca verificada; si no (o si no había), se usa esta.
+ */
+const CHECKED: Partial<Record<SiteId, [number, number]>> = {
+  icvc: [10.4700607, -73.2523065],
+  ohi: [10.470757, -73.2572842],
+  sohec: [10.4730598, -73.2528892],
+  fracturas: [10.4636139, -73.2545948],
+  erasmo: [10.4872248, -73.2646681],
+  'ohi-santa-isabel': [10.4621554, -73.2511127],
+  'san-lucas': [10.4754693, -73.2487229],
+  'simon-bolivar': [10.4566358, -73.2476429],
+};
+const CHECK_SOURCE = 'Google Maps, consulta manual del 24 nov 2026';
+
 interface El {
   type: 'node' | 'way' | 'relation';
   id: number;
@@ -239,7 +255,7 @@ interface SiteGeo {
   lon: number;
   x: number;
   y: number;
-  method: 'osm' | 'direccion';
+  method: 'osm' | 'direccion' | 'google';
   ref: string;
   /** distancia entre el objeto OSM y la ubicación por dirección (control del método) */
   checkM?: number;
@@ -275,10 +291,28 @@ for (const s of SITES) {
     method = 'direccion';
     verify = addr.detail.includes('error ≤ 1 cuadra');
     note = `Nomenclatura sobre calles OSM: ${addr.detail}`;
-  } else {
+  } else if (!CHECKED[s.id]) {
     missing[s.id] = `Sin objeto OSM y sin cruce de calles OSM para «${s.address}»: ubicación por verificar`;
     console.error(`Sin ubicación: ${s.name} (${s.address})`);
     continue;
+  } else {
+    p = proj(...CHECKED[s.id]!);
+    method = 'google';
+    verify = false;
+    note = `Sin objeto OSM ni cruce de calles OSM para «${s.address}»; ubicada con ${CHECK_SOURCE}`;
+  }
+  const g = CHECKED[s.id];
+  if (g && method !== 'google') {
+    const d = Math.round(dist(p, proj(...g)));
+    if (d <= 100) {
+      verify = false;
+      note += `; contrastada con ${CHECK_SOURCE} (${d} m)`;
+    } else {
+      p = proj(...g);
+      method = 'google';
+      verify = false;
+      note = `${CHECK_SOURCE}; la ubicación anterior (${note}) quedaba a ${d} m`;
+    }
   }
   sites[s.id] = { ...unproj(p), x: Math.round(p[0]), y: Math.round(p[1]), method, ref: ref ?? s.address, ...(checkM !== undefined ? { checkM } : {}), verify, note };
 }
