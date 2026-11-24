@@ -251,3 +251,9 @@ Hecho: F0 y F1 de T25.
 A medias: F2–F5 (coordenadas y calles OSM, rutas, selección de destino en el motor, mapa real, pruebas de remisión).
 Siguiente paso: F2, extracción OSM (Overpass, una consulta) y rutas por Dijkstra en `tools/`.
 Preguntas para la autora: el hospital de origen queda como «Hospital de origen (simulado)» en las coordenadas del HRPL salvo que decidas otra cosa.
+
+## 2026-11-24 · Claude · feat/T25-red-valledupar (F2)
+Hecho: F2 de T25. `npm run red-vial` (`tools/valledupar-map.ts`) genera `src/model/valledupar/calles.json` (173 KB) y `rutas.json` desde OpenStreetMap: 11 de 12 sedes ubicadas (4 por objeto OSM, el resto por nomenclatura de la dirección; control 30–54 m), rutas por Dijkstra respetando sentidos únicos desde el HRPL (origen simulado). Clínica de Fracturas queda sin ubicación ni ruta (declarada en `missing`). Atribución ODbL en los JSON y en `docs/CREDITOS.md`. 106 pruebas (5 nuevas en `tests/valledupar-rutas.test.ts`) y TypeScript.
+A medias: F3–F5.
+Siguiente paso: F3, `src/model/referral.ts` y escenario de red en `params.ts`. Ojo: los viajes son de 1–6 min; el ciclo de la ambulancia necesita un supuesto de alistamiento y entrega.
+Preguntas para la autora: ¿conoces la ubicación de la Clínica de Fracturas (Diagonal 20B #18D-76) o de las sedes marcadas ⚠ en `docs/RED_VALLEDUPAR.md`? Overpass estuvo saturado; si hay que regenerar, `npm run red-vial` reintenta en tres espejos.

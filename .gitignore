@@ -17,3 +17,6 @@ imagenes-guia/*.exe
 docs/*.docx
 docs/PROMPT_GRILL_ME.md
 imagenes-guia/
+
+# Descargas de OpenStreetMap (se regeneran con npm run red-vial)
+tools/.cache/

@@ -9,7 +9,7 @@
  * - Un dato no documentado es `null`, nunca 0 ni un valor inventado.
  * - "Habilitado" o "instalado" NO significa cupo libre: la disponibilidad la decide la simulación
  *   (supuestos aparte, en el escenario de red).
- * - Coordenadas: se agregan en F2 desde OpenStreetMap; hasta entonces `geo = null`.
+ * - Coordenadas y rutas: `rutas.json`, generado desde OpenStreetMap con `npm run red-vial`.
  */
 
 export type SourceId =
@@ -94,8 +94,6 @@ export interface Site {
   sources: SourceId[];
   /** advertencias de procedencia o discrepancias */
   notes: string[];
-  /** coordenadas WGS84; F2 las toma de OpenStreetMap */
-  geo: { lat: number; lon: number; source: string } | null;
 }
 
 const none: Capacity = {
@@ -135,7 +133,6 @@ export const SITES: Site[] = [
     },
     sources: ['reps', 'web-alta-complejidad', 'informe'],
     notes: ['Única unidad dedicada de quemados documentada en la investigación; no se afirma exclusividad legal.', 'UCI pediátrica habilitada sin número documentado.'],
-    geo: null,
   },
   {
     id: 'hrpl',
@@ -155,7 +152,6 @@ export const SITES: Site[] = [
     },
     sources: ['reps', 'web-hrpl', 'informe'],
     notes: ['UCI adulto, pediátrica y neonatal habilitadas sin número documentado en el informe.'],
-    geo: null,
   },
   {
     id: 'icvc',
@@ -176,7 +172,6 @@ export const SITES: Site[] = [
     },
     sources: ['reps', 'informe'],
     notes: ['2 puestos de hemodiálisis (REPS).', 'Sin UCI pediátrica documentada: no es destino pediátrico crítico primario.'],
-    geo: null,
   },
   {
     id: 'ohi',
@@ -201,7 +196,6 @@ export const SITES: Site[] = [
     },
     sources: ['reps', 'informe'],
     notes: ['Identificar por código REPS 2000100018; los nombres comerciales históricos pueden duplicarla.'],
-    geo: null,
   },
   {
     id: 'ohi-santa-isabel',
@@ -215,7 +209,6 @@ export const SITES: Site[] = [
     capacity: { ...none },
     sources: ['reps', 'informe'],
     notes: ['Sin cifras de capacidad en el informe.', 'No aparece en la matriz de recepción del informe: su compatibilidad es "información insuficiente".'],
-    geo: null,
   },
   {
     id: 'simon-bolivar',
@@ -229,7 +222,6 @@ export const SITES: Site[] = [
     capacity: { ...none },
     sources: ['reps', 'informe'],
     notes: ['El informe menciona infraestructura relevante sin cifras: capacidad no documentada.'],
-    geo: null,
   },
   {
     id: 'clinica-cesar',
@@ -252,7 +244,6 @@ export const SITES: Site[] = [
     },
     sources: ['reps', 'informe'],
     notes: [],
-    geo: null,
   },
   {
     id: 'clinica-valledupar',
@@ -266,7 +257,6 @@ export const SITES: Site[] = [
     capacity: { ...none },
     sources: ['reps', 'web-clinica-valledupar', 'informe'],
     notes: ['REPS confirma UCI adulto y hospitalización; las cifras del portal institucional no están verificadas contra REPS.', 'No aparece en la matriz de recepción del informe: su compatibilidad es "información insuficiente".'],
-    geo: null,
   },
   {
     id: 'erasmo',
@@ -280,7 +270,6 @@ export const SITES: Site[] = [
     capacity: { ...none, adultBeds: reps(21), icuAdult: reps(7), intermediateAdult: reps(3), operatingRooms: reps(3) },
     sources: ['reps', 'informe'],
     notes: [],
-    geo: null,
   },
   {
     id: 'fracturas',
@@ -294,7 +283,6 @@ export const SITES: Site[] = [
     capacity: { ...none, adultBeds: reps(4), operatingRooms: reps(1), ambulances: reps(4, 'ambulancias básicas') },
     sources: ['reps', 'informe'],
     notes: [],
-    geo: null,
   },
   {
     id: 'san-lucas',
@@ -308,7 +296,6 @@ export const SITES: Site[] = [
     capacity: { ...none },
     sources: ['reps', 'informe'],
     notes: ['Intoxicación con inestabilidad fisiológica: primero hospital general (inferencia clínica del informe).'],
-    geo: null,
   },
   {
     id: 'sohec',
@@ -322,7 +309,6 @@ export const SITES: Site[] = [
     capacity: { ...none },
     sources: ['reps', 'web-sohec', 'informe'],
     notes: ['28 sillas de quimioterapia y 3 salas de radioterapia (REPS).', 'No es la única prestadora de radioterapia del municipio (Rosalud 777 también la registra).'],
-    geo: null,
   },
 ];
 

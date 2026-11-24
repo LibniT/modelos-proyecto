@@ -14,7 +14,8 @@
     "mock": "vite-node tools/export-mock-events.ts",
     "experiment": "vite-node tools/doctor-experiment.ts",
     "welch": "vite-node tools/welch.ts",
-    "accidente": "vite-node tools/mass-casualty.ts"
+    "accidente": "vite-node tools/mass-casualty.ts",
+    "red-vial": "vite-node tools/valledupar-map.ts"
   },
   "author": "Libni Jahzeel Torres Castro",
   "license": "UNLICENSED",
