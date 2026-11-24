@@ -242,3 +242,12 @@ A medias: nada del alcance. Sin inventario (decisión: ilimitado y así lo dice 
 Siguiente paso: integrar la rama con T23 cuando se publique; repetir el guion en el monitor físico el 24.
 Dependencias clínicas: ninguna; no se tocó `src/engine`, `src/model`, `src/validation` ni `src/batch`.
 Preguntas para el autor: ¿quieres inventario limitado (con «Agotado») para la feria, o basta ilimitado? Push pendiente de tu autorización.
+
+## 2026-11-24 · Claude · feat/T25-red-valledupar
+Hecho: F0 y F1 de T25.
+- F0: `main` avanzó sin merge hasta T24 (0326196, incluye T23) y se publicó; rama `feat/T25-red-valledupar`; T25 en `TAREAS.md` con corte el miércoles 25 a las 20:00.
+- F1: fuentes guardadas en `docs/investigacion/` (informe hospitalario del 24 nov y PDF de requisitos). `src/model/valledupar/sites.ts`: 12 sedes con dirección, código REPS cuando se conoce, servicios y capacidades con fuente por dato (`null` si no está documentada). `src/model/valledupar/capabilities.ts`: matriz de recepción AD/C/ER/NH/SI (23 condiciones × 9 sedes) con interpretación conservadora de celdas combinadas y de «AD adulto». `docs/RED_VALLEDUPAR.md`: hechos, vacíos y supuestos.
+- Verificado: 101 pruebas (5 nuevas en `tests/valledupar.test.ts`, una compara la matriz celda a celda con el informe guardado) y `npx tsc --noEmit`. No se tocó el motor ni los escenarios existentes.
+A medias: F2–F5 (coordenadas y calles OSM, rutas, selección de destino en el motor, mapa real, pruebas de remisión).
+Siguiente paso: F2, extracción OSM (Overpass, una consulta) y rutas por Dijkstra en `tools/`.
+Preguntas para la autora: el hospital de origen queda como «Hospital de origen (simulado)» en las coordenadas del HRPL salvo que decidas otra cosa.
