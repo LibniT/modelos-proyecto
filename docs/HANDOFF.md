@@ -290,3 +290,9 @@ Hecho: la autora vio el satélite en bloques al ampliar (y confirmó que F y Esc
 A medias: nada.
 Siguiente paso: si la autora consigue una ortoimagen del IGAC (Colombia en Mapas) de Valledupar, se convierte a teselas con el mismo esquema de `public/satelite/`.
 Preguntas para la autora: ninguna.
+
+## 2026-11-24 · Claude · feat/T25-red-valledupar (satélite en línea)
+Hecho: la autora aclaró que en la feria hay internet y pidió ambas capas. `hiresTiles()` en `geo.ts` elige las teselas de Esri World Imagery que cubren la vista al nivel del zoom (z 12–19); `CityScene.updateHires()` las pide en vivo (CORS anónimo, filtro lineal), deja debajo las de menor detalle mientras llegan, descarta las fuera de vista pasadas 400 y, si falla la red, reintenta cada 30 s dejando Sentinel-2 local. Con conexión el zoom del satélite sube a ×10; la atribución de Esri aparece solo cuando hay teselas en línea.
+Verificado: 127 pruebas (1 nueva de cobertura y nivel de detalle), TypeScript; navegador con conexión: 24 teselas de Esri cargadas, imagen nítida a nivel de cuadra junto al hospital de origen. No se probó sin conexión en el navegador (el código cae a Sentinel-2 y no lanza errores propios).
+Siguiente paso: la autora prueba en la feria con sus datos.
+Preguntas para la autora: ninguna.

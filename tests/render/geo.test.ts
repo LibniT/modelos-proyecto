@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { geoMap, OSM_ATTRIBUTION } from '../../src/render/map/geo';
+import { geoMap, hiresTiles, OSM_ATTRIBUTION } from '../../src/render/map/geo';
 import { networkParams } from '../../src/model/params';
 import { EmergencyDepartment } from '../../src/model/ed';
 import { erlangB } from '../../src/validation/analytic';
@@ -59,5 +59,21 @@ describe('T25 · mapa real de Valledupar', () => {
     expect(m.rivers.some((r) => r.big)).toBe(true);
     expect(m.labels.length).toBeGreaterThan(10);
     for (const l of m.labels) expect(Math.abs(l.deg)).toBeLessThanOrEqual(90); // nunca al revés
+  });
+
+  it('satélite en línea: más zoom pide más detalle y las teselas cubren la vista', () => {
+    const view = { x: -500, y: -400, width: 1000, height: 600 };
+    const far = hiresTiles(view, 0.06),
+      near = hiresTiles(view, 1);
+    expect(near[0].z).toBeGreaterThan(far[0].z);
+    expect(near[0].z).toBeLessThanOrEqual(19);
+    for (const ts of [far, near]) {
+      expect(Math.min(...ts.map((t) => t.x0))).toBeLessThanOrEqual(view.x);
+      expect(Math.max(...ts.map((t) => t.x1))).toBeGreaterThanOrEqual(view.x + view.width);
+      expect(Math.min(...ts.map((t) => t.y0))).toBeLessThanOrEqual(view.y);
+      expect(Math.max(...ts.map((t) => t.y1))).toBeGreaterThanOrEqual(view.y + view.height);
+    }
+    // a un píxel de tesela por píxel de pantalla: con zoom 1 (1 px por metro) la tesela mide < 2 m por píxel
+    expect((near[0].x1 - near[0].x0) / 256).toBeLessThan(2);
   });
 });

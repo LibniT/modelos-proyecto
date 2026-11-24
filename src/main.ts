@@ -6,7 +6,7 @@
  */
 import { EmergencyDepartment } from './model/ed';
 import { networkParams, realisticParams, validationParams, type Mode } from './model/params';
-import { geoMap, OSM_ATTRIBUTION, SATELLITE_ATTRIBUTION, type MapStyle } from './render/map/geo';
+import { geoMap, HIRES_ATTRIBUTION, OSM_ATTRIBUTION, SATELLITE_ATTRIBUTION, type MapStyle } from './render/map/geo';
 import { SITES } from './model/valledupar/sites';
 import { RECEPTION_LABEL, reception } from './model/valledupar/capabilities';
 import { mountValidationPanel } from './ui/validation/panel';
@@ -349,10 +349,7 @@ if (primary)
 if (networkMode) {
   $('osm-attrib').textContent = OSM_ATTRIBUTION;
   const style = $('map-style') as HTMLSelectElement;
-  style.onchange = () => {
-    city?.setStyle(style.value as MapStyle);
-    $('osm-attrib').textContent = OSM_ATTRIBUTION + (style.value === 'satelite' ? ' · Imagen: ' + SATELLITE_ATTRIBUTION : '');
-  };
+  style.onchange = () => city?.setStyle(style.value as MapStyle);
   $('key-net').hidden = false;
   $('practice').parentElement!.hidden = true; // el ensayo usa las clínicas ficticias
 }
@@ -596,6 +593,9 @@ setInterval(() => {
   $('legend').hidden = scene.inCity;
   $('city-key').hidden = !scene.inCity;
   $('osm-attrib').hidden = $('map-style').hidden = !(networkMode && scene.inCity && ward.index === undefined);
+  if (networkMode && city)
+    $('osm-attrib').textContent =
+      OSM_ATTRIBUTION + (city.style === 'satelite' ? ' · Imagen: ' + (city.hiresOk ? HIRES_ATTRIBUTION + ' · ' : '') + SATELLITE_ATTRIBUTION : '');
   const camera = ward.index !== undefined ? clinicScene : scene.inCity ? city : scene;
   const zoom = camera?.cameras?.main?.zoom;
   button('minus').disabled = !camera || zoom === undefined || zoom <= camera.minZoom + 1e-6;

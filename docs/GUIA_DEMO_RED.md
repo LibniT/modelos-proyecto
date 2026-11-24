@@ -17,7 +17,7 @@ Comprobado el 24 nov: `npm run preview` sin conexión, con recarga, solo carga a
 3. **Una remisión.** Espera a que aparezca la franja **Remisión de la corrida** (en promedio una cada 1–2 min a ×60; a ×600 sale más rápido) y pulsa **Seguir ambulancia**. El mapa se acerca, baja a ×6 y la ambulancia recorre la ruta vial azul.
 4. **Por qué ese destino.** Despliega la línea de la franja: condición del paciente, motivo («atención definitiva, camas libres, ruta más corta») y por qué se descartó cada sede (ruta más larga, saturada, capacidad no documentada, no habilitada para esa condición).
 5. **Una ficha y su interior.** Clic en una sede: ocupación, viaje y probabilidad de encontrarla llena (Erlang B); «Entrar a la clínica» muestra su planta representativa (aclarar que no es el edificio real). En una gris: los datos documentados y el motivo de no simularla.
-   **Vistas:** cambia el selector a «Satélite» para mostrar la ciudad real y vuelve a «Mapa». Tecla **F** para pantalla completa (Esc sale).
+   **Vistas:** cambia el selector a «Satélite» para mostrar la ciudad real (con internet se ve nítida de cerca; sin internet, la imagen local de 10 m) y vuelve a «Mapa». Tecla **F** para pantalla completa (Esc sale).
 6. **Validación.** Pestaña **Validación**: el modelo original pasa 16 de 16 comparaciones con la teoría de colas. «La red real es un escenario aparte; el modelo validado no cambió.»
 
 ## Cifras para conversar (corrida de 30 días, semilla 1)

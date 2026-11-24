@@ -4,7 +4,7 @@ import { ambulance, stamp } from '../art';
 import type { Driver } from '../drivers';
 import { cityLayout, type CityLayout } from './layout';
 import { neighborhood, facility } from './neighborhood';
-import type { GeoMap, MapStyle } from './geo';
+import { hiresTiles, type GeoMap, type MapStyle } from './geo';
 
 export interface ClinicView {
   name: string;
@@ -56,7 +56,7 @@ export class CityScene extends Phaser.Scene {
     if (!this.o.geo) return this.overview * 3;
     // Satélite de 10 m: más allá de ~2 píxeles de pantalla por píxel de imagen solo se ven bloques borrosos.
     const t = this.o.geo.tiles[0];
-    const sat = this.style === 'satelite' && t ? 2 / ((t.x1 - t.x0) / 256) : Infinity;
+    const sat = this.style === 'satelite' && t && !this.hiresOk ? 2 / ((t.x1 - t.x0) / 256) : Infinity;
     return Math.max(this.overview, Math.min(this.overview * 10, sat));
   }
   /** mundo → pantalla: proyección isométrica del barrio, o el plano real tal cual */
@@ -66,6 +66,11 @@ export class CityScene extends Phaser.Scene {
   /** capas del mapa real por vista */
   private layers?: { ground: Phaser.GameObjects.Graphics; nature: Phaser.GameObjects.Graphics; roads: Phaser.GameObjects.Graphics; labels: Phaser.GameObjects.Text[]; sat?: Phaser.GameObjects.Image[] };
   style: MapStyle = 'mapa';
+  /** satélite en línea: teselas cargadas, en vuelo o fallidas, y si al menos una llegó (hay conexión) */
+  private hires = new Map<string, { img: Phaser.GameObjects.Image; z: number }>();
+  private hiresBusy = new Set<string>();
+  private hiresFailedAt = -Infinity;
+  hiresOk = false;
   private geoZoom = 0;
   private hover?: Landmark;
 
@@ -174,6 +179,7 @@ export class CityScene extends Phaser.Scene {
     L.nature.setVisible(style === 'mapa');
     L.roads.setAlpha(sat ? 0.45 : 1);
     for (const t of L.labels) t.setVisible(style !== 'simple').setColor(sat ? '#ffffff' : '#4a5f5c').setStroke(sat ? '#1d2b2a' : '#ffffff', 3);
+    this.updateHires();
     if (!sat) return L.sat?.forEach((i) => i.setVisible(false));
     if (L.sat) return L.sat.forEach((i) => i.setVisible(true));
     L.sat = [];
@@ -186,6 +192,52 @@ export class CityScene extends Phaser.Scene {
       );
     });
     this.load.start();
+  }
+
+  /**
+   * Satélite en línea sobre el local: pide las teselas que cubren la vista al nivel de detalle del zoom. Las de
+   * menor detalle quedan debajo mientras llegan las nuevas. Si no hay conexión, falla en silencio y reintenta
+   * cada 30 s; el satélite local sigue visible.
+   */
+  private updateHires(): void {
+    const cam = this.cameras.main;
+    const on = this.style === 'satelite' && !!this.o.geo;
+    const want = on ? hiresTiles(cam.worldView, cam.zoom) : [];
+    const z = want[0]?.z ?? 0;
+    const v = cam.worldView;
+    for (const { img, z: tz } of this.hires.values())
+      img.setVisible(on && tz <= z && img.x < v.right && img.x + img.displayWidth > v.x && img.y < v.bottom && img.y + img.displayHeight > v.y);
+    if (!on || this.time.now - this.hiresFailedAt < 30000) return;
+    let queued = false;
+    for (const t of want) {
+      if (this.hires.has(t.key) || this.hiresBusy.has(t.key)) continue;
+      this.hiresBusy.add(t.key);
+      this.load.setCORS('anonymous');
+      this.load.image(t.key, t.url);
+      this.load.once(`filecomplete-image-${t.key}`, () => {
+        this.hiresBusy.delete(t.key);
+        this.hiresOk = true;
+        this.textures.get(t.key).setFilter(Phaser.Textures.FilterMode.LINEAR);
+        const img = this.add.image(t.x0, t.y0, t.key).setOrigin(0).setDisplaySize(t.x1 - t.x0, t.y1 - t.y0).setDepth(1 + t.z / 100);
+        this.hires.set(t.key, { img, z: t.z });
+      });
+      queued = true;
+    }
+    if (!queued) return;
+    this.load.once('loaderror', (file: Phaser.Loader.File) => {
+      if (!file.key.startsWith('esri-')) return;
+      this.hiresFailedAt = this.time.now;
+      this.hiresBusy.clear();
+    });
+    if (!this.load.isLoading()) this.load.start();
+    // shortcut: se descartan las teselas fuera de vista pasadas 400; suficiente para una demostración.
+    if (this.hires.size > 400)
+      for (const [k, h] of this.hires)
+        if (!h.img.visible) {
+          h.img.destroy();
+          this.textures.remove(k);
+          this.hires.delete(k);
+        }
   }
 
   /** Marcador de sede: círculo de color con cruz blanca, tamaño constante en pantalla. */
@@ -380,6 +432,7 @@ export class CityScene extends Phaser.Scene {
         .setVisible(true);
     }
     if (time - this.lastRead < 250) return;
+    if (this.o.geo) this.updateHires();
     this.lastRead = time;
     const clinics = this.o.clinics();
     // Mapa real: resalta la ruta vial de cada traslado en curso.

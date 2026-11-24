@@ -6,11 +6,49 @@ import calles from '../../model/valledupar/calles.json';
 import rutas from '../../model/valledupar/rutas.json';
 import { SITES, type SiteId } from '../../model/valledupar/sites';
 import satelite from '../../model/valledupar/satelite.json';
-import { proj, tileBounds } from '../../model/valledupar/proj';
+import { LAT0, proj, tileBounds, tileOf, unproj } from '../../model/valledupar/proj';
 import type { Vec } from '../layout';
 
 export const OSM_ATTRIBUTION = calles.attribution;
 export const SATELLITE_ATTRIBUTION = satelite.attribution;
+
+/**
+ * Satélite de alta resolución EN LÍNEA (Esri World Imagery, ~0,5 m). Solo se pide si hay conexión; sin ella queda
+ * Sentinel-2 local. No se guarda en el repositorio: los términos de Esri no permiten el uso sin conexión.
+ */
+export const HIRES_ATTRIBUTION = 'Esri, Maxar, Earthstar Geographics y la comunidad de usuarios GIS (en línea)';
+const HIRES_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile';
+
+export interface HiresTile {
+  key: string;
+  url: string;
+  z: number;
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+}
+
+/**
+ * Teselas en línea que cubren la vista (en metros de pantalla, y hacia abajo = sur) con un píxel de tesela por
+ * píxel de pantalla aproximadamente. `zoom` es el de la cámara (píxeles de pantalla por metro).
+ */
+export function hiresTiles(view: { x: number; y: number; width: number; height: number }, zoom: number): HiresTile[] {
+  const z = Math.max(12, Math.min(19, Math.ceil(Math.log2(156543.03 * Math.cos((LAT0 * Math.PI) / 180) * zoom))));
+  const nw = unproj([view.x, -view.y]),
+    se = unproj([view.x + view.width, -(view.y + view.height)]);
+  const a = tileOf(z, nw.lat, nw.lon),
+    b = tileOf(z, se.lat, se.lon);
+  const out: HiresTile[] = [];
+  for (let x = a.x; x <= b.x; x++)
+    for (let y = a.y; y <= b.y; y++) {
+      const t = tileBounds(z, x, y);
+      const [x0, n] = proj(t.north, t.west),
+        [x1, s] = proj(t.south, t.east);
+      out.push({ key: `esri-${z}-${x}-${y}`, url: `${HIRES_URL}/${z}/${y}/${x}`, z, x0, y0: -n, x1, y1: -s });
+    }
+  return out;
+}
 
 /** Vistas del mapa real: calles con ríos, parques y nombres; imagen satelital; o solo calles. */
 export type MapStyle = 'mapa' | 'satelite' | 'simple';
