@@ -87,6 +87,11 @@ Secuencia en el motor (`src/model/ed.ts`, solo cuando `params.network` existe): 
 - **Pantalla completa**: botón «Pantalla completa» o tecla F (no se activa mientras se escribe en un campo o en la máquina); Esc sale. Incluye las franjas de «Mi paciente» y de la remisión.
 - **Vistas del mapa** (selector junto a «Ver todo», solo en la red): «Mapa» (calles, ríos, zonas verdes y nombres de las vías principales, de OSM), «Satélite» (Sentinel-2 cloudless 2023, 10 m por píxel, calles semitransparentes encima) y «Solo calles». El río se dibuja más ancho que su cauce para que se vea a la escala de la ciudad. **Satélite en dos capas:** con conexión se piden en vivo las teselas de Esri World Imagery (~0,5 m por píxel, al nivel de detalle del zoom) encima de Sentinel-2, y el acercamiento llega hasta ×10 como en «Mapa». Sin conexión queda Sentinel-2 local (10 m), suavizado y con el acercamiento detenido en ~2 píxeles de pantalla por píxel de imagen; la aplicación no falla, solo reintenta cada 30 s. Esri no se guarda en el repositorio porque sus términos no permiten el uso sin conexión. La autora confirmó que en la feria hay internet (24 nov). No hay imagen libre de alta resolución para Valledupar: OpenAerialMap no tiene cobertura (consulta del 24 nov) y no se encontró una ortoimagen del IGAC publicada; las de Google, Esri o Bing no se pueden guardar para uso sin conexión.
 
+## Parte 2 (T26, P1 del PDF)
+- **Indicadores de la red** (pestaña «Gráficas en vivo», solo en `?red`): traslados completados, espera media en el pasillo para remitir, % de llegadas remitidas fuera de la red, uso de ambulancias y tabla por sede (ocupadas ahora, ocupación media, remitidos recibidos). La ocupación de camas se grafica en porcentaje para comparar sedes de 21 a 173 camas.
+- **Seguimiento en 4 pasos** (figura C): `src/ui/referral-steps.ts` reconstruye cada remisión desde los eventos del motor (fin de consulta, pasillo, aceptación del destino en `TRANSFER_START.data.acceptedAt`, salida, llegada) y la liberación de la ambulancia desde el estado del recurso.
+- **Filtro por condición** en el mapa: anillo verde = atención definitiva documentada, ámbar = condicionada; el resto se atenúa (matriz del informe, sin disponibilidad).
+
 ## Pendiente
 - Capturas de la red para el póster y el README.
 

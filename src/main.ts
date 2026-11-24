@@ -8,7 +8,8 @@ import { EmergencyDepartment } from './model/ed';
 import { networkParams, realisticParams, validationParams, type Mode } from './model/params';
 import { geoMap, HIRES_ATTRIBUTION, OSM_ATTRIBUTION, SATELLITE_ATTRIBUTION, type MapStyle } from './render/map/geo';
 import { SITES } from './model/valledupar/sites';
-import { RECEPTION_LABEL, reception } from './model/valledupar/capabilities';
+import { CONDITION_LABEL, RECEPTION_LABEL, reception, type ConditionId } from './model/valledupar/capabilities';
+import { ReferralLog, referralSteps } from './ui/referral-steps';
 import { mountValidationPanel } from './ui/validation/panel';
 import { mountPanel } from './ui/panel';
 import { describe } from './ui/tooltip';
@@ -64,10 +65,10 @@ app.innerHTML = `
         <div><strong>Mi paciente</strong><span id="visitor-state" role="status">Crea un visitante para seguir su recorrido.</span></div>
         <div><label>Destino del ensayo <select id="destination"></select></label><button id="practice">Demostrar traslado con mi paciente</button></div>
       </section>
-      <section class="trip-strip" id="trip-strip" hidden><div><strong id="trip-label"></strong><span id="trip-state"></span></div><div id="trip-why" hidden></div><div><button id="ride">Seguir ambulancia</button><button id="enter-destination" hidden>Entrar a la clínica</button><button id="repeat" hidden>Repetir demostración</button></div></section>
+      <section class="trip-strip" id="trip-strip" hidden><div><strong id="trip-label"></strong><span id="trip-state"></span></div><div id="trip-why" hidden><ol id="trip-steps" class="steps"></ol><details id="trip-eval"><summary></summary><ul></ul></details></div><div><button id="ride">Seguir ambulancia</button><button id="enter-destination" hidden>Entrar a la clínica</button><button id="repeat" hidden>Repetir demostración</button></div></section>
       <div class="map-card">
         <div class="map-head"><div><span class="map-symbol" aria-hidden="true">◇</span><b id="map-heading">Plano del hospital</b></div>
-          <div class="view-group" role="group" aria-label="Vista y cámara"><span id="cafe-group" role="group" aria-label="Cafetería"><button id="buy-drink">Máquina de refrescos</button><button id="buy-snack">Máquina de papas</button></span><button id="view">Ver ciudad</button><button id="minus" aria-label="Alejar">−</button><button id="plus" aria-label="Acercar">+</button><button id="fit">Ver todo</button><select id="map-style" aria-label="Vista del mapa" hidden><option value="mapa">Mapa</option><option value="satelite">Satélite</option><option value="simple">Solo calles</option></select><button id="fullscreen" title="Tecla F">Pantalla completa</button></div>
+          <div class="view-group" role="group" aria-label="Vista y cámara"><span id="cafe-group" role="group" aria-label="Cafetería"><button id="buy-drink">Máquina de refrescos</button><button id="buy-snack">Máquina de papas</button></span><button id="view">Ver ciudad</button><button id="minus" aria-label="Alejar">−</button><button id="plus" aria-label="Acercar">+</button><button id="fit">Ver todo</button><select id="map-focus" aria-label="Resaltar sedes por condición" hidden><option value="">Todas las sedes</option></select><select id="map-style" aria-label="Vista del mapa" hidden><option value="mapa">Mapa</option><option value="satelite">Satélite</option><option value="simple">Solo calles</option></select><button id="fullscreen" title="Tecla F">Pantalla completa</button></div>
         </div>
         <div class="canvas-wrap">
           <div id="scene"></div><section id="ward" hidden></section><section id="vending" hidden></section><div id="tip" hidden></div>
@@ -75,7 +76,7 @@ app.innerHTML = `
           <div id="subs" aria-live="polite" hidden></div>
           <div id="demo-banner" hidden>Demostración · mueve el puntero para tomar el control</div>
         </div>
-        <div class="map-foot"><div id="legend"></div><div id="city-key" hidden>Ocupación de camas <span>● &lt; 70 %</span><span>● 70–89 %</span><span>● ≥ 90 %</span><span id="key-net" hidden>● no simulada <b>—</b> ruta del traslado</span></div><small id="osm-attrib" hidden></small></div>
+        <div class="map-foot"><div id="legend"></div><div id="city-key" hidden>Ocupación de camas <span>● &lt; 70 %</span><span>● 70–89 %</span><span>● ≥ 90 %</span><span id="key-net" hidden>● no simulada <b>—</b> ruta del traslado</span><span id="key-focus" hidden>◯ verde: atención definitiva · ◯ ámbar: condicionada · atenuadas: no la atienden o sin información</span></div><small id="osm-attrib" hidden></small></div>
       </div>
       <p id="companion-state" role="status"></p><p id="toast" role="status"></p><p id="recovery" role="status"></p><p id="following"></p><p id="source"></p>
       </div>
@@ -127,9 +128,10 @@ function makePair(mode: Mode): [EmergencyDepartment, EmergencyDepartment] {
   return [ed, twin];
 }
 const primary = mockMode ? undefined : new LiveDriver(...makePair(query.get('modo') === 'validacion' ? 'validacion' : 'realista'));
-/** T25: motivo de cada traslado en curso (data de TRANSFER_START), por ambulancia. */
-const why = new Map<string, { condition?: string; reason?: string; discarded?: { site: string; reason: string }[] }>();
-if (networkMode) primary?.ed.onEvent((e) => e.type === 'TRANSFER_START' && e.resourceId && why.set(e.resourceId, e.data as never));
+/** T26: remisiones de la corrida principal en 4 pasos (todo sale de eventos del motor). */
+const referrals = new ReferralLog();
+if (networkMode) primary?.ed.onEvent((e) => referrals.onEvent(e));
+const hhmm = (t: number) => `${String(Math.floor((t % 1440) / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 const original = primary ?? new MockDriver();
 let live = primary;
 const driver = new SessionDriver(original);
@@ -350,6 +352,12 @@ if (networkMode) {
   $('osm-attrib').textContent = OSM_ATTRIBUTION;
   const style = $('map-style') as HTMLSelectElement;
   style.onchange = () => city?.setStyle(style.value as MapStyle);
+  const focus = $('map-focus') as HTMLSelectElement;
+  focus.append(...Object.entries(CONDITION_LABEL).map(([id, label]) => new Option(label, id)));
+  focus.onchange = () => {
+    city?.setFocus((focus.value || undefined) as ConditionId | undefined);
+    $('key-focus').hidden = !focus.value;
+  };
   $('key-net').hidden = false;
   $('practice').parentElement!.hidden = true; // el ensayo usa las clínicas ficticias
 }
@@ -592,7 +600,7 @@ setInterval(() => {
   $('map-heading').textContent = scene.inCity ? (networkMode ? 'Red hospitalaria de Valledupar' : 'Red de clínicas') : 'Plano del hospital';
   $('legend').hidden = scene.inCity;
   $('city-key').hidden = !scene.inCity;
-  $('osm-attrib').hidden = $('map-style').hidden = !(networkMode && scene.inCity && ward.index === undefined);
+  $('osm-attrib').hidden = $('map-style').hidden = $('map-focus').hidden = !(networkMode && scene.inCity && ward.index === undefined);
   if (networkMode && city)
     $('osm-attrib').textContent =
       OSM_ATTRIBUTION + (city.style === 'satelite' ? ' · Imagen: ' + (city.hiresOk ? HIRES_ATTRIBUTION + ' · ' : '') + SATELLITE_ATTRIBUTION : '');
@@ -642,23 +650,40 @@ setInterval(() => {
   $('follow').textContent = tracked ? 'Seguir a ' + tracked.info.name : 'Seguir a mi paciente';
   const first = pb.transfers.entries().next().value;
   const tr = ride && !ride.arrived ? pb.transfers.get(ride.amb) : first?.[1];
-  $('trip-strip').hidden = !practice && !ride && !first;
+  $('trip-strip').hidden = !practice && !ride && !first && !(networkMode && referrals.latest);
   $('trip-label').textContent = practice ? 'Traslado de demostración' : 'Remisión de la corrida';
   button('ride').hidden = !tr;
   button('enter-destination').hidden = !ride?.arrived;
-  const amb = ride && !ride.arrived ? ride.amb : first?.[0];
-  const w = amb ? why.get(amb) : undefined;
-  $('trip-why').hidden = !w?.reason;
-  if (w?.reason && $('trip-why').dataset.amb !== amb) {
-    // Resumen en una línea; la evaluación de cada sede se despliega a pedido.
-    $('trip-why').dataset.amb = amb;
-    const details = document.createElement('details');
-    const summary = document.createElement('summary');
-    summary.textContent = `${w.condition} · ${w.reason} · otras ${w.discarded?.length ?? 0} sedes evaluadas`;
-    const list = document.createElement('ul');
-    list.replaceChildren(...(w.discarded ?? []).map((d) => Object.assign(document.createElement('li'), { textContent: `${d.site}: ${d.reason}` })));
-    details.replaceChildren(summary, list);
-    $('trip-why').replaceChildren(details);
+  // T26: la remisión que se sigue, la del traslado en curso o la última que empezó.
+  referrals.tick(pb.t, pb.ambulancesAway);
+  const refId = (ride && !ride.arrived ? ride.patientId : undefined) ?? first?.[1].patientId ?? referrals.latest;
+  const ref = !practice && networkMode && refId ? referrals.all.get(refId) : undefined;
+  $('trip-why').hidden = !ref;
+  if (ref && live) {
+    const snapP = live.ed.snapshot().patients.find((p) => p.id === ref.id);
+    $('trip-steps').replaceChildren(
+      ...referralSteps(ref, pb.t, snapP).map((s) => {
+        const li = document.createElement('li');
+        li.className = 'st-' + s.state.replace(' ', '-');
+        li.append(
+          Object.assign(document.createElement('small'), { textContent: `${s.n} · ${s.state}${s.when !== undefined ? ' · ' + hhmm(s.when) : ''}` }),
+          Object.assign(document.createElement('b'), { textContent: s.title }),
+          Object.assign(document.createElement('em'), { textContent: s.sub }),
+          Object.assign(document.createElement('span'), { textContent: s.detail }),
+        );
+        return li;
+      }),
+    );
+    // Evaluación de cada sede: la del traslado o, mientras espera, la más reciente del motor.
+    const evals = ref.discarded ?? snapP?.decision?.evaluated.map((e) => ({ site: e.name, reason: e.reason })) ?? [];
+    const key = ref.id + ':' + evals.length + ':' + (ref.depart ?? '');
+    if ($('trip-eval').dataset.key !== key) {
+      $('trip-eval').dataset.key = key;
+      $('trip-eval').querySelector('summary')!.textContent = (ref.reason ? `Por qué: ${ref.reason}. ` : '') + `Ver las ${evals.length} sedes evaluadas`;
+      $('trip-eval').querySelector('ul')!.replaceChildren(...evals.map((d) => Object.assign(document.createElement('li'), { textContent: `${d.site}: ${d.reason}` })));
+    }
+    $('trip-eval').hidden = !evals.length;
+    if (!tr && !ride) $('trip-state').textContent = (pb.figures.get(ref.id)?.name ?? ref.id) + (ref.arrive !== undefined ? ' · remisión completada' : ref.out !== undefined ? ' · remitido fuera de la red' : ' · remisión en curso');
   }
   button('repeat').hidden = !practice || !ride?.arrived;
   if (tr)

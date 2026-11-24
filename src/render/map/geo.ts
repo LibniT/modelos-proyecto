@@ -54,7 +54,7 @@ export function hiresTiles(view: { x: number; y: number; width: number; height: 
 export type MapStyle = 'mapa' | 'satelite' | 'simple';
 
 /** Nombres cortos para las placas del mapa (el nombre completo va en la ficha). */
-const SHORT: Record<SiteId, string> = {
+export const SHORT: Record<SiteId, string> = {
   'alta-complejidad': 'Alta Complejidad',
   hrpl: 'Hospital de origen (simulado)',
   icvc: 'Inst. Cardiovascular',

@@ -301,3 +301,9 @@ Preguntas para la autora: ninguna.
 Hecho: la autora vio que con internet "no carga lo demás". Causas en `CityScene.updateHires()`: un solo fallo de tesela bloqueaba todas las descargas 30 s y vaciaba la lista de pendientes (las que seguían en vuelo se volvían a pedir y podían quedar dos imágenes encimadas). Ahora el fallo afecta solo a esa tesela (reintento a los 20 s), el bloqueo global solo aplica si nunca llegó ninguna (sin conexión), cada tesela tiene una sola imagen, se piden primero las del centro de la vista y la imagen local se encola antes que la de Esri.
 Verificado: 127 pruebas, TypeScript, build; navegador: con una tesela forzada a fallar, al mover y acercar se cargan todas las teselas de la vista (faltantes 0) y hay una imagen por tesela.
 Siguiente paso: si la autora usa `npm run preview`, debe correr `npm run build` antes (el `dist` anterior no tenía la capa en línea).
+
+## 2026-11-24 · Claude · feat/T26-red-p1
+Hecho (T26, parte 2 de la red, P1 del PDF): (1) indicadores de la red en «Gráficas en vivo» (`live-charts.ts`: KPI, tabla por sede, ocupación en %); (2) seguimiento de la remisión en 4 pasos (`src/ui/referral-steps.ts`, `ReferralLog` + `referralSteps`, sin DOM) en la franja «Remisión de la corrida», con la evaluación de sedes desplegable; el motor agrega `Journey.referralAt` y `TRANSFER_START.data.acceptedAt` (solo en red; contrato sin cambios); (3) filtro del mapa por condición (`CityScene.setFocus`).
+Verificado: pruebas nuevas en `tests/referral-steps.test.ts` (orden de tiempos con el motor real, estados de los pasos, cama del hospital, fuera de la red); TypeScript; navegador: los 4 pasos avanzan, filtro «Quemadura grave» deja solo Alta Complejidad en verde, panel de indicadores con 5 sedes; modo original sin cambios visibles.
+A medias: T26 (4) ficha completa de institución y (5) verificación de sedes ⚠ (necesita a la autora).
+Siguiente paso: (4) ficha; integrar T26 en main cuando la autora lo apruebe.

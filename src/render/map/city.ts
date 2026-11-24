@@ -5,6 +5,8 @@ import type { Driver } from '../drivers';
 import { cityLayout, type CityLayout } from './layout';
 import { neighborhood, facility } from './neighborhood';
 import { hiresTiles, type GeoMap, type MapStyle } from './geo';
+import { reception, type ConditionId, type Reception } from '../../model/valledupar/capabilities';
+import type { SiteId } from '../../model/valledupar/sites';
 
 export interface ClinicView {
   name: string;
@@ -40,6 +42,9 @@ interface Landmark {
   leader?: Phaser.GameObjects.Graphics;
   /** mapa real: color fijo del marcador (origen, no simulada) o según la ocupación */
   fixed?: number;
+  /** último color de ocupación y recepción de la condición filtrada (T26) */
+  color?: number;
+  focus?: Reception;
 }
 
 export class CityScene extends Phaser.Scene {
@@ -259,10 +264,29 @@ export class CityScene extends Phaser.Scene {
         }
   }
 
+  /**
+   * T26: resalta las sedes según la recepción documentada de una condición (matriz del informe) y atenúa las
+   * que no la atienden. Sin condición, todas normales.
+   */
+  setFocus(condition?: ConditionId): void {
+    const pediatric = condition === 'nino_critico' || condition === 'recien_nacido_critico';
+    for (const p of this.places) {
+      if (!p.site) continue;
+      p.focus = condition ? reception(condition, p.site as SiteId, !pediatric).level : undefined;
+      const dim = condition !== undefined && p.focus !== 'AD' && p.focus !== 'C';
+      for (const o of [p.image, p.panel, p.leader!]) o.setAlpha(dim ? 0.3 : 1);
+      this.paintMarker(p, p.color ?? 0x328366);
+    }
+  }
+
   /** Marcador de sede: círculo de color con cruz blanca, tamaño constante en pantalla. */
   private paintMarker(place: Landmark, color: number): void {
+    place.color = color;
     const g = place.image as Phaser.GameObjects.Graphics;
-    g.clear()
+    g.clear();
+    // T26: anillo según la recepción de la condición filtrada (verde AD, ámbar C).
+    if (place.focus === 'AD' || place.focus === 'C') g.fillStyle(place.focus === 'AD' ? 0x2f9a5a : 0xd7a13a).fillCircle(0, 0, 24);
+    g
       .fillStyle(0xffffff)
       .fillCircle(0, 0, 17)
       .fillStyle(place.fixed ?? color)

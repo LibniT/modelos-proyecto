@@ -53,6 +53,8 @@ export interface Journey {
   /** T25: condición que motivó la remisión y por qué se eligió el destino */
   condition?: string;
   referralReason?: string;
+  /** instante en que se aceptó el destino y se reservó la cama */
+  referralAt?: number;
 }
 
 interface Patient {
@@ -689,6 +691,7 @@ export class EmergencyDepartment {
         const c = p.decision.chosen;
         if (!c) continue; // sin destino elegible: espera y se reevalúa en la próxima liberación de cama
         p.journey.referralReason = c.reason;
+        p.journey.referralAt = this.sim.now;
         p.reservedClinic = c.clinic;
         this.clinicOccupy(c.clinic);
         this.ambulances.request(p, 0, (aid) => this.startTransfer(p, aid));
@@ -730,6 +733,7 @@ export class EmergencyDepartment {
     const why = p.decision && {
       condition: p.journey.condition,
       reason: p.journey.referralReason,
+      acceptedAt: p.journey.referralAt,
       discarded: p.decision.evaluated.filter((e) => e.site !== p.decision!.chosen?.site).map((e) => ({ site: e.name, reason: e.reason })),
     };
     this.emit('TRANSFER_START', { p, resourceId: p.resourceId, from: 'ambulance_bay', to: `clinic_${j}`, duration: trip, data: { clinic: cl.name, ...why } });
