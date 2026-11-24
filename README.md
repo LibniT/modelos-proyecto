@@ -19,11 +19,14 @@ Más capturas en [`docs/capturas`](docs/capturas) (incluida la vista de celular)
 ```bash
 npm install
 npm run dev        # desarrollo: http://localhost:5173
-npm test           # 50 pruebas, incluida la validación analítica (30 réplicas)
+npm test           # 127 pruebas, incluida la validación analítica (30 réplicas)
 npm run report     # escribe docs/VALIDACION.md (tabla analítico vs simulado con IC 95 %)
 npm run build && npm run preview   # versión de presentación, funciona sin internet
 npm run red-vial   # regenera calles y rutas de Valledupar desde OpenStreetMap (requiere internet)
 ```
+
+## Red hospitalaria de Valledupar (`?red`)
+Escenario adicional con sedes reales (REPS), calles y rutas viales de OpenStreetMap: abre `http://localhost:5173/?red` (o elige «Red Valledupar» en el panel). Cada remisión elige destino por compatibilidad clínica, cama simulada y ruta, y explica las sedes descartadas; la ambulancia recorre la ruta real en el mapa. Vistas «Mapa», «Satélite» (nítido con internet; imagen local de 10 m sin conexión) y «Solo calles»; tecla F para pantalla completa. La ocupación es simulada, no la real. Detalles: [`docs/RED_VALLEDUPAR.md`](docs/RED_VALLEDUPAR.md) · guía del stand: [`docs/GUIA_DEMO_RED.md`](docs/GUIA_DEMO_RED.md).
 
 ## Estructura
 | Carpeta | Contenido |
@@ -32,7 +35,8 @@ npm run red-vial   # regenera calles y rutas de Valledupar desde OpenStreetMap (
 | `src/model` | Red de urgencias, parámetros (modo validación / realista), EPS y clínicas ficticias |
 | `src/validation` | Fórmulas analíticas, IC t-Student, Kolmogorov-Smirnov, tabla de validación |
 | `src/batch` | Réplicas independientes (Web Worker) |
-| `src/render`, `src/ui` | Escena isométrica y panel (en construcción) |
+| `src/render`, `src/ui` | Escenas (hospital, ciudad, interiores), panel, creador, gráficas en vivo |
+| `src/model/valledupar` | Red real: sedes (REPS), matriz de recepción, calles y rutas de OpenStreetMap |
 | `docs/` | `SPEC.md` (especificación), `TAREAS.md`, `HANDOFF.md`, `VALIDACION.md` |
 
 Trabajo con varias IAs: ver `AGENTS.md`.
