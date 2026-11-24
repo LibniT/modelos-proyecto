@@ -70,6 +70,8 @@ export class CityScene extends Phaser.Scene {
   private hires = new Map<string, { img: Phaser.GameObjects.Image; z: number }>();
   private hiresBusy = new Set<string>();
   private hiresFailedAt = -Infinity;
+  private hiresFail = new Map<string, number>();
+  private hiresListening = false;
   hiresOk = false;
   private geoZoom = 0;
   private hover?: Landmark;
@@ -179,9 +181,14 @@ export class CityScene extends Phaser.Scene {
     L.nature.setVisible(style === 'mapa');
     L.roads.setAlpha(sat ? 0.45 : 1);
     for (const t of L.labels) t.setVisible(style !== 'simple').setColor(sat ? '#ffffff' : '#4a5f5c').setStroke(sat ? '#1d2b2a' : '#ffffff', 3);
-    this.updateHires();
-    if (!sat) return L.sat?.forEach((i) => i.setVisible(false));
-    if (L.sat) return L.sat.forEach((i) => i.setVisible(true));
+    if (!sat) {
+      this.updateHires();
+      return L.sat?.forEach((i) => i.setVisible(false));
+    }
+    if (L.sat) {
+      this.updateHires();
+      return L.sat.forEach((i) => i.setVisible(true));
+    }
     L.sat = [];
     for (const t of m.tiles) this.load.image(t.key, t.url);
     this.load.once('complete', () => {
@@ -192,6 +199,7 @@ export class CityScene extends Phaser.Scene {
       );
     });
     this.load.start();
+    this.updateHires();
   }
 
   /**
@@ -207,15 +215,32 @@ export class CityScene extends Phaser.Scene {
     const v = cam.worldView;
     for (const { img, z: tz } of this.hires.values())
       img.setVisible(on && tz <= z && img.x < v.right && img.x + img.displayWidth > v.x && img.y < v.bottom && img.y + img.displayHeight > v.y);
-    if (!on || this.time.now - this.hiresFailedAt < 30000) return;
+    // Sin ninguna tesela recibida todavía y con fallos: probablemente no hay conexión; se reintenta cada 30 s.
+    if (!on || (!this.hiresOk && this.time.now - this.hiresFailedAt < 30000)) return;
+    if (!this.hiresListening) {
+      this.hiresListening = true;
+      this.load.on('loaderror', (file: Phaser.Loader.File) => {
+        if (!file.key.startsWith('esri-')) return;
+        // Solo esa tesela queda en espera 20 s; las demás siguen cargando.
+        this.load.off(`filecomplete-image-${file.key}`);
+        this.hiresBusy.delete(file.key);
+        this.hiresFail.set(file.key, this.time.now);
+        this.hiresFailedAt = this.time.now;
+      });
+    }
     let queued = false;
+    // Primero las del centro de la vista: es lo que se mira.
+    const cx = v.centerX,
+      cy = v.centerY;
+    want.sort((a, b) => Math.hypot((a.x0 + a.x1) / 2 - cx, (a.y0 + a.y1) / 2 - cy) - Math.hypot((b.x0 + b.x1) / 2 - cx, (b.y0 + b.y1) / 2 - cy));
     for (const t of want) {
-      if (this.hires.has(t.key) || this.hiresBusy.has(t.key)) continue;
+      if (this.hires.has(t.key) || this.hiresBusy.has(t.key) || this.time.now - (this.hiresFail.get(t.key) ?? -Infinity) < 20000) continue;
       this.hiresBusy.add(t.key);
       this.load.setCORS('anonymous');
       this.load.image(t.key, t.url);
       this.load.once(`filecomplete-image-${t.key}`, () => {
         this.hiresBusy.delete(t.key);
+        if (this.hires.has(t.key)) return; // nunca dos imágenes para la misma tesela
         this.hiresOk = true;
         this.textures.get(t.key).setFilter(Phaser.Textures.FilterMode.LINEAR);
         const img = this.add.image(t.x0, t.y0, t.key).setOrigin(0).setDisplaySize(t.x1 - t.x0, t.y1 - t.y0).setDepth(1 + t.z / 100);
@@ -223,13 +248,7 @@ export class CityScene extends Phaser.Scene {
       });
       queued = true;
     }
-    if (!queued) return;
-    this.load.once('loaderror', (file: Phaser.Loader.File) => {
-      if (!file.key.startsWith('esri-')) return;
-      this.hiresFailedAt = this.time.now;
-      this.hiresBusy.clear();
-    });
-    if (!this.load.isLoading()) this.load.start();
+    if (queued && !this.load.isLoading()) this.load.start();
     // shortcut: se descartan las teselas fuera de vista pasadas 400; suficiente para una demostración.
     if (this.hires.size > 400)
       for (const [k, h] of this.hires)

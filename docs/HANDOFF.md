@@ -296,3 +296,8 @@ Hecho: la autora aclaró que en la feria hay internet y pidió ambas capas. `hir
 Verificado: 127 pruebas (1 nueva de cobertura y nivel de detalle), TypeScript; navegador con conexión: 24 teselas de Esri cargadas, imagen nítida a nivel de cuadra junto al hospital de origen. No se probó sin conexión en el navegador (el código cae a Sentinel-2 y no lanza errores propios).
 Siguiente paso: la autora prueba en la feria con sus datos.
 Preguntas para la autora: ninguna.
+
+## 2026-11-24 · Claude · feat/T25-red-valledupar (satélite en línea, carga robusta)
+Hecho: la autora vio que con internet "no carga lo demás". Causas en `CityScene.updateHires()`: un solo fallo de tesela bloqueaba todas las descargas 30 s y vaciaba la lista de pendientes (las que seguían en vuelo se volvían a pedir y podían quedar dos imágenes encimadas). Ahora el fallo afecta solo a esa tesela (reintento a los 20 s), el bloqueo global solo aplica si nunca llegó ninguna (sin conexión), cada tesela tiene una sola imagen, se piden primero las del centro de la vista y la imagen local se encola antes que la de Esri.
+Verificado: 127 pruebas, TypeScript, build; navegador: con una tesela forzada a fallar, al mover y acercar se cargan todas las teselas de la vista (faltantes 0) y hay una imagen por tesela.
+Siguiente paso: si la autora usa `npm run preview`, debe correr `npm run build` antes (el `dist` anterior no tenía la capa en línea).
