@@ -19,7 +19,9 @@ export function clinicCard(j: number, p: Params, occupied: number, received: num
     lines: [
       `Camas ocupadas: ${occupied} de ${c.beds} (${pct(occupied / c.beds)})`,
       `Remitidos desde el hospital en esta sesión: ${received}`,
-      `EPS con contrato: ${eps.join(', ') || 'ninguna'}`,
+      p.network
+        ? 'Camas simuladas = camas de adulto documentadas en REPS · sin restricción EPS (la urgencia no se condiciona a convenio)'
+        : `EPS con contrato: ${eps.join(', ') || 'ninguna'}`,
       `Viaje en ambulancia: ${distMean(c.travel).toFixed(0)} min en promedio`,
       `Demanda propia: ${String(c.backgroundRatePerHour).replace('.', ',')} pacientes/h · estancia media ${(los / 60).toFixed(0)} h`,
       `Probabilidad de encontrarla llena solo con su demanda propia (${a.toFixed(1).replace('.', ',')} Erlangs, Erlang B): ${b < 0.001 ? '< 0,1 %' : pct(b, 1)}`,

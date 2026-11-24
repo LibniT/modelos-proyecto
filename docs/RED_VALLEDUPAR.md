@@ -46,6 +46,8 @@ Secuencia en el motor (`src/model/ed.ts`, solo cuando `params.network` existe): 
 
 **Corrida de referencia** (semilla 1, 30 días tras 1 de calentamiento): 496 traslados (ICVC 299, Alta Complejidad 192, OHI 5); 0,4 % de las llegadas se remiten fuera de la red, todas por crisis psiquiátrica: San Lucas es la única sede AD aparte del origen y su capacidad no está documentada, así que el modelo no la usa. Clínica del Cesar y Erasmo casi no reciben remisiones porque ICVC y Alta Complejidad, a 1 min de ruta, tienen cupo casi siempre.
 
+**Arranque en equilibrio:** las sedes no empiezan vacías. Su ocupación inicial se sortea de la distribución estacionaria del sistema de pérdida M/M/K/K con su demanda propia (Poisson truncada en K); como la estancia es exponencial, a cada cama ocupada le queda Exp(48 h). Una prueba verifica que la media inicial coincide con a·(1 − B) de Erlang B.
+
 **Limitaciones:** un solo grupo de camas por sede (sin separar UCI adulto, pediátrica y neonatal); la aceptación de una sede C es automática; la ocupación del 90 % es la misma en todas las sedes.
 
 ## Cartografía y rutas (F2)
@@ -73,5 +75,12 @@ Secuencia en el motor (`src/model/ed.ts`, solo cuando `params.network` existe): 
 
 **Supuesto:** tiempo base = distancia vial / 30 km/h. Las sedes están concentradas en el centro, así que el viaje es de 1–6 min, mucho menor que los 12–25 min del escenario ficticio. El ciclo de la ambulancia en F3 debe sumar alistamiento, cargue y entrega del paciente (supuesto aparte), no solo el viaje.
 
+## Mapa y remisión visible (F4)
+- `?red` en la dirección (o «Red Valledupar» en el selector de modo) carga el escenario. Cambiar de modo recarga la página, porque cambia el número de sedes y el mapa.
+- «Ver ciudad» dibuja las calles de OpenStreetMap con Phaser en la misma `CityScene` (sin bibliotecas nuevas ni teselas, funciona sin internet): marcadores por sede coloreados por la ocupación simulada, placas con camas, sedes no simuladas en gris con su motivo, ruta azul del traslado en curso y ambulancia que avanza sobre la geometría de la ruta con el reloj del motor (pausa y velocidad incluidas). Atribución de OSM visible bajo el mapa.
+- Clic en una sede simulada: ficha con ocupación, viaje y Erlang B. Clic en una no simulada: hechos documentados y por qué no se simula. Las sedes no tienen interior isométrico (las plantas de T24 son de 30–50 camas).
+- La franja «Remisión de la corrida» muestra la condición, el motivo del destino y, desplegable, la evaluación de cada sede. «Seguir ambulancia» acerca el mapa y baja la velocidad a ×6 (los viajes reales son de 1–6 min).
+- El ensayo con destino elegido (T23) se oculta en este escenario: usa las clínicas ficticias.
+
 ## Pendiente
-- F4: mapa real en `CityScene` con la atribución de OSM visible.
+- F5: prueba con `npm run preview` sin red y guía de demostración.

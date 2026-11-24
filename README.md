@@ -22,6 +22,7 @@ npm run dev        # desarrollo: http://localhost:5173
 npm test           # 50 pruebas, incluida la validación analítica (30 réplicas)
 npm run report     # escribe docs/VALIDACION.md (tabla analítico vs simulado con IC 95 %)
 npm run build && npm run preview   # versión de presentación, funciona sin internet
+npm run red-vial   # regenera calles y rutas de Valledupar desde OpenStreetMap (requiere internet)
 ```
 
 ## Estructura

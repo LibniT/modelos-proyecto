@@ -203,6 +203,7 @@ export class EmergencyDepartment {
 
     this.clinics = this.params.clinics.map(() => ({ occupied: 0, occ: new TimeAverage(0, 0), bgArrivals: 0, bgBlocked: 0 }));
     this.params.clinics.forEach((cl, j) => this.scheduleClinicBackground(j, cl.backgroundRatePerHour));
+    if (this.params.network) this.startClinicsInEquilibrium();
 
     this.scheduleNextArrival();
     if (opts.useWarmup && this.params.warmup > 0) this.sim.scheduleAt(this.params.warmup, () => this.resetStats());
@@ -758,6 +759,28 @@ export class EmergencyDepartment {
     c.occupied--;
     c.occ.set(this.sim.now, c.occupied);
     this.tryDispatchHallway();
+  }
+
+  /**
+   * T25 · red: las sedes reales no arrancan vacías. Ocupación inicial = distribución estacionaria del sistema
+   * de pérdida M/M/K/K con su demanda propia (Poisson truncada en K, carga a = λ·E[S]); por la falta de memoria
+   * de la estancia exponencial, a cada cama ocupada le queda Exp(E[S]). Así no hace falta calentamiento.
+   */
+  private startClinicsInEquilibrium(): void {
+    const rng = this.rngs.stream('ocupacion-inicial');
+    this.params.clinics.forEach((cl, j) => {
+      if (cl.los.kind !== 'exp') return;
+      const a = (cl.backgroundRatePerHour / 60) * cl.los.mean;
+      const logw: number[] = [];
+      for (let n = 0, lw = 0; n <= cl.beds; n++, lw += Math.log(a) - Math.log(n)) logw.push(lw);
+      const max = Math.max(...logw);
+      const w = logw.map((x) => Math.exp(x - max));
+      const n0 = rng.weighted(w);
+      for (let i = 0; i < n0; i++) {
+        this.clinicOccupy(j);
+        this.sim.schedule(sample(cl.los, rng), () => this.clinicRelease(j));
+      }
+    });
   }
 
   /** Demanda propia de cada clínica: Poisson; si está llena, se pierde (pérdida pura, Erlang B). */

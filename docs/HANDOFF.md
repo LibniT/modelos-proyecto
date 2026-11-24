@@ -264,3 +264,10 @@ Verificado: 119 pruebas (6 en `tests/referral.test.ts`, 7 en `tests/network.test
 A medias: F4 (mapa real en `CityScene`, selector de escenario, tarjeta del motivo) y F5.
 Siguiente paso: F4. `main.ts` aún no ofrece el escenario; `clinic-scene` tiene 3 plantas y la red tiene 5 sedes simuladas.
 Preguntas para la autora: las crisis psiquiátricas salen siempre «fuera de la red» porque San Lucas no tiene capacidad documentada. ¿Lo dejamos así (es el dato honesto) o agregamos un supuesto explícito de camas para San Lucas?
+
+## 2026-11-24 · Claude · feat/T25-red-valledupar (F4)
+Hecho: F4 de T25. `?red` (o «Red Valledupar» en el selector) carga `networkParams()`. `src/render/map/geo.ts` arma el mapa desde los JSON de OSM; `CityScene` tiene dos constructores (`buildIso` original y `buildGeo`) y comparte cámara, clics y ambulancias. Marcadores y placas de tamaño constante en pantalla, ruta azul del traslado en curso, ambulancia sobre la geometría real, atribución OSM. Fichas: sede simulada (`clinicCard` sin EPS en red) y sede no simulada (`showSiteCard`). Franja de remisión con condición, motivo y evaluación desplegable de cada sede (`data` de `TRANSFER_START`). «Seguir ambulancia» en red: zoom ×4 y velocidad ×6. Motor: las sedes arrancan en equilibrio (Poisson truncada, solo en red). Selector: las sedes AD/C no elegidas dicen por qué.
+Verificado: 124 pruebas, TypeScript, `npm run build`; en el navegador (panel oculto, cuadros avanzados a mano: 3,2 ms por cuadro con el mapa): remisión completa hospital → mapa → llegada a ICVC, fichas, modo original intacto, cero errores de consola.
+A medias: F5 (preview sin red con recarga, guía de demostración, capturas).
+Siguiente paso: F5.
+Preguntas para la autora: las placas del centro usan desplazamientos fijos (`LABEL` en geo.ts); si en el monitor de la feria se tapan, se ajustan ahí.

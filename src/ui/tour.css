@@ -70,3 +70,9 @@
 @media(max-width:800px){.graph-grid {grid-template-columns:1fr} nav {flex-wrap:wrap}}
 .view-group { flex-wrap:wrap; justify-content:flex-end }
 @media(max-width:650px){ #cafe-group button { padding:4px 7px; font-size:13px } }
+
+/* T25: motivo del traslado y atribución de OpenStreetMap */
+#trip-why { flex-basis: 100%; font-size: 13px; line-height: 1.4; color: #3d5654 }
+#trip-why summary { cursor: pointer }
+#trip-why ul { margin: 4px 0 0; padding-left: 18px; max-height: 140px; overflow: auto }
+#osm-attrib { margin-left: auto; color: #536e69 }

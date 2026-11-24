@@ -53,3 +53,12 @@ describe('T25 · selección del destino de la remisión', () => {
     expect(d.chosen?.site).toBe('san-lucas');
   });
 });
+
+describe('T25 · motivo de las sedes elegibles no elegidas', () => {
+  it('una AD más lejana dice que su ruta es más larga; una C, que se prefiere una AD con cupo', () => {
+    const d = chooseDestination('iam', true, 'hrpl', open({ icvc: { minutes: 1 }, 'alta-complejidad': { minutes: 2 } }));
+    expect(d.chosen?.site).toBe('icvc');
+    expect(why(d, 'alta-complejidad')).toBe('elegible, pero su ruta es más larga (2.0 min)');
+    expect(why(d, 'clinica-cesar')).toMatch(/se prefiere una sede con atención definitiva/);
+  });
+});

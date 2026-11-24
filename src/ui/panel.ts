@@ -42,13 +42,14 @@ const WINDOW = 12 * 60;
 const clock = (t: number) => `${String(Math.floor((t % 1440) / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 
 /** `reload(mode)` carga en el driver un motor nuevo del modo pedido (y su gemelo, T17). */
-export function mountPanel(root: HTMLElement, driver: LiveDriver, reload: (mode: Mode) => void): void {
+export function mountPanel(root: HTMLElement, driver: LiveDriver, reload: (mode: Mode | 'red') => void): void {
   root.innerHTML = `
 <div class="pnl">
   <h3><label for="pn-mode">Modo de simulación</label></h3>
   <select id="pn-mode">
     <option value="realista">Realista · perfil horario y abandono</option>
     <option value="validacion">Validación · λ constante</option>
+    <option value="red">Red Valledupar · sedes y rutas reales</option>
   </select>
   <details open><summary>Capacidad y llegadas</summary><div class="sliders">
     ${SLIDERS.map((s) => `<label>${s.label}<output id="pn-out-${s.key}"></output><input type="range" id="pn-${s.key}" aria-label="${s.label}" min="${s.min}" max="${s.max}" step="${s.step}"></label>`).join('')}
@@ -97,7 +98,7 @@ export function mountPanel(root: HTMLElement, driver: LiveDriver, reload: (mode:
 
   const syncInputs = () => {
     const p = driver.ed.params;
-    $<HTMLSelectElement>('pn-mode').value = p.mode;
+    $<HTMLSelectElement>('pn-mode').value = p.network ? 'red' : p.mode;
     for (const s of SLIDERS) {
       const v = s.key === 'lambda' ? p.arrivalRatePerHour : p.capacity[s.key];
       $<HTMLInputElement>(`pn-${s.key}`).value = String(v);
@@ -117,7 +118,7 @@ export function mountPanel(root: HTMLElement, driver: LiveDriver, reload: (mode:
   }
 
   $<HTMLSelectElement>('pn-mode').onchange = (e) => {
-    reload((e.target as HTMLSelectElement).value as Mode);
+    reload((e.target as HTMLSelectElement).value as Mode | 'red');
     series.length = 0;
     twinSeries.length = 0;
     syncInputs();

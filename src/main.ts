@@ -5,7 +5,10 @@
  * `?mock` reproduce src/render/mock/events.json en vez del motor (desarrollo).
  */
 import { EmergencyDepartment } from './model/ed';
-import { realisticParams, validationParams, type Mode } from './model/params';
+import { networkParams, realisticParams, validationParams, type Mode } from './model/params';
+import { geoMap, OSM_ATTRIBUTION } from './render/map/geo';
+import { SITES } from './model/valledupar/sites';
+import { RECEPTION_LABEL, reception } from './model/valledupar/capabilities';
 import { mountValidationPanel } from './ui/validation/panel';
 import { mountPanel } from './ui/panel';
 import { describe } from './ui/tooltip';
@@ -61,7 +64,7 @@ app.innerHTML = `
         <div><strong>Mi paciente</strong><span id="visitor-state" role="status">Crea un visitante para seguir su recorrido.</span></div>
         <div><label>Destino del ensayo <select id="destination"></select></label><button id="practice">Demostrar traslado con mi paciente</button></div>
       </section>
-      <section class="trip-strip" id="trip-strip" hidden><div><strong id="trip-label"></strong><span id="trip-state"></span></div><div><button id="ride">Seguir ambulancia</button><button id="enter-destination" hidden>Entrar a la clínica</button><button id="repeat" hidden>Repetir demostración</button></div></section>
+      <section class="trip-strip" id="trip-strip" hidden><div><strong id="trip-label"></strong><span id="trip-state"></span></div><div id="trip-why" hidden></div><div><button id="ride">Seguir ambulancia</button><button id="enter-destination" hidden>Entrar a la clínica</button><button id="repeat" hidden>Repetir demostración</button></div></section>
       <div class="map-card">
         <div class="map-head"><div><span class="map-symbol" aria-hidden="true">◇</span><b id="map-heading">Plano del hospital</b></div>
           <div class="view-group" role="group" aria-label="Vista y cámara"><span id="cafe-group" role="group" aria-label="Cafetería"><button id="buy-drink">Máquina de refrescos</button><button id="buy-snack">Máquina de papas</button></span><button id="view">Ver ciudad</button><button id="minus" aria-label="Alejar">−</button><button id="plus" aria-label="Acercar">+</button><button id="fit">Ver todo</button></div>
@@ -72,7 +75,7 @@ app.innerHTML = `
           <div id="subs" aria-live="polite" hidden></div>
           <div id="demo-banner" hidden>Demostración · mueve el puntero para tomar el control</div>
         </div>
-        <div class="map-foot"><div id="legend"></div><div id="city-key" hidden>Ocupación de camas <span>● &lt; 70 %</span><span>● 70–89 %</span><span>● ≥ 90 %</span></div></div>
+        <div class="map-foot"><div id="legend"></div><div id="city-key" hidden>Ocupación de camas <span>● &lt; 70 %</span><span>● 70–89 %</span><span>● ≥ 90 %</span><span id="key-net" hidden>● no simulada <b>—</b> ruta del traslado</span></div><small id="osm-attrib" hidden></small></div>
       </div>
       <p id="companion-state" role="status"></p><p id="toast" role="status"></p><p id="recovery" role="status"></p><p id="following"></p><p id="source"></p>
       </div>
@@ -104,21 +107,29 @@ document.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach(
     }),
 );
 
-const mockMode = new URLSearchParams(location.search).has('mock');
+const query = new URLSearchParams(location.search);
+const mockMode = query.has('mock');
+/** T25: `?red` carga el escenario de la red real de Valledupar (sedes, calles y rutas de OpenStreetMap). */
+const networkMode = !mockMode && query.has('red');
+/** Parámetros de referencia de la sesión (clínicas del mapa, tarjetas, acompañantes). */
+const baseParams = () => (networkMode ? networkParams() : realisticParams());
 /**
  * Motor nuevo en el modo pedido, arrancando a las 08:00 del día 1, y su gemelo sin accidentes
  * (misma semilla) para medir la recuperación tras un accidente masivo (T17).
  */
 function makePair(mode: Mode): [EmergencyDepartment, EmergencyDepartment] {
   const seed = Date.now() % 100000;
-  const params = () => (mode === 'validacion' ? validationParams() : realisticParams());
+  const params = () => (networkMode ? networkParams() : mode === 'validacion' ? validationParams() : realisticParams());
   const ed = new EmergencyDepartment(params(), { seed, recordEvents: true });
   const twin = new EmergencyDepartment(params(), { seed });
   ed.step(8 * 60);
   twin.step(8 * 60);
   return [ed, twin];
 }
-const primary = mockMode ? undefined : new LiveDriver(...makePair('realista'));
+const primary = mockMode ? undefined : new LiveDriver(...makePair(query.get('modo') === 'validacion' ? 'validacion' : 'realista'));
+/** T25: motivo de cada traslado en curso (data de TRANSFER_START), por ambulancia. */
+const why = new Map<string, { condition?: string; reason?: string; discarded?: { site: string; reason: string }[] }>();
+if (networkMode) primary?.ed.onEvent((e) => e.type === 'TRANSFER_START' && e.resourceId && why.set(e.resourceId, e.data as never));
 const original = primary ?? new MockDriver();
 let live = primary;
 const driver = new SessionDriver(original);
@@ -140,12 +151,13 @@ function social(): Social {
   let s = socials.get(d);
   if (!s) {
     const beds = (d instanceof LiveDriver ? d.ed.params : realisticParams()).clinics.map((c) => c.beds);
-    s = new Social([hospitalCafe(), ...beds.map((b, j) => clinicPlan(j, b))], 2026);
+    // Red real: las sedes no tienen interior (ficha informativa), solo la cafetería del hospital de origen.
+    s = new Social([hospitalCafe(), ...(networkMode ? [] : beds.map((b, j) => clinicPlan(j, b)))], 2026);
     socials.set(d, s);
   }
   return s;
 }
-const siteName = (site: number) => (site < 0 ? 'Hospital Regional' : clinicParams()[site].name);
+const siteName = (site: number) => (site < 0 ? (networkMode ? 'Hospital de origen' : 'Hospital Regional') : clinicParams()[site].name);
 const vending = new VendingPanel($('vending'), {
   social,
   siteName,
@@ -203,7 +215,7 @@ const onHover = (hit: Hit | undefined, x: number, y: number) => {
   tip.style.top = `${Math.max(0, Math.min(y + 12, $('scene').clientHeight - tip.offsetHeight))}px`;
 };
 // T19: mapa de la ciudad (segunda escena). Distancias ∝ tiempo medio de viaje; ocupación del snapshot del motor.
-const clinicParams = () => (live ? live.ed.params : realisticParams()).clinics;
+const clinicParams = () => (live ? live.ed.params : baseParams()).clinics;
 const clinicState = () => (live ? live.ed.snapshot().clinics : (original as MockDriver).initialClinics);
 /** Camas reservadas ahora para traslados que van en camino a la clínica j (ya incluidas en `occupied`). */
 const reservedFor = (j: number) => Array.from(driver.pb.transfers.values()).filter((tr) => tr.clinicId === j).length;
@@ -223,8 +235,9 @@ const {
     const occ = clinicState()[j].occupied;
     const c = clinicCard(j, p, occ, driver.pb.receivedByClinic.get(j) ?? 0);
     if (mockMode) c.lines[0] += ' · al inicio del registro';
-    showInfoCard(c.title, '#e6edf3', c.lines, () => openWard(j));
+    showInfoCard(c.title, '#e6edf3', c.lines, networkMode ? undefined : () => openWard(j));
   },
+  ...(networkMode ? { geo: geoMap(networkParams().network!.sites), onSite: (id: string) => showSiteCard(id) } : {}),
   },
   {
     cafe: { social, onMachine: openMachine },
@@ -291,6 +304,11 @@ $('panel').hidden = mockMode;
 if (mockMode) $('city-key').prepend('Registro inicial · ');
 if (primary)
   mountPanel($('panel'), primary, (mode) => {
+    // La red real cambia el número de sedes y el mapa: se carga en una página nueva.
+    if (mode === 'red' || networkMode) {
+      location.search = mode === 'red' ? '?red' : mode === 'validacion' ? '?modo=validacion' : '';
+      return;
+    }
     primary.load(...makePair(mode));
     tracked = undefined;
     pending = [];
@@ -302,7 +320,14 @@ if (primary)
     observeVisitors();
   });
 
-$('source').textContent = mockMode
+if (networkMode) {
+  $('osm-attrib').textContent = OSM_ATTRIBUTION;
+  $('key-net').hidden = false;
+  $('practice').parentElement!.hidden = true; // el ensayo usa las clínicas ficticias
+}
+$('source').textContent = networkMode
+  ? 'Red Valledupar: sedes reales (REPS), calles y rutas de OpenStreetMap. Escenario académico: la ocupación es simulada, no la disponibilidad real; no sirve para decidir traslados.'
+  : mockMode
   ? 'Modo mock: reproduce src/render/mock/events.json (3 h de eventos reales del motor, semilla 2026).'
   : 'Motor en vivo. Arrastra para mover la cámara y usa la rueda para acercar. EPS y clínicas ficticias · parámetros estimados con fines académicos.';
 $('legend').innerHTML =
@@ -408,7 +433,8 @@ function startRide(amb: string) {
       arrived: false,
       name: driver.pb.figures.get(tr.patientId)?.name ?? tr.patientId,
     };
-    driver.speed = 60;
+    // Red real: los viajes duran 1–6 min simulados; a ×6 se ven 10–60 s en pantalla.
+    driver.speed = networkMode ? 6 : 60;
   }
   ward.close();
   city.followedAmbulance = amb;
@@ -481,6 +507,22 @@ function showCard(e: SimEvent): void {
   showInfoCard(c.title, `#${TRIAGE_COLOR[c.level].toString(16).padStart(6, '0')}`, c.lines);
 }
 /** Tarjeta sobre la escena (recorrido de un paciente o clínica del mapa). Solo textContent. */
+/** T25: ficha de una sede real que no entra a la simulación (hechos documentados y por qué no se simula). */
+function showSiteCard(id: string): void {
+  const s = SITES.find((x) => x.id === id)!;
+  const facts = Object.entries(s.capacity)
+    .filter(([, f]) => f)
+    .map(([k, f]) => `${k}: ${f!.value}${f!.note ? ' (' + f!.note + ')' : ''} · ${f!.source}`);
+  showInfoCard(s.name, '#d7ddd1', [
+    s.address + ' · ' + (s.ownership === 'publica' ? 'pública' : 'privada'),
+    s.role,
+    s.emergency ? 'No se simula: sin camas documentadas en las fuentes revisadas (no se inventan).' : 'No se simula: no recibe urgencias.',
+    'Servicios: ' + s.services.join(', '),
+    ...(facts.length ? ['Capacidad documentada:', ...facts] : ['Capacidad documentada: ninguna cifra en el informe.']),
+    ...s.notes,
+    'Ejemplo, infarto con posible angioplastia: ' + RECEPTION_LABEL[reception('iam', s.id).level] + '.',
+  ]);
+}
 function showInfoCard(title: string, color: string, lines: string[], enter?: () => void): void {
   const b = document.createElement('b');
   b.textContent = title;
@@ -519,9 +561,10 @@ setInterval(() => {
   $('pause').textContent = driver.paused ? 'Continuar' : 'Pausa';
   $('clock').textContent = fmtClock(driver.pb.t);
   $('n-patients').textContent = String(driver.pb.figures.size);
-  $('map-heading').textContent = scene.inCity ? 'Red de clínicas' : 'Plano del hospital';
+  $('map-heading').textContent = scene.inCity ? (networkMode ? 'Red hospitalaria de Valledupar' : 'Red de clínicas') : 'Plano del hospital';
   $('legend').hidden = scene.inCity;
   $('city-key').hidden = !scene.inCity;
+  $('osm-attrib').hidden = !(networkMode && scene.inCity);
   const camera = ward.index !== undefined ? clinicScene : scene.inCity ? city : scene;
   const zoom = camera?.cameras?.main?.zoom;
   button('minus').disabled = !camera || zoom === undefined || zoom <= camera.minZoom + 1e-6;
@@ -571,7 +614,21 @@ setInterval(() => {
   $('trip-strip').hidden = !practice && !ride && !first;
   $('trip-label').textContent = practice ? 'Traslado de demostración' : 'Remisión de la corrida';
   button('ride').hidden = !tr;
-  button('enter-destination').hidden = !ride?.arrived;
+  button('enter-destination').hidden = !ride?.arrived || networkMode;
+  const amb = ride && !ride.arrived ? ride.amb : first?.[0];
+  const w = amb ? why.get(amb) : undefined;
+  $('trip-why').hidden = !w?.reason;
+  if (w?.reason && $('trip-why').dataset.amb !== amb) {
+    // Resumen en una línea; la evaluación de cada sede se despliega a pedido.
+    $('trip-why').dataset.amb = amb;
+    const details = document.createElement('details');
+    const summary = document.createElement('summary');
+    summary.textContent = `${w.condition} · ${w.reason} · otras ${w.discarded?.length ?? 0} sedes evaluadas`;
+    const list = document.createElement('ul');
+    list.replaceChildren(...(w.discarded ?? []).map((d) => Object.assign(document.createElement('li'), { textContent: `${d.site}: ${d.reason}` })));
+    details.replaceChildren(summary, list);
+    $('trip-why').replaceChildren(details);
+  }
   button('repeat').hidden = !practice || !ride?.arrived;
   if (tr)
     $('trip-state').textContent =
@@ -585,7 +642,9 @@ setInterval(() => {
   $('following').textContent = ward.index !== undefined
     ? 'Arrastra para recorrer la clínica; haz clic en una máquina de la cafetería para comprar con Mi acompañante.'
     : scene.inCity
-    ? 'Selecciona una clínica para consultar sus camas y convenios, o el hospital para entrar.'
+    ? networkMode
+      ? 'Selecciona una sede para ver su ficha, o el hospital de origen para entrar. La ruta azul es el traslado en curso.'
+      : 'Selecciona una clínica para consultar sus camas y convenios, o el hospital para entrar.'
     : f
       ? `Siguiendo a ${f.name} (anillo amarillo). Arrastra la escena o haz clic en el piso para soltar.`
       : 'Haz clic sobre un paciente para seguirlo con la cámara.';

@@ -65,5 +65,8 @@ export function chooseDestination(condition: ConditionId, adult: boolean, origin
   const best = pick('AD') ?? pick('C');
   if (!best) return { evaluated };
   best.reason = `${best.level === 'C' ? 'sin atención definitiva con cupo; ' : ''}${best.reason}; ruta más corta entre las elegibles (${best.minutes!.toFixed(1)} min)`;
+  for (const e of evaluated)
+    if (e.ok && e !== best)
+      e.reason = e.level === 'C' && best.level === 'AD' ? 'condicionada: se prefiere una sede con atención definitiva y cupo' : `elegible, pero su ruta es más larga (${e.minutes!.toFixed(1)} min)`;
   return { chosen: { ...best, clinic: state[best.site]!.clinic! }, evaluated };
 }
