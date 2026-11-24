@@ -52,7 +52,13 @@ export class CityScene extends Phaser.Scene {
   private manualCamera = false;
   followedAmbulance?: string;
   get minZoom(): number { return this.overview * .75; }
-  get maxZoom(): number { return this.overview * (this.o.geo ? 10 : 3); }
+  get maxZoom(): number {
+    if (!this.o.geo) return this.overview * 3;
+    // Satélite de 10 m: más allá de ~2 píxeles de pantalla por píxel de imagen solo se ven bloques borrosos.
+    const t = this.o.geo.tiles[0];
+    const sat = this.style === 'satelite' && t ? 2 / ((t.x1 - t.x0) / 256) : Infinity;
+    return Math.max(this.overview, Math.min(this.overview * 10, sat));
+  }
   /** mundo → pantalla: proyección isométrica del barrio, o el plano real tal cual */
   private screen = (v: Vec): Vec => (this.o.geo ? v : iso(v));
   private routeGfx?: Phaser.GameObjects.Graphics;
@@ -158,6 +164,8 @@ export class CityScene extends Phaser.Scene {
   /** Cambia la vista del mapa real. El satélite se carga la primera vez (teselas locales, sin internet). */
   setStyle(style: MapStyle): void {
     this.style = style;
+    const cam = this.cameras?.main;
+    if (cam && cam.zoom > this.maxZoom) cam.setZoom(this.maxZoom);
     const L = this.layers;
     const m = this.o.geo;
     if (!L || !m) return;
@@ -171,6 +179,8 @@ export class CityScene extends Phaser.Scene {
     L.sat = [];
     for (const t of m.tiles) this.load.image(t.key, t.url);
     this.load.once('complete', () => {
+      // Filtro lineal (el juego usa pixelArt: sin esto la imagen se ve en bloques al ampliar).
+      for (const t of m.tiles) if (this.textures.exists(t.key)) this.textures.get(t.key).setFilter(Phaser.Textures.FilterMode.LINEAR);
       L.sat = m.tiles.filter((t) => this.textures.exists(t.key)).map((t) =>
         this.add.image(t.x0, t.y0, t.key).setOrigin(0).setDisplaySize(t.x1 - t.x0, t.y1 - t.y0).setDepth(1).setVisible(this.style === 'satelite'),
       );

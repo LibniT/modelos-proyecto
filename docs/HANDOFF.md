@@ -284,3 +284,9 @@ Verificado: 126 pruebas, TypeScript, build; navegador (dev): vistas Mapa/Satéli
 A medias: capturas de la red.
 Siguiente paso: la autora prueba F/Esc en su navegador y en el monitor; capturas para el póster.
 Preguntas para la autora: ninguna.
+
+## 2026-11-24 · Claude · feat/T25-red-valledupar (F6, ajuste del satélite)
+Hecho: la autora vio el satélite en bloques al ampliar (y confirmó que F y Esc funcionan). Las teselas ahora usan filtro lineal y, en la vista «Satélite», `maxZoom` se limita a ~2 píxeles de pantalla por píxel de imagen (0,21 con la imagen de 10 m); al cambiar a satélite con más zoom, la cámara se aleja hasta ese límite. «Mapa» sigue acercando hasta ×10. Búsqueda de imagen de alta resolución con licencia para uso sin conexión: OpenAerialMap sin cobertura en Valledupar; IGAC (CC BY 4.0) sin ortoimagen publicada encontrada.
+A medias: nada.
+Siguiente paso: si la autora consigue una ortoimagen del IGAC (Colombia en Mapas) de Valledupar, se convierte a teselas con el mismo esquema de `public/satelite/`.
+Preguntas para la autora: ninguna.
