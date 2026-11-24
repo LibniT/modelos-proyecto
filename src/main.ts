@@ -35,15 +35,19 @@ import './ui/expo.css';
 import './ui/tour.css';
 import './ui/city.css';
 import { mountPrehospital, type PrehospitalUi } from './ui/prehospital-panel';
+import { mountSitePanel } from './ui/site-panel';
+import { POOLS } from './model/params';
+import { TRAFFIC_LABEL } from './model/valledupar/router';
+import rutas from './model/valledupar/rutas.json';
 
 const app = document.getElementById('app')!;
 app.innerHTML = `
 <header class="mast"><div class="mast-inner">
   <h1><span class="brand-cross" aria-hidden="true">✚</span>SimUrgencias</h1>
   <nav aria-label="Vistas del simulador" role="tablist">
-    <button role="tab" data-tab="scene" aria-selected="true">Escena</button>
-    <button role="tab" data-tab="graphs" aria-selected="false">Gráficas en vivo</button>
-    <button role="tab" data-tab="sim" aria-selected="false">Motor (texto)</button>
+    <button role="tab" data-tab="scene" data-view="city" aria-selected="false">Ciudad</button>
+    <button role="tab" data-tab="scene" data-view="hospital" aria-selected="true">Hospital</button>
+    <button role="tab" data-tab="graphs" aria-selected="false">Estadísticas</button>
     <button role="tab" data-tab="val" aria-selected="false">Validación</button>
   </nav>
 </div></header>
@@ -68,15 +72,17 @@ app.innerHTML = `
         <div><strong>Mi paciente</strong><span id="visitor-state" role="status">Crea un visitante para seguir su recorrido.</span></div>
         <div><label>Destino del ensayo <select id="destination"></select></label><button id="practice">Demostrar traslado con mi paciente</button></div>
       </section>
-      <section class="trip-strip" id="trip-strip" hidden><div><strong id="trip-label"></strong><span id="trip-state"></span></div><div id="trip-why" hidden><ol id="trip-steps" class="steps"></ol><details id="trip-eval"><summary></summary><ul></ul></details></div><div><button id="ride">Seguir ambulancia</button><button id="enter-destination" hidden>Entrar a la clínica</button><button id="repeat" hidden>Repetir demostración</button></div></section>
+      <section class="trip-strip" id="trip-strip" hidden><div><strong id="trip-label"></strong><select id="trip-pick" aria-label="Remisión a mostrar" hidden></select><span id="trip-state"></span></div><div id="trip-why" hidden><ol id="trip-steps" class="steps"></ol><details id="trip-eval"><summary></summary><ul></ul></details></div><div><button id="ride">Seguir ambulancia</button><button id="enter-destination" hidden>Entrar a la clínica</button><button id="repeat" hidden>Repetir demostración</button></div></section>
       <div class="map-card">
         <div class="map-head"><div><span class="map-symbol" aria-hidden="true">◇</span><b id="map-heading">Plano del hospital</b></div>
-          <div class="view-group" role="group" aria-label="Vista y cámara"><span id="cafe-group" role="group" aria-label="Cafetería"><button id="buy-drink">Máquina de refrescos</button><button id="buy-snack">Máquina de papas</button></span><button id="view">Ver ciudad</button><button id="minus" aria-label="Alejar">−</button><button id="plus" aria-label="Acercar">+</button><button id="fit">Ver todo</button><select id="map-focus" aria-label="Resaltar sedes por condición" hidden><option value="">Todas las sedes</option></select><select id="map-style" aria-label="Vista del mapa" hidden><option value="mapa">Mapa</option><option value="satelite">Satélite</option><option value="simple">Solo calles</option></select><button id="fullscreen" title="Tecla F">Pantalla completa</button></div>
+          <div class="view-group" role="group" aria-label="Vista y cámara"><input id="site-search" list="site-list" placeholder="Buscar institución" aria-label="Buscar institución" hidden autocomplete="off"><datalist id="site-list"></datalist><span id="cafe-group" role="group" aria-label="Cafetería"><button id="buy-drink">Máquina de refrescos</button><button id="buy-snack">Máquina de papas</button></span><button id="view">Ver ciudad</button><button id="minus" aria-label="Alejar">−</button><button id="plus" aria-label="Acercar">+</button><button id="fit">Ver todo</button><select id="map-focus" aria-label="Resaltar sedes por condición" hidden><option value="">Todas las sedes</option></select><select id="map-style" aria-label="Vista del mapa" hidden><option value="mapa">Mapa</option><option value="satelite">Satélite</option><option value="simple">Solo calles</option></select><button id="fullscreen" title="Tecla F">Pantalla completa</button></div>
         </div>
         <div class="canvas-wrap">
           <div id="scene"></div><section id="ward" hidden></section><section id="vending" hidden></section><div id="tip" hidden></div>
           <div id="card" role="dialog" aria-label="Información de la simulación" hidden></div>
           <aside id="side" class="side" aria-label="Paciente en el mapa" hidden></aside>
+          <aside id="site-side" class="side right" aria-label="Ficha de la institución" hidden></aside>
+          <div id="map-chips" class="chips" aria-live="polite" hidden></div>
           <button id="doll" class="doll" type="button" hidden aria-label="Paciente: arrástralo al mapa, o haz clic y luego clic en el mapa"><svg viewBox="0 0 44 56" width="44" height="56" aria-hidden="true"><ellipse cx="22" cy="52" rx="13" ry="3.5" fill="#193f40" opacity=".25"/><circle cx="22" cy="12" r="9" fill="#f2c9a0"/><path d="M13 9a9 9 0 0 1 18 0c-3-2-6-3-9-3s-6 1-9 3z" fill="#3b2a20"/><rect x="11" y="22" width="22" height="20" rx="7" fill="#c8442f"/><rect x="20" y="26" width="4" height="12" fill="#fff"/><rect x="16" y="30" width="12" height="4" fill="#fff"/><rect x="14" y="40" width="6" height="11" rx="2" fill="#234e51"/><rect x="24" y="40" width="6" height="11" rx="2" fill="#234e51"/></svg><span>Arrástrame al mapa</span></button>
           <div id="subs" aria-live="polite" hidden></div>
           <div id="demo-banner" hidden>Demostración · mueve el puntero para tomar el control</div>
@@ -88,30 +94,29 @@ app.innerHTML = `
       <aside id="panel"></aside>
     </div>
   </section>
-  <section id="tab-sim" hidden><pre id="state"></pre></section>
-  <section id="tab-graphs" hidden></section>
+  <section id="tab-graphs" hidden><div id="graphs"></div><details class="engine-text"><summary>Estado del motor (texto)</summary><pre id="state"></pre></details></section>
   <section id="tab-val" hidden></section>
 </main>`;
 
 const $ = (id: string) => document.getElementById(id)!;
 
 mountValidationPanel($('tab-val'));
+/** T32: vistas Ciudad · Hospital · Estadísticas · Validación (Ciudad y Hospital comparten la escena). */
+function showTab(tab: string): void {
+  for (const t of ['scene', 'graphs', 'val']) $(`tab-${t}`).hidden = tab !== t;
+  $('controls').hidden = tab === 'val';
+  $('view-title').textContent = tab === 'val' ? 'Validación del modelo' : tab === 'graphs' ? 'Estadísticas en vivo' : 'Servicio de urgencias';
+}
+const showScene = () => showTab('scene');
 document.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach(
   (b) =>
     (b.onclick = () => {
-      document.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach((o) => o.setAttribute('aria-selected', String(o === b)));
-      for (const t of ['scene', 'sim', 'graphs', 'val']) $(`tab-${t}`).hidden = b.dataset.tab !== t;
-      $('controls').hidden = b.dataset.tab === 'val';
-      $('view-title').textContent =
-        b.dataset.tab === 'val'
-          ? 'Validación del modelo'
-          : b.dataset.tab === 'graphs'
-            ? 'Gráficas en vivo'
-            : b.dataset.tab === 'sim'
-              ? 'Estado del motor'
-              : 'Servicio de urgencias';
+      showTab(b.dataset.tab!);
+      if (b.dataset.view) wantView = b.dataset.view as 'city' | 'hospital';
     }),
 );
+/** vista pedida desde la barra; el ciclo de 200 ms la aplica cuando la escena está lista */
+let wantView: 'city' | 'hospital' | undefined;
 
 const query = new URLSearchParams(location.search);
 const mockMode = query.has('mock');
@@ -135,8 +140,18 @@ function makePair(mode: Mode): [EmergencyDepartment, EmergencyDepartment] {
 const primary = mockMode ? undefined : new LiveDriver(...makePair(query.get('modo') === 'validacion' ? 'validacion' : 'realista'));
 /** T26: remisiones de la corrida principal en 4 pasos (todo sale de eventos del motor). */
 const referrals = new ReferralLog();
+/** T32: remisión fijada por el visitante en la franja y nombres de los remitidos (siguen después de salir) */
+let pinnedRef: string | undefined;
+const refNames = new Map<string, string>();
 /** T31: paciente colocado en el mapa (solo `?red`). */
 let pre: PrehospitalUi | undefined;
+/** T32: ficha de institución en pestañas (solo `?red`). */
+let sitePanel: ReturnType<typeof mountSitePanel> | undefined;
+let lastSiteRefresh = -Infinity;
+function showSite(id: SiteId): void {
+  $('card').hidden = true;
+  sitePanel?.show(id);
+}
 if (networkMode) primary?.ed.onEvent((e) => referrals.onEvent(e));
 const hhmm = (t: number) => `${String(Math.floor((t % 1440) / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 const original = primary ?? new MockDriver();
@@ -195,7 +210,7 @@ const ward: ClinicInterior = new ClinicInterior(
   undefined,
   (j) => social().plan(j),
 );
-const updateGraphs = primary ? mountLiveCharts($('tab-graphs')) : undefined;
+const updateGraphs = primary ? mountLiveCharts($('graphs')) : undefined;
 document.querySelector<HTMLButtonElement>('[data-tab="graphs"]')!.hidden = mockMode;
 $('visit-strip').hidden = mockMode;
 // T08: tooltips con el estado actual del motor (solo en vivo; el mock no tiene snapshot).
@@ -256,6 +271,7 @@ const {
     if (mockMode) c.lines[0] += ' · al inicio del registro';
     // T26: en la red real, debajo de la ocupación simulada va la ficha documentada de la sede.
     const site = networkMode ? p.network?.sites[j] : undefined;
+    if (site && sitePanel) return showSite(site); // T32: ficha en pestañas
     // T27: ocupación simulada de cada tipo de cama documentado de la sede (UCI, quemados…).
     const units = site
       ? p.network!.sites.flatMap((id, k) => (id === site && k !== j ? [`${p.clinics[k].name.split(' · ')[1]}: ${clinicState()[k].occupied} de ${p.clinics[k].beds} ocupadas`] : []))
@@ -265,7 +281,7 @@ const {
   ...(networkMode
     ? {
         geo: geoMap(networkParams().network!.sites),
-        onSite: (id: string) => showSiteCard(id),
+        onSite: (id: string) => showSite(id as SiteId),
         prehospital: () => pre?.mapState() ?? { cases: [] },
         onMapPick: (x: number, y: number) => pre?.onPick(x, y),
       }
@@ -311,6 +327,28 @@ if (networkMode && primary) {
     },
   });
   primary.ed.onEvent((e) => pre!.log.onEvent(e));
+  const net = primary.ed.params.network!;
+  sitePanel = mountSitePanel({
+    root: $('site-side'),
+    units: (id) =>
+      net.sites.flatMap((s, k) =>
+        s === id ? [{ label: POOLS.find((x) => x.id === net.pools[k])!.label.replace(/^./, (c) => c.toUpperCase()), occupied: clinicState()[k].occupied, beds: clinicParams()[k].beds, j: k, general: net.pools[k] === 'general' }] : [],
+      ),
+    patient: () => pre?.point(),
+    traffic: net.traffic,
+    onEnter: (j) => openWard(j),
+    onClose: () => {},
+  });
+  const located = rutas.sites as Record<string, { x: number; y: number }>;
+  $('site-list').replaceChildren(...SITES.filter((s) => located[s.id]).map((s) => new Option(s.name)));
+  $('site-search').onchange = (e) => {
+    const input = e.target as HTMLInputElement;
+    const s = SITES.find((x) => x.name === input.value);
+    if (!s) return;
+    city?.lookAt(located[s.id].x, located[s.id].y);
+    showSite(s.id);
+    input.value = '';
+  };
 }
 function openWard(j: number) {
   $('card').hidden = true;
@@ -449,7 +487,7 @@ new DemoMode({
     !$('side').hidden ||
     !!document.querySelector('dialog[open]'),
   onStart: () => {
-    document.querySelector<HTMLButtonElement>('[data-tab="scene"]')!.click();
+    showScene();
     if (scene.inCity) city?.goHospital(); // la demo cuenta la historia dentro del hospital
   },
 });
@@ -489,7 +527,7 @@ if (primary)
   );
 $('follow').hidden = mockMode;
 $('follow').onclick = () => {
-  document.querySelector<HTMLButtonElement>('[data-tab=scene]')!.click();
+  showScene();
   const id = practice?.patientId ?? tracked?.id;
   if (!id) return;
   const transfer = Array.from(driver.pb.transfers).find(([, tr]) => tr.patientId === id);
@@ -589,10 +627,6 @@ function showCard(e: SimEvent): void {
   showInfoCard(c.title, `#${TRIAGE_COLOR[c.level].toString(16).padStart(6, '0')}`, c.lines);
 }
 /** Tarjeta sobre la escena (recorrido de un paciente o clínica del mapa). Solo textContent. */
-/** T25: ficha de una sede real que no entra a la simulación (hechos documentados y por qué no se simula). */
-function showSiteCard(id: string): void {
-  showInfoCard(SITES.find((x) => x.id === id)!.name, '#d7ddd1', siteLines(id as SiteId, false));
-}
 function showInfoCard(title: string, color: string, lines: string[], enter?: () => void): void {
   const b = document.createElement('b');
   b.textContent = title;
@@ -610,6 +644,7 @@ function showInfoCard(title: string, color: string, lines: string[], enter?: () 
 }
 $('mass').onclick = () => live?.massCasualty(Number(($('mass-n') as HTMLSelectElement).value));
 const updateAccident = mountAccidentStatus($('recovery'), fmtClock);
+($('trip-pick') as HTMLSelectElement).onchange = (e) => (pinnedRef = (e.target as HTMLSelectElement).value || undefined);
 
 function fmtClock(t: number): string {
   const day = Math.floor(t / 1440) + 1;
@@ -627,6 +662,39 @@ setInterval(() => {
     else city?.goHospital();
   }
   markSpeed(); // la demo cambia y restaura la velocidad
+  if (wantView && !$('tab-scene').hidden) {
+    if (ward.index !== undefined) ward.close(wantView === 'city' ? 'city' : 'hospital');
+    else if (wantView === 'city' && !scene.inCity) scene.goCity();
+    else if (wantView === 'hospital' && scene.inCity) city?.goHospital();
+    wantView = undefined;
+  }
+  const onScene = !$('tab-scene').hidden;
+  document.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach((b) =>
+    b.setAttribute('aria-selected', String(b.dataset.tab === 'scene' ? onScene && (b.dataset.view === 'city') === scene.inCity : !$(`tab-${b.dataset.tab}`).hidden)),
+  );
+  const cityMode = networkMode && scene.inCity && ward.index === undefined && !practice;
+  document.body.classList.toggle('city-mode', cityMode);
+  $('site-search').hidden = $('map-chips').hidden = !cityMode;
+  $('site-side').hidden = !(cityMode && sitePanel?.current());
+  if (cityMode && live) {
+    const a = live.ed.prehospitalAmbulances;
+    const cases = pre?.mapState().cases ?? [];
+    const active = cases.filter((c) => !c.outcome || (c.arrived !== undefined && c.arrived > driver.pb.t)).length;
+    $('map-chips').replaceChildren(
+      ...[
+        a ? `Ambulancias prehospitalarias: ${a.busy} de ${a.capacity} en servicio${a.queue ? ` · ${a.queue} en espera` : ''}` : '',
+        `Ambulancias de remisión: ${driver.pb.ambulancesAway.size} de ${live.ed.params.capacity.ambulances} fuera`,
+        `Pacientes del mapa: ${active} activos de ${cases.length}`,
+        TRAFFIC_LABEL[live.ed.params.network!.traffic] + ' (supuesto)',
+      ]
+        .filter(Boolean)
+        .map((t) => Object.assign(document.createElement('span'), { textContent: t })),
+    );
+    if (performance.now() - lastSiteRefresh > 1000) {
+      lastSiteRefresh = performance.now();
+      sitePanel?.refresh();
+    }
+  }
   pre?.update();
   $('doll').hidden = !(pre && scene.inCity && ward.index === undefined && !practice);
   $('side').hidden = !(pre?.open() && scene.inCity && ward.index === undefined && !practice);
@@ -688,12 +756,26 @@ setInterval(() => {
   const first = pb.transfers.entries().next().value;
   const tr = ride && !ride.arrived ? pb.transfers.get(ride.amb) : first?.[1];
   $('trip-strip').hidden = !practice && !ride && !first && !(networkMode && referrals.latest);
-  $('trip-label').textContent = practice ? 'Traslado de demostración' : 'Remisión de la corrida';
+  $('trip-label').textContent = practice ? 'Traslado de demostración' : networkMode ? 'Remisión desde el hospital de origen' : 'Remisión de la corrida';
   button('ride').hidden = !tr;
   button('enter-destination').hidden = !ride?.arrived;
   // T26: la remisión que se sigue, la del traslado en curso o la última que empezó.
   referrals.tick(pb.t, pb.ambulancesAway);
-  const refId = (ride && !ride.arrived ? ride.patientId : undefined) ?? first?.[1].patientId ?? referrals.latest;
+  // T32: el visitante puede fijar una remisión (activa o del historial); si no, la que se sigue, la del traslado
+  // en curso o la última que empezó. Antes la franja saltaba sola al paciente más reciente.
+  for (const id of referrals.all.keys()) if (!refNames.has(id)) { const f = pb.figures.get(id); if (f) refNames.set(id, f.name); }
+  const pick = $('trip-pick') as HTMLSelectElement;
+  pick.hidden = practice !== undefined || !networkMode || referrals.all.size === 0;
+  const pickKey = [...referrals.all.values()].map((r) => r.id + (r.arrive ?? '') + (r.out ?? '')).join();
+  if (pick.dataset.key !== pickKey && document.activeElement !== pick) {
+    pick.dataset.key = pickKey;
+    pick.replaceChildren(
+      new Option('La más reciente (automático)', ''),
+      ...[...referrals.all.values()].reverse().map((r) => new Option(`${refNames.get(r.id) ?? r.id} (${r.id}) · ${r.out !== undefined ? 'fuera de la red' : r.arrive !== undefined ? 'recibida' : 'en curso'}`, r.id, false, r.id === pinnedRef)),
+    );
+  }
+  if (pinnedRef && !referrals.all.has(pinnedRef)) pinnedRef = undefined;
+  const refId = pinnedRef ?? (ride && !ride.arrived ? ride.patientId : undefined) ?? first?.[1].patientId ?? referrals.latest;
   const ref = !practice && networkMode && refId ? referrals.all.get(refId) : undefined;
   $('trip-why').hidden = !ref;
   if (ref && live) {
@@ -720,7 +802,7 @@ setInterval(() => {
       $('trip-eval').querySelector('ul')!.replaceChildren(...evals.map((d) => Object.assign(document.createElement('li'), { textContent: `${d.site}: ${d.reason}` })));
     }
     $('trip-eval').hidden = !evals.length;
-    if (!tr && !ride) $('trip-state').textContent = (pb.figures.get(ref.id)?.name ?? ref.id) + (ref.arrive !== undefined ? ' · remisión completada' : ref.out !== undefined ? ' · remitido fuera de la red' : ' · remisión en curso');
+    if (!tr && !ride) $('trip-state').textContent = (refNames.get(ref.id) ?? ref.id) + ` (${ref.id})` + (ref.arrive !== undefined ? ' · remisión completada' : ref.out !== undefined ? ' · remitido fuera de la red' : ' · remisión en curso');
   }
   button('repeat').hidden = !practice || !ride?.arrived;
   if (tr)
@@ -763,7 +845,7 @@ setInterval(() => {
   updateAccident(live);
   // El motor rechaza el accidente masivo y los visitantes en validación (cambiarían el proceso de llegadas).
   ($('mass') as HTMLButtonElement).disabled = ($('create') as HTMLButtonElement).disabled = !!practice || ed.params.mode === 'validacion';
-  if ($('tab-sim').hidden) return;
+  if ($('tab-graphs').hidden) return;
   const s = snap;
   const m = ed.metrics();
   const byState = new Map<string, number>();

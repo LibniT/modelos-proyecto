@@ -69,7 +69,7 @@ Estados: `pendiente` · `en curso (agente, fecha)` · `hecha` · `bloqueada (por
 | T29 | **Fase 2 · EPS reales**: EPS de Valledupar con estado y fuente, matriz EPS–IPS con estado de la relación, normativa de urgencias | Claude | `src/model/valledupar`, `docs/` | hecha (Claude, 24 nov) |
 | T30 | **Fase 2 · paciente prehospitalario en el motor**: `injectPrehospital` (despacho, escena, traslado, ingreso), grupo de ambulancias prehospitalario, selector con rutas dinámicas, EPS (≤ 15 min extra para estables; críticos sin EPS) y 3 políticas | Claude | `src/model`, `tests` | hecha (Claude, 24 nov) |
 | T31 | **Fase 2 · paciente en el mapa**: muñeco arrastrable + clic, formulario, alternativas, ambulancia con geometría dinámica | Claude | `src/render/map`, `src/ui`, `src/main.ts` | hecha (Claude, 24 nov) |
-| T32 | **Fase 2 · rediseño**: vista Ciudad con el mapa protagonista, ficha con pestañas, seguimiento del paciente | Claude | `src/ui`, `src/main.ts`, CSS | pendiente |
+| T32 | **Fase 2 · rediseño**: vista Ciudad con el mapa protagonista, ficha con pestañas, seguimiento del paciente | Claude | `src/ui`, `src/main.ts`, CSS | hecha (Claude, 24 nov) |
 | T33 | **Fase 2 · experimentos** A (políticas) y B (tráfico) con réplicas y CRN | Claude | `src/batch`, `tools/`, `docs/` | pendiente |
 | T34 | **Fase 2 · P1 restante**: historial completo, perfil horario de tráfico, experimentos C/D | Claude | varias | pendiente |
 

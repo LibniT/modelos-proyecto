@@ -66,3 +66,55 @@
 .doll:active { cursor: grabbing }
 .doll.ghost { position: fixed; z-index: 1000; pointer-events: none; opacity: .9; right: auto; bottom: auto; transform: scale(1.08) }
 @media (max-width: 760px) { .side { top: auto; height: 62%; width: calc(100% - 24px) } .pre-form { grid-template-columns: 1fr } }
+
+/* ---------- T32: vista Ciudad con el mapa como protagonista ---------- */
+.heading { padding-block: 10px 12px }
+h2 { font-size: clamp(24px, 1.9vw, 36px) }
+body.city-mode .heading h2, body.city-mode .location { display: none }
+body.city-mode .heading { padding-block: 4px 8px }
+body.city-mode #visit-strip { display: none }
+body.city-mode .stage { grid-template-columns: minmax(0, 1fr) }
+body.city-mode #panel { display: none }
+body.city-mode #scene { height: clamp(460px, calc(100svh - 215px), 1100px) }
+body.city-mode .map-card { position: relative }
+body.city-mode .map-head {
+  position: absolute; z-index: 7; top: 12px; right: 12px; left: auto; border: 0; padding: 0; background: transparent;
+  max-width: calc(100% - 460px); justify-content: flex-end
+}
+body.city-mode .map-head > div:first-child { display: none }
+body.city-mode .view-group { flex-wrap: wrap; justify-content: flex-end; gap: 6px }
+body.city-mode .view-group > * { box-shadow: 0 2px 10px #16383d2a }
+body.city-mode .view-group button, body.city-mode .view-group select, body.city-mode #site-search {
+  border-radius: 99px; border-color: #d4dcd2; background: #fffdf8; padding: 7px 14px; font-size: 14.5px
+}
+body.city-mode #minus, body.city-mode #plus { width: 38px; padding: 7px 0; font-size: 18px }
+#site-search { width: 240px; border: 1px solid var(--line); padding: 6px 12px }
+.chips { position: absolute; z-index: 5; left: 12px; bottom: 12px; display: flex; flex-wrap: wrap; gap: 6px; max-width: calc(100% - 180px); pointer-events: none }
+.chips span { padding: 5px 11px; border-radius: 99px; background: #203e40e6; color: #fdf8ea; font-size: 13px; font-weight: 600 }
+body.city-mode .side:not(.right):not([hidden]) ~ .chips { left: 444px; max-width: calc(100% - 600px) }
+#trip-pick { margin: 0 8px; max-width: 320px }
+.side.right { left: auto; right: 12px; top: 112px; bottom: 100px; width: min(400px, calc(100% - 24px)) }
+body.city-mode #view { display: none }
+.side .status { font-weight: 650; margin: 0 0 8px } .side .status.on { color: var(--ok) } .side .status.off { color: #7b5a4a }
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid #dfe5dc; margin-bottom: 10px; overflow-x: auto }
+.tabs button { margin: 0; border: 0; border-radius: 8px 8px 0 0; background: transparent; padding: 7px 10px; font-size: 14px; color: var(--muted) }
+.tabs button[aria-selected=true] { color: var(--accent); box-shadow: inset 0 -3px var(--accent); background: #f1f7f2 }
+.tab-body h4 { margin: 12px 0 4px; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em }
+.fact { display: grid; grid-template-columns: 16px 140px 1fr; gap: 6px; padding: 6px 0; border-bottom: 1px solid #eef1eb; font-size: 14.5px }
+.fact .fl { color: var(--muted) } .fact .fv { font-weight: 600 }
+.mark { font-weight: 800; text-align: center } .mark.doc { color: var(--accent) } .mark.sim { color: #2f6fd6 } .mark.unk { color: #9a8f86 }
+.occ { margin: 8px 0; padding: 8px 10px; border-radius: 10px; background: var(--soft) }
+.occ small { color: var(--muted); font-weight: 600 }
+.unit { display: grid; grid-template-columns: 16px 1fr 90px auto; gap: 8px; align-items: center; padding: 4px 0; font-size: 14px }
+.unit .bar { height: 8px; border-radius: 99px; background: #d9e0d6; overflow: hidden } .unit .fill { display: block; height: 100% }
+.eps { display: grid; grid-template-columns: 16px 1fr; gap: 0 6px; padding: 7px 0; border-bottom: 1px solid #eef1eb }
+.eps small { grid-column: 2; color: #3c5453 } .eps small.note { color: var(--muted) }
+.plain { list-style: none; padding: 0; margin: 4px 0 } .plain li { padding: 3px 0 }
+.grp { font-size: 14px }
+.legend { font-size: 13px; color: var(--muted) }
+.engine-text { margin-top: 16px } .engine-text summary { cursor: pointer; font-weight: 700; color: #245e59; padding: 8px 0 }
+@media (max-width: 900px) {
+  body.city-mode .map-head { position: static; max-width: none; padding: 8px }
+  .side.right { top: auto; bottom: 12px; height: 60% }
+  body.city-mode .side:not(.right):not([hidden]) ~ .chips { display: none }
+}

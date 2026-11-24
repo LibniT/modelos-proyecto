@@ -3,6 +3,7 @@
  * ruta (con el método y si hay que verificarla), qué atiende según la matriz del informe y por qué se simula o no.
  */
 import rutas from '../model/valledupar/rutas.json';
+import { routesFromSite } from '../model/valledupar/router';
 import { CONDITION_LABEL, RECEPTION_MATRIX, reception, type ConditionId, type Reception } from '../model/valledupar/capabilities';
 import { SITES, SOURCES, type Capacity, type SiteId } from '../model/valledupar/sites';
 
@@ -32,7 +33,9 @@ const km = (m: number) => `${(m / 1000).toFixed(2).replace('.', ',')} km`;
 export function siteLines(id: SiteId, simulated: boolean): string[] {
   const s = SITES.find((x) => x.id === id)!;
   const geo = (rutas.sites as Record<string, { method: string; verify: boolean; note: string }>)[id];
-  const route = (rutas.routes as Record<string, { distanceM: number; straightM: number; minutes: number } | null>)[id];
+  const route = id === rutas.origin ? null : routesFromSite(rutas.origin)[id];
+  const here = (rutas.sites as Record<string, { x: number; y: number }>)[id];
+  const origin = (rutas.sites as Record<string, { x: number; y: number }>)[rutas.origin];
   const lines = [
     `${s.address} · ${s.ownership === 'publica' ? 'pública' : 'privada'}${s.repsCode ? ` · código REPS ${s.repsCode}` : ''}`,
     s.role,
@@ -42,7 +45,10 @@ export function siteLines(id: SiteId, simulated: boolean): string[] {
   lines.push(
     geo ? `Ubicación ${geo.verify ? 'APROXIMADA (verificar)' : 'verificada'}: ${geo.note}.` : 'Ubicación: no se pudo ubicar con OpenStreetMap; no aparece en el mapa.',
   );
-  if (route) lines.push(`Ruta vial desde el hospital de origen: ${km(route.distanceM)} (en línea recta ${km(route.straightM)}) · ${route.minutes.toFixed(1).replace('.', ',')} min a 30 km/h (supuesto).`);
+  if (route && here)
+    lines.push(
+      `Ruta vial desde el hospital de origen: ${km(route.meters)} (en línea recta ${km(Math.hypot(here.x - origin.x, here.y - origin.y))}) · ${route.minutes.toFixed(1).replace('.', ',')} min (velocidad por tipo de vía, tráfico fluido; supuesto).`,
+    );
   const facts = (Object.keys(CAPACITY_LABEL) as (keyof Capacity)[])
     .filter((k) => s.capacity[k])
     .map((k) => {

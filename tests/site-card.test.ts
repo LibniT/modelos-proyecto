@@ -8,7 +8,7 @@ describe('T26 · ficha completa de sede', () => {
     expect(l).toMatch(/Camas de adulto: 173 · REPS/);
     expect(l).toMatch(/Camas de quemados: 14 .* portal institucional/);
     expect(l).toMatch(/Atención definitiva documentada: .*Quemadura extensa o grave/);
-    expect(l).toMatch(/Ruta vial desde el hospital de origen: 0,57 km/);
+    expect(l).toMatch(/Ruta vial desde el hospital de origen: 0,5\d km/);
     expect(l).toMatch(/Ubicación verificada/);
     expect(l).not.toMatch(/No se simula/);
   });

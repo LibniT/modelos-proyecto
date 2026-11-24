@@ -22,6 +22,8 @@ export interface PrehospitalUi {
   update: () => void;
   /** el panel tiene algo que mostrar (formulario o seguimiento) */
   open: () => boolean;
+  /** punto del paciente que se está configurando o siguiendo (metros) */
+  point: () => { x: number; y: number } | undefined;
   log: CaseLog;
   /** ids de pacientes del mapa (para no confundirlos con los del creador de personaje) */
   ids: Set<string>;
@@ -296,6 +298,7 @@ export function mountPrehospital(o: Options): PrehospitalUi {
     ids,
     onPick,
     open: () => mode !== 'idle',
+    point: () => pending ?? (selected ? o.ed()?.prehospitalCases().find((c) => c.id === selected)?.point : undefined),
     mapState: () => {
       const ed = o.ed();
       const chosen = preview?.decision.chosen;

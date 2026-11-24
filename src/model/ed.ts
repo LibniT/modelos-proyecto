@@ -914,14 +914,15 @@ export class EmergencyDepartment {
     p.zone = 'ambulance_bay';
     this.sim.schedule(trip, () => {
       this.transfers++;
-      this.emit('TRANSFER_END', { p, resourceId: `amb-${ambId}`, to: `clinic_${j}` });
+      // Entrega del paciente (red) y regreso de la ambulancia vacía: se sortean aquí (cada flujo conserva su orden)
+      // para informar en el evento la hora exacta en que la ambulancia queda libre (T32, solo en la red).
+      const handover = this.net ? sample(this.params.network!.handover, this.net.handover) : 0;
+      const back = sample(cl.travelBack ?? cl.travel, this.r.ambulance);
+      this.emit('TRANSFER_END', { p, resourceId: `amb-${ambId}`, to: `clinic_${j}`, ...(this.net ? { data: { freeAt: this.sim.now + handover + back } } : {}) });
       p.zone = `clinic_${j}`;
       this.depart(p, 'remitido');
       // Estancia en la clínica (fuera del hospital, pero ocupa su cama).
       this.sim.schedule(sample(cl.los, this.r.observation), () => this.clinicRelease(j));
-      // Entrega del paciente (red) y regreso de la ambulancia vacía.
-      const handover = this.net ? sample(this.params.network!.handover, this.net.handover) : 0;
-      const back = sample(cl.travelBack ?? cl.travel, this.r.ambulance);
       this.sim.schedule(handover + back, () => this.ambulances.release(ambId));
     });
   }

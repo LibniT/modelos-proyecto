@@ -21,6 +21,8 @@ export interface Referral {
   trip?: number;
   arrive?: number;
   released?: number;
+  /** hora exacta en que la ambulancia queda libre (dato del motor en TRANSFER_END, escenario de red) */
+  freeAt?: number;
   /** salió fuera de la red sin destino elegible */
   out?: number;
 }
@@ -58,7 +60,10 @@ export class ReferralLog {
           discarded: d.discarded as Referral['discarded'],
           accepted: (d.acceptedAt as number | undefined) ?? e.t,
         });
-      } else if (e.type === 'TRANSFER_END') r.arrive = e.t;
+      } else if (e.type === 'TRANSFER_END') {
+        r.arrive = e.t;
+        if (typeof d.freeAt === 'number') r.freeAt = d.freeAt;
+      }
       else if (e.type === 'DEPARTURE' && r.depart === undefined) {
         const j = (d.journey ?? {}) as { clinic?: string; referralReason?: string; condition?: string };
         if (j.clinic === 'fuera de la red') Object.assign(r, { out: e.t, reason: j.referralReason, condition: j.condition });
@@ -66,9 +71,17 @@ export class ReferralLog {
     }
   }
 
-  /** La ambulancia vuelve a estar libre cuando deja de figurar como ocupada (entrega + regreso). */
+  /**
+   * La ambulancia vuelve a estar libre (entrega + regreso). Con el dato del motor (`freeAt`) la hora es exacta;
+   * sin él, se toma cuando deja de figurar como ocupada (precisión de un cuadro).
+   */
   tick(t: number, away: ReadonlySet<string>): void {
-    for (const r of this.all.values()) if (r.arrive !== undefined && r.released === undefined && r.amb && !away.has(r.amb)) r.released = t;
+    for (const r of this.all.values()) {
+      if (r.arrive === undefined || r.released !== undefined) continue;
+      if (r.freeAt !== undefined) {
+        if (t >= r.freeAt) r.released = r.freeAt;
+      } else if (r.amb && !away.has(r.amb)) r.released = t;
+    }
   }
 }
 
