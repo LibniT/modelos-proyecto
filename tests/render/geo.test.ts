@@ -13,7 +13,7 @@ describe('T25 · mapa real de Valledupar', () => {
     const origin = m.sites.find((s) => s.origin)!;
     p.network!.sites.forEach((id, j) => {
       const s = m.sites.find((x) => x.id === id)!;
-      expect(s.clinic).toBe(j);
+      expect(s.clinic).toBe(p.network!.sites.indexOf(id)); // la primera unidad de la sede (T27: una por tipo de cama)
       const r = m.routes[j];
       expect(r.length).toBeGreaterThan(1);
       expect(Math.hypot(r[0].x - origin.at.x, r[0].y - origin.at.y)).toBeLessThan(150);

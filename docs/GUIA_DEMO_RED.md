@@ -23,9 +23,11 @@ Comprobado el 24 nov: `npm run preview` sin conexión, con recarga, solo carga a
 7. **Validación.** Pestaña **Validación**: el modelo original pasa 16 de 16 comparaciones con la teoría de colas. «La red real es un escenario aparte; el modelo validado no cambió.»
 
 ## Cifras para conversar (corrida de 30 días, semilla 1)
-- 464 traslados en 30 días: Instituto Cardiovascular 274, Alta Complejidad 178, OHI 11, Clínica del Cesar 1. Las sedes del centro están a 0,4–3 km del origen (1–6 min de viaje).
-- 0,36 % de las llegadas se remiten fuera de la red: crisis psiquiátricas, porque la única sede con atención definitiva (San Lucas) no tiene capacidad documentada.
+- 440 traslados en 30 días, todos a camas de UCI o de quemados (cada sede simula por separado cada tipo de cama documentado). Las sedes del centro están a 0,4–3 km del origen (1–6 min de viaje).
+- 0,45 % de las llegadas se remiten fuera de la red: crisis psiquiátricas, porque la única sede con atención definitiva (San Lucas) no tiene capacidad documentada.
 - La única unidad de quemados documentada es la de Alta Complejidad; el modelo nunca envía una quemadura grave a otra sede.
+
+- **Experimento con réplicas** (`docs/EXPERIMENTO_RED.md`): más ambulancias no reducen la espera para remitir (se usan el 10 % del tiempo); sí la reducen bajar la ocupación de las sedes (−15 min) y la demora del CRUE (60 min la sube 12 min).
 
 ## Lo que hay que decir si preguntan
 - **Es académico.** La ocupación y la aceptación del destino son simuladas con supuestos explícitos (`docs/RED_VALLEDUPAR.md`); no sirve para decidir traslados reales. En la vida real decide el CRUE.

@@ -2,7 +2,7 @@ import type { Dist } from '../engine/distributions';
 import type { TriageLevel } from '../engine/events';
 import { CLINICS, EPS_LIST, type ClinicParams, type EpsParams } from './catalog';
 import type { ConditionId } from './valledupar/capabilities';
-import { SITES, type SiteId } from './valledupar/sites';
+import { SITES, type Capacity, type SiteId } from './valledupar/sites';
 import rutas from './valledupar/rutas.json';
 
 export type Mode = 'validacion' | 'realista';
@@ -53,8 +53,14 @@ export interface Params {
 /** Supuestos del escenario de red (docs/RED_VALLEDUPAR.md). Los hechos están en src/model/valledupar. */
 export interface NetworkParams {
   origin: SiteId;
-  /** sede de cada clínica simulada: clinics[j] ↔ sites[j] */
+  /**
+   * sede y tipo de cama de cada unidad simulada: clinics[j] ↔ (sites[j], pools[j]). Una sede tiene una unidad por
+   * cada tipo de cama documentado (T27), así que una sede puede aparecer varias veces.
+   */
   sites: SiteId[];
+  pools: PoolId[];
+  /** probabilidad de que la sede acepte el traslado en una coordinación, según su recepción (SUPUESTO, T27) */
+  acceptance: { AD: number; C: number };
   /** condición clínica de quien se remite (SUPUESTO) */
   conditionMix: { id: ConditionId; p: number }[];
   /** búsqueda y aceptación del destino (CRUE), antes de reservar cama y ambulancia */
@@ -121,26 +127,66 @@ export function realisticParams(): Params {
 export const NETWORK_OCCUPANCY = 0.9;
 
 /**
- * Escenario RED VALLEDUPAR: el realista + destinos reales. Entra a la simulación cada sede con urgencias,
- * ruta vial y camas de adulto DOCUMENTADAS (REPS); su demanda propia se fija para una ocupación media de
- * NETWORK_OCCUPANCY con estancia de 48 h. Las sedes sin capacidad documentada no se simulan y el selector
- * las descarta con ese motivo. No hay restricción EPS (la urgencia no se condiciona a convenio).
+ * T27 — Tipos de cama de la red. Cada sede simula por separado cada tipo con capacidad DOCUMENTADA (sin cifra, no
+ * se simula ese tipo: el selector la descarta con ese motivo). Estancias medias: SUPUESTOS.
+ */
+export type PoolId = 'general' | 'uci-adulto' | 'uci-pediatrica' | 'uci-neonatal' | 'quemados';
+export const POOLS: { id: PoolId; field: keyof Capacity; label: string; los: number }[] = [
+  { id: 'general', field: 'adultBeds', label: 'camas de adulto', los: 2 * 1440 },
+  { id: 'uci-adulto', field: 'icuAdult', label: 'camas de UCI adulto', los: 5 * 1440 },
+  { id: 'uci-pediatrica', field: 'icuPediatric', label: 'camas de UCI pediátrica', los: 5 * 1440 },
+  { id: 'uci-neonatal', field: 'icuNeonatal', label: 'incubadoras de UCI neonatal', los: 7 * 1440 },
+  { id: 'quemados', field: 'burnBeds', label: 'camas de quemados', los: 10 * 1440 },
+];
+
+/** SUPUESTO (T27): tipo de cama que necesita cada condición remitida, según el «recurso crítico» del informe. */
+export const CONDITION_POOL: Record<ConditionId, PoolId> = {
+  quemadura_leve: 'general',
+  quemadura_grave: 'quemados',
+  transito_leve: 'general',
+  politrauma: 'uci-adulto',
+  herida_arma: 'uci-adulto',
+  iam: 'uci-adulto',
+  cardiovascular_quirurgica: 'uci-adulto',
+  acv: 'uci-adulto',
+  tce_grave: 'uci-adulto',
+  fractura_aislada: 'general',
+  fractura_expuesta_shock: 'uci-adulto',
+  falla_respiratoria_adulto: 'uci-adulto',
+  intoxicacion_grave: 'uci-adulto',
+  sepsis: 'uci-adulto',
+  cancer_programado: 'general',
+  radioterapia: 'general',
+  dialisis_aguda: 'uci-adulto',
+  crisis_psiquiatrica: 'general',
+  preeclampsia: 'uci-adulto',
+  nino_critico: 'uci-pediatrica',
+  recien_nacido_critico: 'uci-neonatal',
+  cirugia_compleja_adulto: 'uci-adulto',
+  uci_adulto: 'uci-adulto',
+};
+
+/**
+ * Escenario RED VALLEDUPAR: el realista + destinos reales. Entra a la simulación cada sede con urgencias y ruta
+ * vial, con una unidad por cada tipo de cama DOCUMENTADO (REPS o portal institucional); la demanda propia de
+ * cada unidad se fija para una ocupación media de NETWORK_OCCUPANCY. No hay restricción EPS (la urgencia no se
+ * condiciona a convenio).
  */
 export function networkParams(): Params {
   const p = realisticParams();
   const origin = rutas.origin as SiteId;
   const routes = rutas.routes as Record<string, { minutes: number; backM: number } | null>;
-  const los = 2880;
-  const chosen = SITES.filter((s) => s.id !== origin && s.emergency && routes[s.id] && s.capacity.adultBeds);
-  const clinics: ClinicParams[] = chosen.map((s, j) => {
-    const beds = s.capacity.adultBeds!.value;
+  const units = SITES.filter((s) => s.id !== origin && s.emergency && routes[s.id]).flatMap((s) =>
+    POOLS.filter((k) => s.capacity[k.field]).map((k) => ({ s, k, beds: s.capacity[k.field]!.value })),
+  );
+  const clinics: ClinicParams[] = units.map(({ s, k, beds }, j) => {
     const r = routes[s.id]!;
     return {
       id: j,
-      name: s.name,
+      name: k.id === 'general' ? s.name : `${s.name} · ${k.label.replace(/^camas de |^incubadoras de /, '')}`,
       beds,
-      backgroundRatePerHour: (NETWORK_OCCUPANCY * beds * 60) / los,
-      los: { kind: 'exp', mean: los },
+      backgroundRatePerHour: (NETWORK_OCCUPANCY * beds * 60) / k.los,
+      los: { kind: 'exp', mean: k.los },
       travel: { kind: 'lognormal', mean: r.minutes, cv: 0.3 },
       travelBack: { kind: 'lognormal', mean: (r.backM / 1000 / rutas.ambulanceKmh) * 60, cv: 0.3 },
     };
@@ -150,7 +196,9 @@ export function networkParams(): Params {
     clinics,
     network: {
       origin,
-      sites: chosen.map((s) => s.id),
+      sites: units.map((u) => u.s.id),
+      pools: units.map((u) => u.k.id),
+      acceptance: { AD: 0.85, C: 0.5 },
       conditionMix: [
         { id: 'iam', p: 0.2 },
         { id: 'uci_adulto', p: 0.2 },

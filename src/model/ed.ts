@@ -5,7 +5,7 @@ import { Resource } from '../engine/resource';
 import { TimeAverage, Tally } from '../engine/stats';
 import type { PatientInfo, SimEvent, SimEventType, TriageLevel, Zone } from '../engine/events';
 import { NAMES } from './catalog';
-import type { Params } from './params';
+import { CONDITION_POOL, POOLS, type Params, type PoolId } from './params';
 import { chooseDestination, type Decision, type SiteState } from './referral';
 import { CONDITION_LABEL, type ConditionId } from './valledupar/capabilities';
 import type { SiteId } from './valledupar/sites';
@@ -150,7 +150,7 @@ export class EmergencyDepartment {
   private obsOccupied = 0;
   private readonly clinics: Clinic[];
   /** flujos solo del escenario de red (no alteran los flujos de los escenarios originales) */
-  private readonly net?: { condition: Rng; crue: Rng; handover: Rng };
+  private readonly net?: { condition: Rng; crue: Rng; handover: Rng; accept: Rng };
   private remitOutOfNetwork = 0;
   private nextId = 1;
   private readonly visitorQueue: PatientInfo[] = [];
@@ -189,7 +189,8 @@ export class EmergencyDepartment {
     this.record = opts.recordEvents ?? false;
     const names = ['arrivals', 'mix', 'triage', 'admission', 'doctor', 'routing', 'patience', 'observation', 'ambulance', 'eps', 'names', 'clinicChoice', 'mass'];
     this.r = Object.fromEntries(names.map((n) => [n, this.rngs.stream(n)]));
-    if (this.params.network) this.net = { condition: this.rngs.stream('condicion'), crue: this.rngs.stream('crue'), handover: this.rngs.stream('entrega') };
+    if (this.params.network)
+      this.net = { condition: this.rngs.stream('condicion'), crue: this.rngs.stream('crue'), handover: this.rngs.stream('entrega'), accept: this.rngs.stream('aceptacion') };
 
     const c = this.params.capacity;
     this.triage = new Resource(this.sim, 'triage', c.triage, 'fifo');
@@ -660,13 +661,15 @@ export class EmergencyDepartment {
     });
   }
 
-  /** Estado de cada sede para el selector (red): camas simuladas y tiempo de ruta. */
-  private networkState(): Partial<Record<SiteId, SiteState>> {
+  /** Estado de cada sede para el selector (red): camas simuladas del tipo `pool` y tiempo de ruta. */
+  private networkState(pool: PoolId): Partial<Record<SiteId, SiteState>> {
     const n = this.params.network!;
     const routes = rutas.routes as Record<string, { minutes: number } | null>;
     const st: Partial<Record<SiteId, SiteState>> = {};
     for (const [id, r] of Object.entries(routes)) st[id as SiteId] = { minutes: r ? r.minutes : null };
-    n.sites.forEach((id, j) => (st[id] = { clinic: j, beds: this.params.clinics[j].beds, occupied: this.clinics[j].occupied, minutes: st[id]?.minutes ?? null }));
+    n.sites.forEach((id, j) => {
+      if (n.pools[j] === pool) st[id] = { clinic: j, beds: this.params.clinics[j].beds, occupied: this.clinics[j].occupied, minutes: st[id]?.minutes ?? null };
+    });
     return st;
   }
 
@@ -686,10 +689,26 @@ export class EmergencyDepartment {
       if (p.reservedClinic !== undefined) continue;
       if (this.net) {
         if (!p.coordinated) continue;
+        const n = this.params.network!;
         const pediatric = p.condition === 'nino_critico' || p.condition === 'recien_nacido_critico';
-        p.decision = chooseDestination(p.condition!, !pediatric && p.info.ageRange !== '0-17', this.params.network!.origin, this.networkState());
+        const pool = CONDITION_POOL[p.condition!];
+        const net = this.net;
+        const accept = (e: { level: string }) => net.accept.next() < (e.level === 'AD' ? n.acceptance.AD : n.acceptance.C);
+        p.decision = chooseDestination(p.condition!, !pediatric && p.info.ageRange !== '0-17', n.origin, this.networkState(pool), POOLS.find((k) => k.id === pool)!.label, accept);
         const c = p.decision.chosen;
-        if (!c) continue; // sin destino elegible: espera y se reevalúa en la próxima liberación de cama
+        if (!c) {
+          // Hubo sedes con cupo pero ninguna aceptó: el CRUE vuelve a coordinar después de otro retardo.
+          // Si no hubo ninguna con cupo, se reevalúa en la próxima liberación de cama.
+          if (p.decision.evaluated.some((e) => e.rejected)) {
+            p.coordinated = false;
+            this.sim.schedule(sample(n.coordination, net.crue), () => {
+              if (!this.hallway.includes(p) || p.reservedClinic !== undefined) return;
+              p.coordinated = true;
+              this.tryDispatchHallway();
+            });
+          }
+          continue;
+        }
         p.journey.referralReason = c.reason;
         p.journey.referralAt = this.sim.now;
         p.reservedClinic = c.clinic;

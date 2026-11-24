@@ -32,6 +32,8 @@ export interface Evaluation {
   /** por qué se eligió o se descartó, en español */
   reason: string;
   minutes?: number;
+  /** elegible, pero la sede no aceptó el traslado en esta coordinación (aceptación simulada) */
+  rejected?: boolean;
 }
 
 export interface Decision {
@@ -39,7 +41,18 @@ export interface Decision {
   evaluated: Evaluation[];
 }
 
-export function chooseDestination(condition: ConditionId, adult: boolean, origin: SiteId, state: Partial<Record<SiteId, SiteState>>): Decision {
+/**
+ * `resource`: tipo de cama que se necesita (p. ej. «camas de UCI adulto»), para los motivos.
+ * `accept`: aceptación simulada de cada candidata, en orden de preferencia (por defecto, todas aceptan).
+ */
+export function chooseDestination(
+  condition: ConditionId,
+  adult: boolean,
+  origin: SiteId,
+  state: Partial<Record<SiteId, SiteState>>,
+  resource = 'camas',
+  accept: (e: Evaluation) => boolean = () => true,
+): Decision {
   const evaluated: Evaluation[] = [];
   for (const s of SITES) {
     if (s.id === origin) continue;
@@ -50,21 +63,34 @@ export function chooseDestination(condition: ConditionId, adult: boolean, origin
     if (!s.emergency) no('no recibe urgencias');
     else if (level === 'NH' || level === 'ER' || level === 'SI') no(`${RECEPTION_LABEL[level]} (informe: «${raw}»)`);
     else if (!st || st.minutes === null) no('sin ubicación o sin ruta vial');
-    else if (st.clinic === undefined || st.beds === undefined) no('capacidad no documentada');
-    else if ((st.occupied ?? 0) >= st.beds) no(`saturada (${st.occupied}/${st.beds} camas simuladas)`);
-    else evaluated.push({ ...base, ok: true, reason: `${RECEPTION_LABEL[level]}, ${st.beds - (st.occupied ?? 0)} camas simuladas libres`, minutes: st.minutes });
+    else if (st.clinic === undefined || st.beds === undefined) no(`sin ${resource} documentadas`);
+    else if ((st.occupied ?? 0) >= st.beds) no(`saturada (${st.occupied}/${st.beds} ${resource} simuladas)`);
+    else evaluated.push({ ...base, ok: true, reason: `${RECEPTION_LABEL[level]}, ${st.beds - (st.occupied ?? 0)} ${resource} simuladas libres`, minutes: st.minutes });
   }
-  const pick = (lv: Reception) =>
-    evaluated
-      .filter((e) => e.ok && e.level === lv)
-      .sort((a, b) => a.minutes! - b.minutes! || occ(a) - occ(b) || a.site.localeCompare(b.site))[0];
   const occ = (e: Evaluation) => {
     const st = state[e.site]!;
     return (st.occupied ?? 0) / st.beds!;
   };
-  const best = pick('AD') ?? pick('C');
+  const sorted = (lv: Reception) =>
+    evaluated.filter((e) => e.ok && e.level === lv).sort((a, b) => a.minutes! - b.minutes! || occ(a) - occ(b) || a.site.localeCompare(b.site));
+  // Se ofrece primero a las AD por cercanía y después a las C; la primera que acepta es el destino.
+  let best: Evaluation | undefined;
+  const tried = new Set<Evaluation>();
+  for (const e of [...sorted('AD'), ...sorted('C')]) {
+    tried.add(e);
+    if (accept(e)) {
+      best = e;
+      break;
+    }
+    e.ok = false;
+    e.rejected = true;
+    e.reason = `${e.reason}; no aceptó el traslado en esta coordinación (aceptación simulada)`;
+  }
   if (!best) return { evaluated };
-  best.reason = `${best.level === 'C' ? 'sin atención definitiva con cupo; ' : ''}${best.reason}; ruta más corta entre las elegibles (${best.minutes!.toFixed(1)} min)`;
+  const rejectedAD = evaluated.some((e) => e.rejected && e.level === 'AD');
+  best.reason = `${best.level === 'C' ? (rejectedAD ? 'ninguna sede con atención definitiva aceptó; ' : 'sin atención definitiva con cupo; ') : ''}${best.reason}; ${
+    [...tried].some((e) => e.rejected) ? 'primera que aceptó en orden de cercanía' : 'ruta más corta entre las elegibles'
+  } (${best.minutes!.toFixed(1)} min)`;
   for (const e of evaluated)
     if (e.ok && e !== best)
       e.reason = e.level === 'C' && best.level === 'AD' ? 'condicionada: se prefiere una sede con atención definitiva y cupo' : `elegible, pero su ruta es más larga (${e.minutes!.toFixed(1)} min)`;

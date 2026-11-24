@@ -126,7 +126,9 @@ export function mountLiveCharts(root: HTMLElement) {
       rows.replaceChildren(
         ...s.clinics.map((c, j) => {
           const tr = document.createElement('tr');
-          for (const v of [c.name, `${c.occupied}/${c.beds} · ${pct(c.occupied / c.beds)}`, pct(m[`clinic${j}.occupancy`] / c.beds), String(driver.pb.receivedByClinic.get(j) ?? 0)])
+          const n = ed.params.network!;
+          const name = SHORT[n.sites[j]] + (n.pools[j] === 'general' ? ' · camas de adulto' : ' · ' + c.name.split(' · ')[1]);
+          for (const v of [name, `${c.occupied}/${c.beds} · ${pct(c.occupied / c.beds)}`, pct(m[`clinic${j}.occupancy`] / c.beds), String(driver.pb.receivedByClinic.get(j) ?? 0)])
             tr.append(Object.assign(document.createElement('td'), { textContent: v }));
           return tr;
         }),
@@ -166,9 +168,12 @@ export function mountLiveCharts(root: HTMLElement) {
     resourcePlot(1, 'queues', ['Triage', 'Admisión', 'Médico']);
     if (ed.params.network) {
       // Red real: sedes de 21 a 173 camas; en porcentaje se comparan en la misma escala.
+      // T27: una línea por sede (sus camas de adulto); las UCI están en la tabla de arriba.
+      const n = ed.params.network;
+      const idx = [0, ...n.pools.flatMap((k, j) => (k === 'general' ? [j + 1] : []))];
       const caps = [s.obsBeds.capacity, ...s.clinics.map((c) => c.beds)];
-      const labels = ['Observación', ...ed.params.network.sites.map((id) => SHORT[id])];
-      plot(2, labels.map((l, j) => `${l} / ${caps[j]}`), labels.map((_, j) => samples.map((a) => ({ x: a.t / 60, y: (100 * a.beds[j]) / Math.max(1, caps[j]) }))), start, t);
+      const labels = idx.map((i) => (i === 0 ? 'Observación' : SHORT[n.sites[i - 1]]));
+      plot(2, labels.map((l, k) => `${l} / ${caps[idx[k]]}`), idx.map((i) => samples.map((a) => ({ x: a.t / 60, y: (100 * a.beds[i]) / Math.max(1, caps[i]) }))), start, t);
       charts[2].options.scales!.y!.title = { display: true, text: '% ocupado' };
     } else resourcePlot(2, 'beds', [`Observación / ${s.obsBeds.capacity}`, ...s.clinics.map((c) => c.name.replace('Clínica ', '') + ' / ' + c.beds)]);
     resourcePlot(3, 'vehicles', ['Disponibles', 'Ocupadas', 'En traslado']);

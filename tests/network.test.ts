@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { SimEvent } from '../src/engine/events';
 import { EmergencyDepartment } from '../src/model/ed';
-import { networkParams, realisticParams, validationParams, type Params } from '../src/model/params';
+import { CONDITION_POOL, networkParams, POOLS, realisticParams, validationParams, type Params } from '../src/model/params';
 import { CONDITION_LABEL, reception, type ConditionId } from '../src/model/valledupar/capabilities';
 import { SITES } from '../src/model/valledupar/sites';
 
@@ -22,7 +22,6 @@ const fnv = (text: string) => {
   return (h >>> 0).toString(16);
 };
 const conditionId = Object.fromEntries(Object.entries(CONDITION_LABEL).map(([k, v]) => [v, k as ConditionId]));
-const siteByName = Object.fromEntries(SITES.map((s) => [s.name, s.id]));
 
 describe('T25 · escenario de red de Valledupar', () => {
   it('regresión: los escenarios originales producen el mismo registro que antes de T25', () => {
@@ -49,7 +48,7 @@ describe('T25 · escenario de red de Valledupar', () => {
     expect(p.network!.sites).toContain('fracturas'); // T26: ubicada; 4 camas de adulto en REPS
   });
 
-  it('cada traslado va a una sede compatible, con motivo y alternativas descartadas', () => {
+  it('cada traslado va a una sede compatible y al tipo de cama que la condición necesita, con motivo', () => {
     const p = networkParams();
     const { ev } = run(p, 7);
     const starts = ev.filter((e) => e.type === 'TRANSFER_START');
@@ -57,12 +56,34 @@ describe('T25 · escenario de red de Valledupar', () => {
     for (const e of starts) {
       const d = e.data as { clinic: string; condition: string; reason: string; discarded: unknown[] };
       const cond = conditionId[d.condition];
-      const site = siteByName[d.clinic];
+      const j = Number(String(e.to).split('_')[1]);
+      const site = p.network!.sites[j];
       const levels = [reception(cond, site, true).level, reception(cond, site, false).level];
       expect(levels.some((l) => l === 'AD' || l === 'C'), `${d.condition} → ${d.clinic}`).toBe(true);
-      expect(d.reason).toMatch(/ruta más corta/);
+      expect(p.network!.pools[j], `${d.condition} → ${d.clinic}`).toBe(CONDITION_POOL[cond]);
+      expect(d.reason).toMatch(/ruta más corta|primera que aceptó/);
       expect(d.discarded.length).toBeGreaterThan(0);
     }
+  });
+
+  it('T27: cada tipo de cama simulado tiene capacidad documentada; las UCI sin cifra no se simulan', () => {
+    const p = networkParams();
+    p.network!.sites.forEach((id, j) => {
+      const field = POOLS.find((k) => k.id === p.network!.pools[j])!.field;
+      expect(SITES.find((s) => s.id === id)!.capacity[field]!.value).toBe(p.clinics[j].beds);
+    });
+    // Alta Complejidad tiene UCI pediátrica habilitada pero sin cifra: no se inventa una unidad.
+    expect(p.network!.sites.some((id, j) => id === 'alta-complejidad' && p.network!.pools[j] === 'uci-pediatrica')).toBe(false);
+    expect(p.network!.sites.some((id, j) => id === 'alta-complejidad' && p.network!.pools[j] === 'quemados')).toBe(true);
+  });
+
+  it('T27: con aceptación nula nadie sale; con aceptación total no hay rechazos', () => {
+    const none = networkParams();
+    none.network!.acceptance = { AD: 0, C: 0 };
+    expect(run(none, 2).ev.some((e) => e.type === 'TRANSFER_START')).toBe(false);
+    const all = networkParams();
+    all.network!.acceptance = { AD: 1, C: 1 };
+    for (const e of run(all, 2).ev.filter((x) => x.type === 'TRANSFER_START')) expect(String((e.data as { reason: string }).reason)).not.toMatch(/aceptó/);
   });
 
   it('conserva pacientes, camas y ambulancias; cada traslado llega', () => {

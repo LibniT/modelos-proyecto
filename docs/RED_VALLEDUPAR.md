@@ -31,7 +31,7 @@ La prueba `tests/valledupar.test.ts` compara la matriz **celda a celda** con la 
 3. **Velocidad de la ambulancia**: 30 km/h urbano; tiempo de viaje Lognormal con media = distancia vial / 30 km/h y CV 0,3 (ida y regreso por separado).
 4. **Escenario de red** (`networkParams()` en `src/model/params.ts`, parte del realista):
    - Sedes simuladas: las que reciben urgencias, tienen ruta y **camas de adulto documentadas en REPS**: Alta Complejidad (173), ICVC (114), OHI (123), Clínica del Cesar (92), Erasmo (21). Sus camas simuladas = las documentadas.
-   - Demanda propia de cada sede: Poisson con ocupación media del **90 %** y estancia Exp(48 h) (supuesto). Sin cama, la demanda propia se pierde (Erlang B, como en el escenario ficticio).
+   - Demanda propia de cada sede: Poisson con carga ofrecida del **90 %** de sus camas y estancia Exp(48 h) (supuesto; desde T27, por tipo de cama). Sin cama, la demanda propia se pierde (Erlang B, como en el escenario ficticio).
    - Condición de quien se remite (supuesto): IAM 20 %, UCI adulto 20 %, TCE grave 10 %, politrauma 10 %, diálisis aguda 10 %, niño crítico 8 %, crisis psiquiátrica 7 %, emergencia cardiovascular quirúrgica 5 %, quemadura grave 5 %, recién nacido crítico 5 %.
    - Búsqueda y aceptación del destino (CRUE): Lognormal media 30 min, CV 1.
    - Alistamiento, cargue y entrega: Lognormal media 15 min, CV 0,5; la ambulancia sigue ocupada y luego regresa.
@@ -48,7 +48,7 @@ Secuencia en el motor (`src/model/ed.ts`, solo cuando `params.network` existe): 
 
 **Arranque en equilibrio:** las sedes no empiezan vacías. Su ocupación inicial se sortea de la distribución estacionaria del sistema de pérdida M/M/K/K con su demanda propia (Poisson truncada en K); como la estancia es exponencial, a cada cama ocupada le queda Exp(48 h). Una prueba verifica que la media inicial coincide con a·(1 − B) de Erlang B.
 
-**Limitaciones:** un solo grupo de camas por sede (sin separar UCI adulto, pediátrica y neonatal); la aceptación de una sede C es automática; la ocupación del 90 % es la misma en todas las sedes.
+**Limitaciones:** la carga del 90 % es la misma en todas las unidades; las estancias por tipo de cama y la aceptación son supuestos; no hay datos de ocupación real. (Desde T27 las camas se separan por tipo y la aceptación es probabilística.)
 
 ## Cartografía y rutas (F2)
 `npm run red-vial` (`tools/valledupar-map.ts`) toma de OpenStreetMap las vías del casco urbano y las sedes de salud (Overpass, solo durante la preparación; la descarga queda en `tools/.cache/`, fuera de Git) y genera:
@@ -92,6 +92,15 @@ Distancia entre la ubicación propia y la de Google Maps entre paréntesis; deta
 - **Seguimiento en 4 pasos** (figura C): `src/ui/referral-steps.ts` reconstruye cada remisión desde los eventos del motor (fin de consulta, pasillo, aceptación del destino en `TRANSFER_START.data.acceptedAt`, salida, llegada) y la liberación de la ambulancia desde el estado del recurso.
 - **Ficha completa de cada sede** (`src/ui/site-card.ts`): dirección, naturaleza y código REPS, rol, ubicación verificada o aproximada con su método, ruta vial desde el origen (vial y recta), capacidad documentada con su fuente, servicios, qué atiende según la matriz (agrupado en AD / C / ER / NH / SI), notas y fuentes con fecha. En las sedes simuladas va debajo de la ocupación simulada.
 - **Filtro por condición** en el mapa: anillo verde = atención definitiva documentada, ámbar = condicionada; el resto se atenúa (matriz del informe, sin disponibilidad).
+
+## Modelo de la red, parte 3 (T27)
+- **Camas por tipo.** Cada sede simula por separado cada tipo de cama con capacidad documentada: camas de adulto, UCI adulto, UCI pediátrica, UCI neonatal y quemados (17 unidades en 6 sedes). Un tipo sin cifra no se simula (p. ej. la UCI pediátrica de Alta Complejidad está habilitada pero sin número) y el selector lo explica: «sin camas de UCI pediátrica documentadas».
+- **Qué cama necesita cada condición** (supuesto, del «recurso crítico» del informe): UCI adulto para IAM, emergencia cardiovascular quirúrgica, TCE grave, politrauma, diálisis aguda y necesidad de UCI; UCI pediátrica para niño crítico; UCI neonatal para recién nacido crítico; quemados para quemadura grave; camas de adulto para crisis psiquiátrica.
+- **Demanda propia y estancias** (supuestos): carga ofrecida = 90 % de las camas de cada unidad; estancia exponencial de 2 días (adulto), 5 (UCI adulto y pediátrica), 7 (UCI neonatal) y 10 (quemados). En unidades pequeñas la ocupación real queda por debajo del 90 % porque parte de esa demanda encuentra la unidad llena (Erlang B).
+- **Aceptación del CRUE** (supuesto): cada sede elegible acepta con probabilidad 0,85 si su atención es definitiva (AD) y 0,5 si es condicionada (C). Se ofrece primero a las AD por cercanía y después a las C; si ninguna acepta, el CRUE vuelve a coordinar tras otra demora. La ficha de la remisión muestra qué sede no aceptó.
+- **Experimento con réplicas** (`npm run red-experimento`, `docs/EXPERIMENTO_RED.md`): ambulancias, demora del CRUE, aceptación y ocupación de las sedes con 30 réplicas y números aleatorios comunes. Resultado: la espera para remitir la determinan la disponibilidad de camas y la demora de coordinación, no las ambulancias.
+
+**Corrida de referencia con camas por tipo** (semilla 1, 30 días): 440 traslados, todos a UCI o quemados (Alta Complejidad UCI adulto 171, ICVC UCI adulto 89, OHI UCI adulto 49, Clínica del Cesar UCI adulto 36, OHI UCI pediátrica 28, quemados 19, Erasmo UCI adulto 14, UCI neonatal 23, Clínica del Cesar UCI pediátrica 11); 0,45 % de las llegadas fuera de la red (crisis psiquiátricas, quemaduras graves y algún niño crítico).
 
 ## Pendiente
 - Capturas de la red para el póster y el README.

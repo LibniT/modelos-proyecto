@@ -36,7 +36,7 @@ describe('T25 · selección del destino de la remisión', () => {
 
   it('capacidad desconocida y falta de ruta descartan sin inventar datos', () => {
     const d = chooseDestination('uci_adulto', true, 'hrpl', open({ 'simon-bolivar': { clinic: undefined, beds: undefined }, erasmo: { minutes: null } }));
-    expect(why(d, 'simon-bolivar')).toBe('capacidad no documentada');
+    expect(why(d, 'simon-bolivar')).toBe('sin camas documentadas');
     expect(why(d, 'erasmo')).toBe('sin ubicación o sin ruta vial');
     expect(d.chosen).toBeDefined();
   });
@@ -60,5 +60,27 @@ describe('T25 · motivo de las sedes elegibles no elegidas', () => {
     expect(d.chosen?.site).toBe('icvc');
     expect(why(d, 'alta-complejidad')).toBe('elegible, pero su ruta es más larga (2.0 min)');
     expect(why(d, 'clinica-cesar')).toMatch(/se prefiere una sede con atención definitiva/);
+  });
+});
+
+describe('T27 · aceptación simulada del destino', () => {
+  it('si la AD más cercana no acepta, se ofrece a la siguiente; las C solo después de todas las AD', () => {
+    const order: string[] = [];
+    const d = chooseDestination('iam', true, 'hrpl', open({ icvc: { minutes: 1 }, 'alta-complejidad': { minutes: 2 } }), 'camas de UCI adulto', (e) => {
+      order.push(e.site);
+      return e.site !== 'icvc';
+    });
+    expect(order.slice(0, 2)).toEqual(['icvc', 'alta-complejidad']);
+    expect(d.chosen?.site).toBe('alta-complejidad');
+    expect(why(d, 'icvc')).toMatch(/no aceptó el traslado/);
+    expect(d.chosen?.reason).toMatch(/primera que aceptó/);
+    expect(d.evaluated.find((e) => e.site === 'icvc')?.rejected).toBe(true);
+  });
+
+  it('si ninguna acepta no hay destino, y el motivo usa el tipo de cama', () => {
+    const d = chooseDestination('iam', true, 'hrpl', open({ ohi: { clinic: undefined, beds: undefined } }), 'camas de UCI adulto', () => false);
+    expect(d.chosen).toBeUndefined();
+    expect(d.evaluated.some((e) => e.rejected)).toBe(true);
+    expect(why(d, 'ohi')).toBe('sin camas de UCI adulto documentadas');
   });
 });

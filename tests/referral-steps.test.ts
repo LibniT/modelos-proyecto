@@ -25,7 +25,7 @@ describe('T26 · seguimiento de la remisión en 4 pasos', () => {
       expect(r.accepted!).toBeLessThanOrEqual(r.depart!);
       expect(r.arrive!).toBeCloseTo(r.depart! + r.trip!, 6);
       expect(r.released!).toBeGreaterThan(r.arrive!);
-      expect(r.reason).toMatch(/ruta más corta/);
+      expect(r.reason).toMatch(/ruta más corta|primera que aceptó/);
       expect(referralSteps(r, ed.now).map((s) => s.state)).toEqual(['hecho', 'hecho', 'hecho', 'hecho']);
     }
   });

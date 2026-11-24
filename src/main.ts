@@ -154,7 +154,9 @@ function social(): Social {
   let s = socials.get(d);
   if (!s) {
     const beds = (d instanceof LiveDriver ? d.ed.params : realisticParams()).clinics.map((c) => c.beds);
-    s = new Social([hospitalCafe(), ...beds.map((b, j) => sitePlan(j, b))], 2026);
+    // T27: en la red solo la unidad de camas de adulto de cada sede tiene planta (las UCI no tienen interior).
+    const pools = live?.ed.params.network?.pools;
+    s = new Social([hospitalCafe(), ...beds.flatMap((b, j) => (pools && pools[j] !== 'general' ? [] : [sitePlan(j, b)]))], 2026);
     socials.set(d, s);
   }
   return s;
@@ -248,7 +250,11 @@ const {
     if (mockMode) c.lines[0] += ' · al inicio del registro';
     // T26: en la red real, debajo de la ocupación simulada va la ficha documentada de la sede.
     const site = networkMode ? p.network?.sites[j] : undefined;
-    showInfoCard(c.title, '#e6edf3', site ? [...c.lines, ...siteLines(site, true)] : c.lines, () => openWard(j));
+    // T27: ocupación simulada de cada tipo de cama documentado de la sede (UCI, quemados…).
+    const units = site
+      ? p.network!.sites.flatMap((id, k) => (id === site && k !== j ? [`${p.clinics[k].name.split(' · ')[1]}: ${clinicState()[k].occupied} de ${p.clinics[k].beds} ocupadas`] : []))
+      : [];
+    showInfoCard(c.title, '#e6edf3', site ? [...c.lines, ...(units.length ? ['Otras camas simuladas — ' + units.join(' · ')] : []), ...siteLines(site, true)] : c.lines, () => openWard(j));
   },
   ...(networkMode ? { geo: geoMap(networkParams().network!.sites), onSite: (id: string) => showSiteCard(id) } : {}),
   },
