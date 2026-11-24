@@ -70,8 +70,8 @@ Estados: `pendiente` · `en curso (agente, fecha)` · `hecha` · `bloqueada (por
 | T30 | **Fase 2 · paciente prehospitalario en el motor**: `injectPrehospital` (despacho, escena, traslado, ingreso), grupo de ambulancias prehospitalario, selector con rutas dinámicas, EPS (≤ 15 min extra para estables; críticos sin EPS) y 3 políticas | Claude | `src/model`, `tests` | hecha (Claude, 24 nov) |
 | T31 | **Fase 2 · paciente en el mapa**: muñeco arrastrable + clic, formulario, alternativas, ambulancia con geometría dinámica | Claude | `src/render/map`, `src/ui`, `src/main.ts` | hecha (Claude, 24 nov) |
 | T32 | **Fase 2 · rediseño**: vista Ciudad con el mapa protagonista, ficha con pestañas, seguimiento del paciente | Claude | `src/ui`, `src/main.ts`, CSS | hecha (Claude, 24 nov) |
-| T33 | **Fase 2 · experimentos** A (políticas) y B (tráfico) con réplicas y CRN | Claude | `src/batch`, `tools/`, `docs/` | pendiente |
-| T34 | **Fase 2 · P1 restante**: historial completo, perfil horario de tráfico, experimentos C/D | Claude | varias | pendiente |
+| T33 | **Fase 2 · experimentos** A (políticas) y B (tráfico) con réplicas y CRN | Claude | `src/batch`, `tools/`, `docs/` | hecha (Claude, 24 nov) |
+| T34 | **Fase 2 · P1 restante**: historial completo, perfil horario de tráfico, experimentos C/D | Claude | varias | parcial (Claude, 24 nov): historial de pacientes del mapa, selector de tráfico y experimentos C/D hechos; perfil horario del tráfico y varias bases de ambulancias pendientes (sin datos con fuente) |
 
 ### Detalle T25 (red Valledupar)
 - **Corte:** miércoles 25 nov a las 20:00. Si P0 no pasa `npm test`, `npx tsc --noEmit` y `npm run preview` sin red (con recarga), la feria se hace con la versión de T24 (`main` en 0326196).

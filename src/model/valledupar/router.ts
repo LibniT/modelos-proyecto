@@ -261,3 +261,28 @@ export function routesFromSite(id: string, traffic: Traffic = 'fluido'): Record<
   if (!fromSite.has(key)) fromSite.set(key, routesFrom(sitePoints()[id], sitePoints(), traffic));
   return fromSite.get(key)!;
 }
+
+let cumLen: number[] | undefined;
+/**
+ * T33: punto de la red vial con densidad UNIFORME sobre la longitud de las vías (supuesto de los experimentos:
+ * no hay datos de dónde ocurren las urgencias en Valledupar). `u1`, `u2` ∈ [0, 1).
+ */
+export function roadPointAt(u1: number, u2: number): RoadPoint {
+  const g = graph();
+  if (!cumLen) {
+    let s = 0;
+    cumLen = g.edges.map((e) => (s += e.len));
+  }
+  const target = u1 * cumLen[cumLen.length - 1];
+  let lo = 0,
+    hi = cumLen.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (cumLen[mid] < target) lo = mid + 1;
+    else hi = mid;
+  }
+  const E = g.edges[lo];
+  const at = u2 * E.len;
+  const [p] = piece(E, at, at);
+  return { x: p[0], y: p[1], edge: lo, at, distM: 0 };
+}

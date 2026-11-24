@@ -17,7 +17,8 @@
     "accidente": "vite-node tools/mass-casualty.ts",
     "red-vial": "vite-node tools/valledupar-map.ts",
     "satelite": "vite-node tools/valledupar-satelite.ts",
-    "red-experimento": "vite-node tools/network-experiment.ts"
+    "red-experimento": "vite-node tools/network-experiment.ts",
+    "prehospital-experimento": "vite-node tools/prehospital-experiment.ts"
   },
   "author": "Libni Jahzeel Torres Castro",
   "license": "UNLICENSED",

@@ -177,3 +177,19 @@ describe('T32 · seguimiento del paciente (línea de tiempo)', () => {
     expect(end.map((s) => s.key)).toEqual(expect.arrayContaining(['triage', 'consulta', 'final']));
   });
 });
+
+describe('T33 · experimento prehospitalario', () => {
+  it('mismos pacientes para todos los escenarios (CRN) y réplicas reproducibles', async () => {
+    const { prehospitalArrivals, runPrehospitalReplication } = await import('../src/batch/prehospital-experiment');
+    const a = prehospitalArrivals(3, 0.5, 2);
+    expect(JSON.stringify(prehospitalArrivals(3, 0.5, 2))).toBe(JSON.stringify(a));
+    expect(a.length).toBeGreaterThan(5);
+    for (const x of a) expect(place(x.point.x, x.point.y).ok).toBe(true);
+    const sc = { label: 't', policy: 'tiempo' as const, traffic: 'fluido' as const, ambulances: 2 };
+    const r1 = runPrehospitalReplication(sc, 3, a, 0.5);
+    const r2 = runPrehospitalReplication(sc, 3, a, 0.5);
+    const strip = ({ cases: _c, ...m }: typeof r1) => m;
+    expect(strip(r2)).toEqual(strip(r1));
+    expect(r1.cases).toHaveLength(a.length);
+  });
+});

@@ -100,7 +100,10 @@ Distancia entre la ubicación propia y la de Google Maps entre paréntesis; deta
 - **Aceptación del CRUE** (supuesto): cada sede elegible acepta con probabilidad 0,85 si su atención es definitiva (AD) y 0,5 si es condicionada (C). Se ofrece primero a las AD por cercanía y después a las C; si ninguna acepta, el CRUE vuelve a coordinar tras otra demora. La ficha de la remisión muestra qué sede no aceptó.
 - **Experimento con réplicas** (`npm run red-experimento`, `docs/EXPERIMENTO_RED.md`): ambulancias, demora del CRUE, aceptación y ocupación de las sedes con 30 réplicas y números aleatorios comunes. Resultado: la espera para remitir la determinan la disponibilidad de camas y la demora de coordinación, no las ambulancias.
 
-**Corrida de referencia con camas por tipo** (semilla 1, 30 días): 440 traslados, todos a UCI o quemados (Alta Complejidad UCI adulto 171, ICVC UCI adulto 89, OHI UCI adulto 49, Clínica del Cesar UCI adulto 36, OHI UCI pediátrica 28, quemados 19, Erasmo UCI adulto 14, UCI neonatal 23, Clínica del Cesar UCI pediátrica 11); 0,45 % de las llegadas fuera de la red (crisis psiquiátricas, quemaduras graves y algún niño crítico).
+**Corrida de referencia con camas por tipo y rutas del router (T28)** (semilla 1, 30 días): 456 traslados, todos a UCI o quemados (Alta Complejidad UCI adulto 154, ICVC UCI adulto 102, OHI UCI adulto 55, Clínica del Cesar UCI adulto 42, quemados 24, OHI UCI pediátrica 22, Erasmo UCI adulto 18, Clínica del Cesar UCI pediátrica 13, UCI neonatal 26); 0,57 % de las llegadas fuera de la red (crisis psiquiátricas, quemaduras graves y algún niño crítico).
+
+## Fase 2 (T28–T33)
+Rutas desde cualquier punto, tráfico supuesto, EPS reales, paciente colocado en el mapa y experimentos prehospitalarios: ver [MODELO_PREHOSPITALARIO.md](MODELO_PREHOSPITALARIO.md), [EPS_VALLEDUPAR.md](EPS_VALLEDUPAR.md), [NORMATIVA.md](NORMATIVA.md), [DISENO_INTERFAZ.md](DISENO_INTERFAZ.md) y [EXPERIMENTO_PREHOSPITALARIO.md](EXPERIMENTO_PREHOSPITALARIO.md). Desde T28 las rutas de remisión también salen del router (velocidad por tipo de vía), por eso cambiaron la corrida de referencia y `EXPERIMENTO_RED.md`.
 
 ## Pendiente
 - Capturas de la red para el póster y el README.

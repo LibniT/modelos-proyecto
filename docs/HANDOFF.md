@@ -344,3 +344,13 @@ Siguiente paso: T32 (rediseño de la vista Ciudad y ficha de sede con pestañas)
 Hecho: T32 (ver `docs/DISENO_INTERFAZ.md`). Navegación Ciudad · Hospital · Estadísticas · Validación (el texto del motor queda plegado en Estadísticas). En `?red`, vista Ciudad con el mapa a todo el ancho (`body.city-mode`): controles flotantes, buscador de instituciones, indicadores de ambulancias y pacientes, ficha de institución en pestañas con marcas documentado/simulado/desconocido (`src/ui/site-panel.ts`). Franja de remisiones: nombre claro, selector de remisión (automática, activa o historial) y hora exacta de ambulancia libre (`TRANSFER_END.data.freeAt`, solo red; huellas de los escenarios originales sin cambio). La ficha de texto (`siteLines`) usa las rutas del router.
 Verificado: pruebas, TypeScript y build; navegador 1600×900: vista Ciudad, ficha (pestañas General y EPS), formulario a la izquierda y ficha a la derecha a la vez, hospital y estadísticas sin cambios visibles, modo original sin errores de consola.
 Siguiente paso: T33 (experimentos A y B; regenerar `EXPERIMENTO_RED.md` con las rutas del router).
+
+## 2026-11-24 · Claude · feat/T33-experimentos
+Hecho: T33. `src/batch/prehospital-experiment.ts` (llegadas de pacientes al mapa con CRN: Poisson 1,5/h, punto uniforme sobre la red vial con `roadPointAt`, condición y triage supuestos; réplica con el motor completo; IC pareados) y `npm run prehospital-experimento` → `docs/EXPERIMENTO_PREHOSPITALARIO.md` + `docs/figuras/t33-prehospital.svg`. Experimentos:
+- A (políticas): «más cercana» +136 min hasta la atención adecuada y 92 % de segundos traslados; «compatible más cercana» = referencia en este diseño, sin EPS.
+- B (tráfico): congestionado +12,6 min.
+- C (ambulancias): con 1 se satura; con 3, −8,5 min.
+- D (sector): periferia 38 min vs centro 26 min de primera atención.
+Regenerado `EXPERIMENTO_RED.md` (rutas del router). Selector de tráfico en el mapa (`?red&trafico=…`, recarga la red). Guía del stand, README y RED_VALLEDUPAR actualizados (corrida de referencia: 456 traslados, 0,57 % fuera de la red).
+Verificado: 155 pruebas (nueva: CRN y reproducibilidad del experimento), TypeScript, build; navegador: selector de tráfico.
+Pendiente (T34): perfil horario del tráfico y bases de ambulancias en otros puntos (sin datos con fuente). La autora debe ensayar la guía en el monitor y probar `npm run preview` sin conexión.

@@ -386,8 +386,9 @@ export class EmergencyDepartment {
   }
 
   /** Ambulancias prehospitalarias ocupadas y en cola. */
-  get prehospitalAmbulances(): { capacity: number; busy: number; queue: number } | undefined {
-    return this.preAmb && { capacity: this.preAmb.capacity, busy: this.preAmb.inService, queue: this.preAmb.queueLength };
+  get prehospitalAmbulances(): { capacity: number; busy: number; queue: number; utilization: number } | undefined {
+    const a = this.preAmb;
+    return a && { capacity: a.capacity, busy: a.inService, queue: a.queueLength, utilization: a.capacity ? a.busy.mean(this.sim.now) / a.capacity : NaN };
   }
 
   /** Casos prehospitalarios (para el seguimiento en pantalla). */

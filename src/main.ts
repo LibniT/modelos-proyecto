@@ -75,7 +75,7 @@ app.innerHTML = `
       <section class="trip-strip" id="trip-strip" hidden><div><strong id="trip-label"></strong><select id="trip-pick" aria-label="Remisión a mostrar" hidden></select><span id="trip-state"></span></div><div id="trip-why" hidden><ol id="trip-steps" class="steps"></ol><details id="trip-eval"><summary></summary><ul></ul></details></div><div><button id="ride">Seguir ambulancia</button><button id="enter-destination" hidden>Entrar a la clínica</button><button id="repeat" hidden>Repetir demostración</button></div></section>
       <div class="map-card">
         <div class="map-head"><div><span class="map-symbol" aria-hidden="true">◇</span><b id="map-heading">Plano del hospital</b></div>
-          <div class="view-group" role="group" aria-label="Vista y cámara"><input id="site-search" list="site-list" placeholder="Buscar institución" aria-label="Buscar institución" hidden autocomplete="off"><datalist id="site-list"></datalist><span id="cafe-group" role="group" aria-label="Cafetería"><button id="buy-drink">Máquina de refrescos</button><button id="buy-snack">Máquina de papas</button></span><button id="view">Ver ciudad</button><button id="minus" aria-label="Alejar">−</button><button id="plus" aria-label="Acercar">+</button><button id="fit">Ver todo</button><select id="map-focus" aria-label="Resaltar sedes por condición" hidden><option value="">Todas las sedes</option></select><select id="map-style" aria-label="Vista del mapa" hidden><option value="mapa">Mapa</option><option value="satelite">Satélite</option><option value="simple">Solo calles</option></select><button id="fullscreen" title="Tecla F">Pantalla completa</button></div>
+          <div class="view-group" role="group" aria-label="Vista y cámara"><input id="site-search" list="site-list" placeholder="Buscar institución" aria-label="Buscar institución" hidden autocomplete="off"><datalist id="site-list"></datalist><span id="cafe-group" role="group" aria-label="Cafetería"><button id="buy-drink">Máquina de refrescos</button><button id="buy-snack">Máquina de papas</button></span><button id="view">Ver ciudad</button><button id="minus" aria-label="Alejar">−</button><button id="plus" aria-label="Acercar">+</button><button id="fit">Ver todo</button><select id="map-focus" aria-label="Resaltar sedes por condición" hidden><option value="">Todas las sedes</option></select><select id="map-style" aria-label="Vista del mapa" hidden><option value="mapa">Mapa</option><option value="satelite">Satélite</option><option value="simple">Solo calles</option></select><select id="map-traffic" aria-label="Tráfico (supuesto de simulación)" hidden><option value="fluido">Tráfico fluido</option><option value="moderado">Tráfico moderado</option><option value="congestionado">Tráfico congestionado</option></select><button id="fullscreen" title="Tecla F">Pantalla completa</button></div>
         </div>
         <div class="canvas-wrap">
           <div id="scene"></div><section id="ward" hidden></section><section id="vending" hidden></section><div id="tip" hidden></div>
@@ -123,14 +123,16 @@ const mockMode = query.has('mock');
 /** T25: `?red` carga el escenario de la red real de Valledupar (sedes, calles y rutas de OpenStreetMap). */
 const networkMode = !mockMode && query.has('red');
 /** Parámetros de referencia de la sesión (clínicas del mapa, tarjetas, acompañantes). */
-const baseParams = () => (networkMode ? networkParams() : realisticParams());
+/** T33: escenario de tráfico (supuesto) elegido en el mapa; cambiarlo recarga la red (`?red&trafico=…`). */
+const traffic = (['fluido', 'moderado', 'congestionado'] as const).find((t) => t === query.get('trafico')) ?? 'fluido';
+const baseParams = () => (networkMode ? networkParams(traffic) : realisticParams());
 /**
  * Motor nuevo en el modo pedido, arrancando a las 08:00 del día 1, y su gemelo sin accidentes
  * (misma semilla) para medir la recuperación tras un accidente masivo (T17).
  */
 function makePair(mode: Mode): [EmergencyDepartment, EmergencyDepartment] {
   const seed = Date.now() % 100000;
-  const params = () => (networkMode ? networkParams() : mode === 'validacion' ? validationParams() : realisticParams());
+  const params = () => (networkMode ? networkParams(traffic) : mode === 'validacion' ? validationParams() : realisticParams());
   const ed = new EmergencyDepartment(params(), { seed, recordEvents: true });
   const twin = new EmergencyDepartment(params(), { seed });
   ed.step(8 * 60);
@@ -280,7 +282,7 @@ const {
   },
   ...(networkMode
     ? {
-        geo: geoMap(networkParams().network!.sites),
+        geo: geoMap(networkParams(traffic).network!.sites, traffic),
         onSite: (id: string) => showSite(id as SiteId),
         prehospital: () => pre?.mapState() ?? { cases: [] },
         onMapPick: (x: number, y: number) => pre?.onPick(x, y),
@@ -442,6 +444,12 @@ if (networkMode) {
     $('key-focus').hidden = !focus.value;
   };
   $('key-net').hidden = false;
+  const tsel = $('map-traffic') as HTMLSelectElement;
+  tsel.value = traffic;
+  tsel.onchange = () => {
+    if (confirm('Cambiar el tráfico reinicia la simulación de la red (las rutas y los tiempos de traslado cambian). ¿Continuar?')) location.search = `?red&trafico=${tsel.value}`;
+    else tsel.value = traffic;
+  };
   $('practice').parentElement!.hidden = true; // el ensayo usa las clínicas ficticias
 }
 $('source').textContent = networkMode
@@ -674,7 +682,7 @@ setInterval(() => {
   );
   const cityMode = networkMode && scene.inCity && ward.index === undefined && !practice;
   document.body.classList.toggle('city-mode', cityMode);
-  $('site-search').hidden = $('map-chips').hidden = !cityMode;
+  $('site-search').hidden = $('map-chips').hidden = $('map-traffic').hidden = !cityMode;
   $('site-side').hidden = !(cityMode && sitePanel?.current());
   if (cityMode && live) {
     const a = live.ed.prehospitalAmbulances;
