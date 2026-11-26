@@ -64,6 +64,9 @@ select { border: 1px solid var(--line); border-radius: 6px; color: var(--ink); b
 #tip b,#card b { display: block; margin-bottom: 5px; font-size: 1.08em; padding-left: 8px; border-left: 4px solid; color: #fff6de }
 #card { left: 12px; top: 12px; padding: 16px 18px; max-width: min(390px,94%); max-height: 90%; overflow: auto; line-height: 1.5 }
 #card button { margin-top: 12px }
+/* la ficha de la clínica (#ward) y el panel del paciente (#side) ocupan la esquina izquierda: la tarjeta pasa a la derecha */
+.canvas-wrap:has(#ward:not([hidden]), #side:not([hidden])) #card { left: auto; right: 12px }
+@media (max-width: 900px) { .canvas-wrap:has(#ward:not([hidden])) #card { top: auto; bottom: 12px; max-height: 45% } }
 #subs { bottom: 10px; left: 50%; transform: translateX(-50%); width: max-content; max-width: 94%; text-align: center; padding: 10px 16px; white-space: pre-line; pointer-events: none; font-size: clamp(17px,1.3vw,24px) }
 #demo-banner { right: 8px; top: 8px; padding: 7px 12px; font-size: .84rem; background: #846034; pointer-events: none }
 #following,#source { color: #506760; margin: 8px 0; font-size: .86rem }

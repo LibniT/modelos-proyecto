@@ -360,3 +360,9 @@ Hecho: el panel «Nuevo paciente en el mapa» ya no corta textos. Las columnas d
 A medias: —
 Siguiente paso: ensayo de la guía en el monitor de la feria.
 Preguntas para el autor: —
+
+## 2026-11-25 · Claude · fix/T35-tarjeta-clinica
+Hecho: la tarjeta «Recorrido de…» (#card) ya no queda debajo de la ficha del interior de la clínica (#ward) ni del panel del paciente (#side): las dos usaban la esquina superior izquierda. Con alguna de ellas abierta, la tarjeta pasa a la derecha (abajo en pantallas de menos de 900 px).
+A medias: —
+Siguiente paso: interiores más interactivos y acompañantes ligados a pacientes, para el final de corte (no para la feria).
+Preguntas para el autor: —
