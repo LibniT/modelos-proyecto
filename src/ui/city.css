@@ -19,10 +19,11 @@
 .side button { margin: 6px 6px 0 0 }
 .side button.primary { background: var(--accent); border-color: var(--accent); color: #fff }
 .side button.primary:hover:enabled { background: #1a5653 }
-.pre-form { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px }
-.field { display: flex; flex-direction: column; gap: 3px; font-size: 13px; color: var(--muted); font-weight: 600 }
+/* minmax(0,1fr): una opción larga del select no puede ensanchar la columna y cortar el panel */
+.pre-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 10px }
+.field { display: flex; flex-direction: column; gap: 3px; min-width: 0; font-size: 13px; color: var(--muted); font-weight: 600 }
 .field.wide, .pre-form .needs, .pre-form .where, .pre-form .fine { grid-column: 1 / -1 }
-.field select, .field input[type=text], .field input:not([type]) { font-size: 15px; padding: 6px 8px; border: 1px solid #c9d4c8; border-radius: 7px; background: #fff; color: var(--side-ink) }
+.field select, .field input[type=text], .field input:not([type]) { font-size: 15px; padding: 6px 8px; border: 1px solid #c9d4c8; border-radius: 7px; background: #fff; color: var(--side-ink); width: 100%; min-width: 0; text-overflow: ellipsis }
 .field.check { flex-direction: row; align-items: center; gap: 8px; color: var(--side-ink) }
 .field.check input { width: 18px; height: 18px }
 .needs { padding: 8px 10px; border-radius: 8px; background: var(--soft); font-size: 14px }
@@ -33,16 +34,17 @@
 .kind { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 12px; font-weight: 700; vertical-align: middle }
 .k-def { background: #dcf1e3; color: var(--ok) } .k-est { background: #fbefd9; color: var(--amber) }
 .k-ins { background: #e7ecef; color: #4d5d66 } .k-no { background: #f3e1dc; color: #8a3524 }
-.policies { width: 100%; margin-top: 12px; border-collapse: collapse; font-size: 13.5px }
+.policies { width: 100%; margin-top: 12px; border-collapse: collapse; font-size: 13.5px; table-layout: fixed }
+.policies th:nth-child(1), .policies th:nth-child(2) { width: 30% }
 .policies caption { text-align: left; font-weight: 700; padding-bottom: 4px }
-.policies th, .policies td { text-align: left; padding: 5px 6px; border-bottom: 1px solid #e3e8e0 }
+.policies th, .policies td { text-align: left; vertical-align: top; padding: 5px 6px; border-bottom: 1px solid #e3e8e0; overflow-wrap: break-word; hyphens: auto }
 .policies th { color: var(--muted); font-weight: 600 }
 .policies tr.on td { background: #eaf5ef; font-weight: 600 }
 .options { margin-top: 10px }
 .options summary { cursor: pointer; font-weight: 650; color: var(--accent); padding: 6px 0 }
 .options ol { padding-left: 18px; margin: 4px 0 }
 .options > ol > li { margin: 8px 0; padding-bottom: 8px; border-bottom: 1px solid #edf0ea }
-.options .row { display: flex; gap: 8px; align-items: center; justify-content: space-between }
+.options .row { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; justify-content: space-between }
 .options ul { margin: 4px 0 0; padding-left: 16px; font-size: 13.5px; color: #3c5453 }
 .options small { color: var(--muted) }
 .options .src { display: block; margin-top: 3px }

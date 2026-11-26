@@ -57,6 +57,8 @@ const select = (id: string, label: string, opts: [string, string][], value?: str
   const s = el('select', { id }, ...opts.map(([v, t]) => new Option(t, v, false, v === value)));
   return { field: el('label', { class: 'field' }, el('span', {}, label), s), input: s };
 };
+/** condición y política tienen textos largos: ocupan las dos columnas para leerse completos */
+const wide = (f: HTMLLabelElement) => (f.classList.add('wide'), f);
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V'];
 const KIND_CLASS: Record<Option['kind'], string> = { definitiva: 'k-def', estabilizacion: 'k-est', insuficiente: 'k-ins', 'no-compatible': 'k-no' };
 const badge = (o: Option) => el('span', { class: 'kind ' + KIND_CLASS[o.kind] }, KIND_LABEL[o.kind]);
@@ -95,14 +97,14 @@ export function mountPrehospital(o: Options): PrehospitalUi {
     'form',
     { class: 'pre-form', onsubmit: (e: Event) => e.preventDefault(), oninput: () => refresh(true), onchange: () => refresh(true) },
     el('label', { class: 'field wide' }, el('span', {}, 'Nombre ficticio'), nameIn),
+    wide(cond.field),
     age.field,
     eps.field,
     reg.field,
-    cond.field,
     tri.field,
     stab.field,
     el('label', { class: 'field check' }, amb, el('span', {}, 'Necesita ambulancia')),
-    pol.field,
+    wide(pol.field),
     needs,
     where,
     el('p', { class: 'fine' }, 'Datos ficticios: no escribas documentos de identidad ni información médica real. El triage es una condición del escenario académico, no una clasificación clínica.'),

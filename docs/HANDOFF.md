@@ -354,3 +354,9 @@ Hecho: T33. `src/batch/prehospital-experiment.ts` (llegadas de pacientes al mapa
 Regenerado `EXPERIMENTO_RED.md` (rutas del router). Selector de tráfico en el mapa (`?red&trafico=…`, recarga la red). Guía del stand, README y RED_VALLEDUPAR actualizados (corrida de referencia: 456 traslados, 0,57 % fuera de la red).
 Verificado: 155 pruebas (nueva: CRN y reproducibilidad del experimento), TypeScript, build; navegador: selector de tráfico.
 Pendiente (T34): perfil horario del tráfico y bases de ambulancias en otros puntos (sin datos con fuente). La autora debe ensayar la guía en el monitor y probar `npm run preview` sin conexión.
+
+## 2026-11-25 · Claude · fix/T35-panel-legible
+Hecho: el panel «Nuevo paciente en el mapa» ya no corta textos. Las columnas del formulario usan `minmax(0, 1fr)` (una opción larga del select ensanchaba la cuadrícula y aparecía scroll horizontal); condición y política ocupan las dos columnas; la tabla «Mismo paciente, tres políticas» usa `table-layout: fixed` con ajuste de línea. Comprobado sin desborde horizontal a 1280, 820 y 375 px.
+A medias: —
+Siguiente paso: ensayo de la guía en el monitor de la feria.
+Preguntas para el autor: —
