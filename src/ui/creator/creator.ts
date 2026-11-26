@@ -6,13 +6,13 @@
  */
 import type { AppearanceSpec, PatientInfo } from '../../engine/events';
 import type { EmergencyDepartment } from '../../model/ed';
-import { CLOTH, HAIR_COLORS, HAIR_STYLES, SKIN, TOP_STYLES, W, H, characterPixels, paint } from '../../render/characters/pixels';
+import { CLOTH, HAIR_COLORS, HAIR_FOR, HAIR_STYLES, SKIN, TOP_FOR, TOP_STYLES, W, H, characterPixels, paint, stylesFor } from '../../render/characters/pixels';
 import { LEVEL_NAME, SYMPTOMS } from './symptoms';
 
 const AGES: PatientInfo['ageRange'][] = ['0-17', '18-39', '40-64', '65+'];
 export type Sex = 'mujer' | 'hombre';
-/** peinado inicial según el sexo elegido (índices de HAIR_STYLES: largo / corto); se puede cambiar después */
-const HAIR_FOR: Record<Sex, number> = { mujer: 1, hombre: 0 };
+/** peinado y ropa iniciales según el sexo elegido (índices de HAIR_STYLES / TOP_STYLES); se pueden cambiar después */
+const START: Record<Sex, { hair: number; top: number }> = { mujer: { hair: 1, top: 0 }, hombre: { hair: 0, top: 0 } };
 const ACCESSORIES: [AppearanceSpec['accessory'], string][] = [
   [undefined, 'Ninguno'],
   ['cap', 'Gorra'],
@@ -70,11 +70,11 @@ export function mountCreator(
     <label>Síntoma <select name="symptom">${SYMPTOMS.map((s, i) => `<option value="${i}">${s.text}</option>`).join('')}</select></label>
     <div>Nivel de triage que le corresponde: <span class="lvl" id="cr-lvl"></span></div>
     <div>Tono de piel ${swatches('skin', SKIN, 'Tono de piel')}</div>
-    <label>Peinado <select name="hairStyle">${HAIR_STYLES.map((h, i) => `<option value="${i}">${h}</option>`).join('')}</select></label>
+    <label>Peinado y accesorio de cabeza <select name="hairStyle"></select></label>
     <div>Color de pelo ${swatches('hairColor', HAIR_COLORS, 'Color de pelo')}</div>
-    <label>Camisa <select name="topStyle">${TOP_STYLES.map((t, i) => `<option value="${i}">${t}</option>`).join('')}</select></label>
+    <label>Ropa <select name="topStyle"></select></label>
     <div>Color de camisa ${swatches('topColor', CLOTH, 'Color de camisa')}</div>
-    <div>Color de pantalón ${swatches('bottomColor', CLOTH, 'Color de pantalón')}</div>
+    <div>Color de pantalón o falda ${swatches('bottomColor', CLOTH, 'Color de pantalón o falda')}</div>
     <label>Accesorio <select name="accessory">${ACCESSORIES.map(([, n], i) => `<option value="${i}">${n}</option>`).join('')}</select></label>
   </div>
   <div class="prev" aria-label="Vista previa del personaje">
@@ -108,18 +108,24 @@ export function mountCreator(
     dlg.querySelector('#cr-lvl')!.textContent = LEVEL_NAME[SYMPTOMS[Number(val('symptom'))].level];
   };
   form.addEventListener('input', draw);
+  // T38: cada sexo ve sus peinados y su ropa (más los de todos); si la elección actual no aplica, toma la inicial.
+  const fill = (name: 'hairStyle' | 'topStyle', names: string[], who: Sex, keep: boolean) => {
+    const sel = form.elements.namedItem(name) as HTMLSelectElement;
+    const allowed = stylesFor(name === 'hairStyle' ? HAIR_FOR : TOP_FOR, who);
+    const prev = Number(sel.value);
+    sel.replaceChildren(...allowed.map((i) => new Option(names[i], String(i))));
+    sel.value = String(keep && allowed.includes(prev) ? prev : name === 'hairStyle' ? START[who].hair : START[who].top);
+  };
+  const setSex = (who: Sex, keep: boolean) => {
+    fill('hairStyle', HAIR_STYLES, who, keep);
+    fill('topStyle', TOP_STYLES, who, keep);
+  };
   form.addEventListener('change', (e) => {
-    // Cambiar el sexo propone su peinado inicial, salvo que ya hayan elegido uno a mano.
     const t = e.target as HTMLInputElement;
-    if (t.name === 'hairStyle') hairTouched = true;
-    if (t.name === 'sex' && !hairTouched) (form.elements.namedItem('hairStyle') as HTMLSelectElement).value = String(HAIR_FOR[t.value as Sex]);
+    if (t.name === 'sex') setSex(t.value as Sex, true);
     draw();
   });
-  let hairTouched = false;
-  const resetHair = () => {
-    hairTouched = false;
-    (form.elements.namedItem('hairStyle') as HTMLSelectElement).value = String(HAIR_FOR.mujer);
-  };
+  const resetHair = () => setSex('mujer', false);
   resetHair();
   // El pantalón por defecto es azul y la camisa roja, para que el primer personaje no salga de un solo color.
   (form.querySelector('input[name=topColor][value="1"]') as HTMLInputElement).checked = true;

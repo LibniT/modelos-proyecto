@@ -381,3 +381,9 @@ Hecho: la máquina de la cafetería se cierra si dejas de ver esa cafetería (ma
 A medias: el sexo no viaja en el motor: `PatientInfo` es parte del contrato congelado (`src/engine/events.ts`) y no tiene ese campo. Pantalla completa no se pudo probar en el panel del navegador (lo bloquea); se probó el botón y el creador por separado.
 Siguiente paso: probar en el monitor la pantalla completa con «Crear mi paciente».
 Preguntas para el autor: ¿agregar `sex?` opcional al contrato de eventos para que el sexo aparezca en el texto emergente del paciente?
+
+## 2026-11-25 · Claude · feat/T36-interiores (T38)
+Hecho: 16 peinados (11 nuevos: cola de caballo, trenzas, melena con flequillo, largo con diadema, cola con lazo, corto con aretes, corto con barba, corto con bigote, copete, afro, rapado con barba) y 9 prendas (6 nuevas: vestido, blusa y falda, camisa con corbata, polo, chaqueta abierta, sudadera con capucha). El creador ofrece a cada sexo lo suyo más lo de todos. Los pacientes generados eligen peinado y ropa del mismo catálogo (siguen acotados a 64 aspectos).
+A medias: los accesorios nuevos van dentro del peinado o la ropa porque `accessory` del contrato congelado solo admite gorra, gafas y tapabocas.
+Siguiente paso: —
+Preguntas para el autor: —

@@ -75,6 +75,7 @@ Estados: `pendiente` · `en curso (agente, fecha)` · `hecha` · `bloqueada (por
 | T35 | Arreglos de legibilidad para la feria: panel del paciente sin textos cortados; tarjeta de recorrido sin tapar la ficha de la clínica | Claude | `src/ui` | hecha (Claude, 25 nov) |
 | T36 | Interiores interactivos: clic en una cama dice quién la ocupa (pacientes con nombre del motor: remitidos y del mapa); acompañantes de la cafetería del hospital ligados a pacientes reales | Claude | `src/model/ed.ts` (solo lectura nueva), `src/render`, `src/ui` | hecha (Claude, 25 nov) |
 | T37 | Ajustes del ensayo: la máquina se cierra al cambiar de vista; franja de remisión minimizable; «Crear mi paciente» en pantalla completa; elegir sexo en el creador; arrastre del muñeco solo con la figura y el punto de caída | Claude | `src/ui`, `src/main.ts` | hecha (Claude, 25 nov) |
+| T38 | Más peinados (16) y ropa (9) por sexo, con accesorios integrados (diadema, lazo, aretes, barba, bigote, corbata); el creador muestra a cada sexo su catálogo | Claude | `src/render/characters`, `src/ui/creator` | hecha (Claude, 25 nov) |
 
 ### Detalle T25 (red Valledupar)
 - **Corte:** miércoles 25 nov a las 20:00. Si P0 no pasa `npm test`, `npx tsc --noEmit` y `npm run preview` sin red (con recarga), la feria se hace con la versión de T24 (`main` en 0326196).
