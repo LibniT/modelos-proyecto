@@ -366,3 +366,12 @@ Hecho: la tarjeta «Recorrido de…» (#card) ya no queda debajo de la ficha del
 A medias: —
 Siguiente paso: interiores más interactivos y acompañantes ligados a pacientes, para el final de corte (no para la feria).
 Preguntas para el autor: —
+
+## 2026-11-25 · Claude · feat/T36-interiores
+Hecho:
+- Motor (`src/model/ed.ts`): registro de solo lectura `clinicStays(j)` con los pacientes con identidad en cada unidad (remitidos desde urgencias y pacientes del mapa): reserva, llegada y fin de la estancia. No cambia eventos ni sorteos: los hashes de regresión siguen iguales (161 pruebas).
+- Interior de clínica: cada paciente con nombre conserva su cama dibujada (`assignBeds`, función pura en `companions/plans.ts`, con pruebas) y lleva un alfiler (azul remitido, rojo del mapa). Clic en una cama → tarjeta: con nombre (triage, condición, horas) o «demanda propia, sin nombre», reservada o libre.
+- Cafetería del hospital: los acompañantes ya no llegan al azar; llegan con un paciente del motor (40 %, supuesto, decidido por hash del id) y se van cuando su paciente sale. Texto emergente «Acompañante de …». Las cafeterías de las clínicas siguen con el modelo social propio.
+A medias: no se vio en pantalla un alfiler azul (remisión) dentro de un interior: en la red las remisiones van a UCI (sin planta) y en el modo original tardan; la lógica está probada.
+Siguiente paso: ensayo de la guía con el recorrido nuevo del paciente en su cama.
+Preguntas para el autor: ¿40 % de pacientes acompañados está bien como supuesto?

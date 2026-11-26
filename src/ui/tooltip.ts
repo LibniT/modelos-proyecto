@@ -74,5 +74,6 @@ export function describe(
     const p = s.patients.find((x) => x.id === hit.id);
     return p && patientTip(p, s, epsName);
   }
+  if (hit.kind === 'companion') return undefined; // T36: lo describe el modelo social (main.ts)
   return hit.kind === 'station' ? stationTip(hit.id, s, ambAway, clinicOf) : areaTip(hit.name, s);
 }

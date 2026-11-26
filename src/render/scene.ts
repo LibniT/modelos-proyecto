@@ -175,7 +175,10 @@ export class HospitalScene extends Phaser.Scene {
       // Cada cuadro: el paciente bajo el puntero puede moverse aunque el puntero esté quieto.
       const p = this.input.activePointer;
       p.updateWorldPoint(this.cameras.main);
-      const hit = p.isDown ? undefined : hitTest(pb, { x: p.worldX, y: p.worldY }, this.driver.speed > SNAP_SPEED);
+      let hit: Hit | undefined = p.isDown ? undefined : hitTest(pb, { x: p.worldX, y: p.worldY }, this.driver.speed > SNAP_SPEED);
+      // T36: un acompañante de la cafetería gana sobre el área (no sobre un paciente)
+      const who = !p.isDown && hit?.kind !== 'patient' ? this.cafeView?.companionAt(p.worldX, p.worldY) : undefined;
+      if (who) hit = { kind: 'companion', id: who };
       this.onHover(hit, p.x, p.y);
     }
   }

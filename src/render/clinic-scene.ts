@@ -2,7 +2,9 @@
  * T24 — Interior isométrico de una clínica (tercera escena del mismo juego; empieza dormida).
  * Las camas son las plazas del motor: `snapshot().clinics[j]` dice cuántas están ocupadas (demanda propia +
  * reservas de remisión). El motor no guarda qué cama ocupa cada paciente, así que las plazas ocupadas
- * se pintan en un orden fijo repartido entre alas, sin identidad. Los acompañantes salen del modelo social.
+ * se pintan en un orden fijo repartido entre alas. T36: los pacientes con identidad (remitidos o del mapa,
+ * `ClinicState.named`) conservan su cama mientras estén y se marcan con un alfiler; un clic en una cama dice
+ * quién la ocupa. La demanda propia sigue anónima. Los acompañantes salen del modelo social.
  */
 import Phaser from 'phaser';
 import { iso } from './layout';
@@ -10,7 +12,7 @@ import { rect, slab, stamp } from './art';
 import { furniture } from './interior';
 import type { Driver } from './drivers';
 import { SKIN, HAIR_COLORS } from './characters/pixels';
-import { fillOrder, type MachineKind, type SitePlan } from './companions/plans';
+import { assignBeds, fillOrder, type BedSlot, type MachineKind, type NamedBed, type SitePlan } from './companions/plans';
 import { PlanView, clinicFloor } from './companions/view';
 import type { Social } from './companions/social';
 
@@ -18,11 +20,16 @@ export interface ClinicState {
   occupied: number;
   /** camas reservadas para traslados que aún van en camino (incluidas en `occupied`) */
   reserved: number;
+  /** T36: pacientes con identidad en la sede (incluidos en `occupied`); `reserved` = aún no llegan */
+  named?: NamedBed[];
 }
+export type { BedSlot };
 export interface ClinicSceneOptions {
   social: () => Social;
   state: (j: number) => ClinicState;
   onMachine?: (site: number, kind: MachineKind) => void;
+  /** T36: clic en la cama `bed` (1, 2, …) de la clínica j */
+  onBed?: (j: number, bed: number, slot: BedSlot) => void;
   /** espacio (px) que ocupa la tarjeta de controles sobre el lienzo, para no tapar la planta al encuadrar */
   inset?: () => { left: number; top: number };
 }
@@ -36,9 +43,12 @@ export class ClinicScene extends Phaser.Scene {
   private builtKey = '';
   private view?: PlanView;
   private made: Phaser.GameObjects.GameObject[] = [];
-  private beds: { lying: Phaser.GameObjects.Image; tag: Phaser.GameObjects.Image }[] = [];
+  private beds: { lying: Phaser.GameObjects.Image; tag: Phaser.GameObjects.Image; pin: Phaser.GameObjects.Image }[] = [];
   private order: number[] = [];
   private shown = '';
+  /** T36: cama dibujada de cada paciente con identidad (estable mientras esté en la sede) */
+  private assigned = new Map<string, number>();
+  private slots: BedSlot[] = [];
   private overview = 1;
   private manualCamera = false;
   get minZoom(): number {
@@ -86,7 +96,9 @@ export class ClinicScene extends Phaser.Scene {
       if (Phaser.Math.Distance.Between(p.downX, p.downY, p.upX, p.upY) > 6) return;
       p.updateWorldPoint(cam);
       const kind = this.view?.machineAt(p.worldX, p.worldY);
-      if (kind) this.o.onMachine?.(this.index, kind);
+      if (kind) return this.o.onMachine?.(this.index, kind);
+      const bed = this.bedAt(p.worldX, p.worldY);
+      if (bed !== undefined) this.o.onBed?.(this.index, bed + 1, this.slots[bed] ?? { kind: 'free' });
     });
     cam.fadeIn(220);
   }
@@ -136,13 +148,27 @@ export class ClinicScene extends Phaser.Scene {
         this.made.push(this.add.image(q.x, q.y, bedKey).setOrigin(0.5, 78 / 112).setDepth(1000 + q.y - 1));
         const lying = this.add.image(q.x, q.y, this.restingTexture(i)).setOrigin(0.5, 42 / 66).setDepth(1000 + q.y).setVisible(false);
         const tag = this.add.image(q.x, q.y, tagKey).setOrigin(0.5, 42 / 66).setDepth(1000 + q.y).setVisible(false);
-        this.made.push(lying, tag);
-        return { lying, tag };
+        // T36: marcador sobre la cama de un paciente con nombre (encima de todo lo de su fila)
+        const pin = this.add.image(q.x, q.y - 40, this.pinTexture('urgencias')).setOrigin(0.5, 1).setDepth(1000 + q.y + 2).setVisible(false);
+        this.made.push(lying, tag, pin);
+        return { lying, tag, pin };
       });
       this.order = fillOrder(plan);
+      this.assigned.clear();
       this.shown = '';
     }
     this.fit();
+  }
+
+  /** T36: alfiler azul (remitido desde urgencias, como su ruta en el mapa) o rojo (paciente llevado desde el mapa). */
+  private pinTexture(from: NamedBed['from']): string {
+    const col = from === 'urgencias' ? 0x2f7fd1 : 0xc8442f;
+    return stamp(this, 'alfiler-cama-' + from, 30, 40, 15, 38, (g) => {
+      g.fillStyle(col).fillTriangle(-6, -18, 6, -18, 0, -2);
+      g.fillStyle(0xffffff).fillCircle(0, -24, 13);
+      g.fillStyle(col).fillCircle(0, -24, 10.5);
+      g.fillStyle(0xffffff).fillRect(-6, -26, 12, 4).fillRect(-2, -30, 4, 12);
+    });
   }
 
   /** Paciente genérico acostado (sin identidad): 6 variantes deterministas por número de cama. */
@@ -163,16 +189,44 @@ export class ClinicScene extends Phaser.Scene {
     social.advance(this.driver.pb.t);
     const s = this.o.state(this.index);
     const occ = Math.min(s.occupied, this.beds.length);
+    const named = s.named ?? [];
     const res = Math.min(s.reserved, occ);
-    const key = `${occ}:${res}`;
+    const key = `${occ}:${res}:${named.map((n) => n.id + (n.reserved ? 'r' : '')).join(',')}`;
     if (key !== this.shown) {
       this.shown = key;
-      this.order.forEach((bed, k) => {
-        this.beds[bed].lying.setVisible(k < occ - res);
-        this.beds[bed].tag.setVisible(k >= occ - res && k < occ);
-      });
+      this.layout(occ, res, named);
     }
     this.view?.drawCompanions(social, this.driver.speed > SNAP_SPEED);
+  }
+
+  /**
+   * T36: reparte las camas. Cada paciente con identidad conserva la suya; el resto de las plazas ocupadas
+   * (demanda propia, anónima) y las reservas sin nombre toman las primeras libres del orden fijo.
+   */
+  private layout(occ: number, res: number, named: NamedBed[]): void {
+    this.slots = assignBeds(this.order, this.beds.length, this.assigned, occ, res, named);
+    this.slots.forEach((s, bed) => {
+      const b = this.beds[bed];
+      b.lying.setVisible(s.kind === 'anon' || (s.kind === 'named' && !s.reserved));
+      b.tag.setVisible(s.kind === 'reserved' || (s.kind === 'named' && s.reserved));
+      b.pin.setVisible(s.kind === 'named');
+      if (s.kind === 'named') b.pin.setTexture(this.pinTexture(s.from));
+    });
+  }
+
+  /** Cama bajo el punto (mundo), por cercanía al centro del mueble dibujado. */
+  private bedAt(x: number, y: number): number | undefined {
+    let best: number | undefined;
+    let bestD = 40;
+    this.plan.beds.forEach((b, i) => {
+      const q = iso(b.p);
+      const d = Math.hypot(x - q.x, (y - (q.y - 12)) * 1.6);
+      if (d < bestD) {
+        bestD = d;
+        best = i;
+      }
+    });
+    return best;
   }
 
   /** Encuadra la planta completa (muros incluidos) debajo de la franja de controles. */

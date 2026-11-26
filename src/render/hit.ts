@@ -4,7 +4,7 @@
 import { AREAS, MAX, iso, stationPos, unIso, type Vec } from './layout';
 import type { Playback } from './playback';
 
-export type Hit = { kind: 'patient'; id: string } | { kind: 'station'; id: string } | { kind: 'area'; name: string };
+export type Hit = { kind: 'patient'; id: string } | { kind: 'station'; id: string } | { kind: 'area'; name: string } | { kind: 'companion'; id: string };
 
 /** cuerpo del personaje: centro a `dy` px sobre los pies y radio de acierto (px de mundo) */
 export const BODY = { dy: 30, r: 18 };

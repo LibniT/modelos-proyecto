@@ -23,6 +23,9 @@
 .ward-legend { display:flex; flex-wrap:wrap; gap:4px 14px; margin:4px 0 }
 .ward-legend span::before { content:''; display:inline-block; width:12px; height:12px; margin-right:5px; vertical-align:-2px; border-radius:3px; border:1px solid #315e5b }
 .lg-occ::before { background:#b2d3c7 } .lg-res::before { background:#f6c453 } .lg-free::before { background:#fbf5e3 }
+.lg-ref::before,.lg-map::before { border-radius:50% !important; border:2px solid #fff !important }
+.lg-ref::before { background:#2f7fd1 } .lg-map::before { background:#c8442f }
+.ward-hint { margin:6px 0 0; font-weight:650; color:#1f5e5a }
 .ward-wings { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 2px }
 .ward-wings button { font-size:13px; padding:5px 9px }
 .ward-receipt { color:#425c56; margin:6px 0 0 }

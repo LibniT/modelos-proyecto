@@ -21,6 +21,7 @@ import { distMean } from './engine/distributions';
 import type { Hit } from './render/hit';
 import type { SimEvent } from './engine/events';
 import { mountScene, TRIAGE_COLOR } from './render/scene';
+import type { BedSlot } from './render/clinic-scene';
 import { LiveDriver, MockDriver } from './render/drivers';
 import { mountAccidentStatus } from './ui/accident-status';
 import { DemoMode } from './render/demo';
@@ -179,7 +180,8 @@ function social(): Social {
     const beds = (d instanceof LiveDriver ? d.ed.params : realisticParams()).clinics.map((c) => c.beds);
     // T27: en la red solo la unidad de camas de adulto de cada sede tiene planta (las UCI no tienen interior).
     const pools = live?.ed.params.network?.pools;
-    s = new Social([hospitalCafe(), ...beds.flatMap((b, j) => (pools && pools[j] !== 'general' ? [] : [sitePlan(j, b)]))], 2026);
+    // T36: en el hospital los acompañantes llegan con los pacientes del motor (sede −1 ligada)
+    s = new Social([hospitalCafe(), ...beds.flatMap((b, j) => (pools && pools[j] !== 'general' ? [] : [sitePlan(j, b)]))], 2026, { linked: [-1] });
     socials.set(d, s);
   }
   return s;
@@ -225,7 +227,9 @@ const onHover = (hit: Hit | undefined, x: number, y: number) => {
   lastTipRead = now;
   const active = live;
   const t =
-    hit &&
+    hit?.kind === 'companion'
+      ? companionTip(hit.id)
+      : hit &&
     active &&
     describe(
       hit,
@@ -250,6 +254,28 @@ const onHover = (hit: Hit | undefined, x: number, y: number) => {
   tip.style.left = `${x + 16 + tip.offsetWidth > w ? x - 16 - tip.offsetWidth : x + 16}px`;
   tip.style.top = `${Math.max(0, Math.min(y + 12, $('scene').clientHeight - tip.offsetHeight))}px`;
 };
+/** T36: texto emergente de un acompañante de la cafetería del hospital. */
+function companionTip(id: string): { title: string; lines: string[]; level?: number } | undefined {
+  const c = social().companions.get(id);
+  if (!c) return undefined;
+  if (c.mine) return { title: 'Mi acompañante', lines: ['Lo manejas tú: haz clic en una máquina y escribe el código del producto.'] };
+  const doing: Record<string, string> = {
+    entrando: 'Acaba de llegar con su paciente.',
+    sentado: 'Espera sentado mientras atienden a su paciente.',
+    'de pie': 'Espera de pie.',
+    'hacia la máquina': 'Va a la máquina.',
+    'en fila': 'Hace fila en la máquina.',
+    comprando: 'Está comprando.',
+    saliendo: 'Se va: su paciente ya salió del servicio.',
+  };
+  if (!c.of) return { title: 'Acompañante', lines: [doing[c.activity] ?? '', 'Modelo social de la cafetería: no sale del motor clínico.'] };
+  const f = driver.pb.figures.get(c.of.id);
+  return {
+    title: `Acompañante de ${c.of.name}`,
+    level: f?.triage,
+    lines: [doing[c.activity] ?? '', 'Llegó con su paciente y se irá cuando este salga del servicio (alta, hospitalización o remisión).'],
+  };
+}
 // T19: mapa de la ciudad (segunda escena). Distancias ∝ tiempo medio de viaje; ocupación del snapshot del motor.
 const clinicParams = () => (live ? live.ed.params : baseParams()).clinics;
 const clinicState = () => (live ? live.ed.snapshot().clinics : (original as MockDriver).initialClinics);
@@ -294,11 +320,13 @@ const {
     clinic: {
       social,
       onMachine: openMachine,
+      onBed: showBed,
       // Cada cama dibujada representa beds/dibujadas camas del motor (1 fuera de la red real).
       state: (j) => {
         const c = clinicState()[j];
         const drawn = social().plan(j)?.beds.length || c.beds;
-        return { occupied: Math.round((c.occupied * drawn) / c.beds), reserved: Math.min(reservedFor(j), drawn) };
+        const named = (live?.ed.clinicStays(j) ?? []).map((st) => ({ id: st.id, reserved: st.arrived === undefined, from: st.from }));
+        return { occupied: Math.round((c.occupied * drawn) / c.beds), reserved: Math.min(reservedFor(j), drawn), named };
       },
       // La tarjeta de la clínica va a la izquierda en pantallas anchas y arriba en las estrechas.
       inset: () =>
@@ -650,6 +678,33 @@ function showInfoCard(title: string, color: string, lines: string[], enter?: () 
   }
   $('card').hidden = false;
 }
+/** T36: tarjeta de una cama del interior: quién la ocupa (con nombre solo si el motor lo sigue). */
+function showBed(j: number, bed: number, slot: BedSlot): void {
+  const cl = clinicParams()[j];
+  const drawn = social().plan(j)?.beds.length || cl.beds;
+  const scale = drawn < cl.beds ? [`Planta representativa: cada cama dibujada equivale a ≈ ${(cl.beds / drawn).toFixed(1).replace('.', ',')} camas reales.`] : [];
+  const st = slot.kind === 'named' ? live?.ed.clinicStays(j).find((x) => x.id === slot.id) : undefined;
+  if (st) {
+    const roman = ['', 'I', 'II', 'III', 'IV', 'V'][st.level];
+    showInfoCard(`Cama ${bed} · ${st.name}`, `#${TRIAGE_COLOR[st.level].toString(16).padStart(6, '0')}`, [
+      st.from === 'urgencias' ? 'Remitido desde urgencias del hospital de origen.' : 'Llevado en ambulancia desde un punto del mapa.',
+      `Triage ${roman}${st.condition ? ' · ' + CONDITION_LABEL[st.condition] : ''}`,
+      `Cama reservada: ${fmtClock(st.reservedAt)}.`,
+      st.arrived !== undefined
+        ? `Llegó: ${fmtClock(st.arrived)}. Su estancia simulada termina hacia ${fmtClock(st.until!)}.`
+        : 'Todavía va en camino: la cama ya cuenta como ocupada.',
+      ...scale,
+    ]);
+    return;
+  }
+  const text: Record<Exclude<BedSlot['kind'], 'named'>, [string, string[]]> = {
+    anon: ['Ocupada', ['Ocupada por la demanda propia de la sede (simulada).', 'El motor cuenta estas camas, pero no sigue a cada paciente: por eso no tiene nombre.']],
+    reserved: ['Reservada', ['Reservada para un traslado que va en camino.']],
+    free: ['Disponible', ['Libre ahora. Si el CRUE remite aquí a un paciente, se reserva al decidir el traslado.']],
+  };
+  const [state, lines] = text[slot.kind === 'named' ? 'anon' : slot.kind];
+  showInfoCard(`Cama ${bed} · ${state}`, '#bdd7cb', [...lines, ...scale]);
+}
 $('mass').onclick = () => live?.massCasualty(Number(($('mass-n') as HTMLSelectElement).value));
 const updateAccident = mountAccidentStatus($('recovery'), fmtClock);
 ($('trip-pick') as HTMLSelectElement).onchange = (e) => (pinnedRef = (e.target as HTMLSelectElement).value || undefined);
@@ -730,6 +785,7 @@ setInterval(() => {
   // T24: el modelo social sigue el reloj de la sesión visible (también en el mapa) y avisa las entregas.
   const soc = social();
   soc.advance(driver.pb.t);
+  soc.syncPatients(-1, [...driver.pb.figures.values()].filter((f) => !f.hidden).map((f) => ({ id: f.id, name: f.name })));
   for (const o of soc.inbox.splice(0)) if (o.state === 'entregado') $('toast').textContent = `Mi acompañante recibió ${o.product.name} · ${o.product.code}`;
   $('companion-state').textContent = soc.myOrder
     ? soc.orderActive

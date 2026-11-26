@@ -4,6 +4,10 @@
  * Usa el reloj simulado de la sesión (avanza solo cuando avanza el reloj del render, así que la pausa
  * lo detiene) y su PROPIO generador sfc32 (otra instancia de RngFactory: no consume los aleatorios del hospital).
  * Sin DOM ni Phaser: se prueba en Node.
+ *
+ * T36 — En las sedes «ligadas» (el hospital) ya no llega gente al azar: cada paciente del motor que entra trae
+ * un acompañante con probabilidad ACCOMPANY (decidida por su id, sin consumir aleatorios), que espera en la
+ * cafetería o en la sala y se va cuando su paciente sale del servicio (alta, hospitalización o remisión).
  */
 import { RngFactory, type Rng } from '../../engine/rng';
 import { along, type Vec } from '../layout';
@@ -75,6 +79,20 @@ export interface Companion {
   holding?: Product;
   /** invalida llegadas programadas de un recorrido anterior */
   leg: number;
+  /** T36: paciente del motor al que acompaña (solo en sedes ligadas) */
+  of?: { id: string; name: string };
+}
+
+/** T36: fracción de pacientes que llegan acompañados (supuesto del escenario; no hay dato local). */
+export const ACCOMPANY = 0.4;
+/** Fracción en [0, 1) fija para cada id (FNV-1a + fmix32): la decisión no depende de los cuadros ni gasta aleatorios. */
+export function idFraction(id: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 0x01000193);
+  // mezcla final (fmix32 de MurmurHash3): sin ella, ids parecidos («p1», «p2») dan fracciones casi iguales
+  h = Math.imul(h ^ (h >>> 16), 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  return ((h ^ (h >>> 16)) >>> 0) / 2 ** 32;
 }
 
 /** minutos simulados por baldosa (paso tranquilo; a más de ×120 la escena salta al destino) */
@@ -105,8 +123,12 @@ export class Social {
   private readonly lines = new Map<string, string[]>();
   private readonly serving = new Set<string>();
   private readonly plans = new Map<Site, SitePlan>();
+  private readonly linked: Set<Site>;
+  /** pacientes ya vistos por sede ligada (cada uno decide una sola vez si viene acompañado) */
+  private readonly seen = new Map<Site, Set<string>>();
 
-  constructor(plans: SitePlan[], seed = 2026) {
+  constructor(plans: SitePlan[], seed = 2026, opts: { linked?: Site[] } = {}) {
+    this.linked = new Set(opts.linked ?? []);
     const f = new RngFactory(seed);
     for (const p of plans) {
       this.plans.set(p.site, p);
@@ -139,6 +161,44 @@ export class Social {
       e.fn();
     }
     this.now = target;
+  }
+
+  /**
+   * T36: pacientes del motor presentes ahora en una sede ligada. Los que aparecen por primera vez pueden traer
+   * acompañante; los acompañantes cuyo paciente ya no está, se van. En la primera llamada los acompañantes
+   * de los pacientes que ya estaban aparecen sentados (como el estado inicial de `populate`).
+   */
+  syncPatients(site: Site, patients: { id: string; name: string }[]): void {
+    if (!this.linked.has(site) || this.last === undefined) return;
+    const first = !this.seen.has(site);
+    const seen = this.seen.get(site) ?? new Set<string>();
+    this.seen.set(site, seen);
+    const here = new Set(patients.map((p) => p.id));
+    for (const c of this.inSite(site)) if (c.of && !here.has(c.of.id) && c.activity !== 'saliendo') this.leave(c);
+    const plan = this.plans.get(site)!;
+    const rng = this.rng.get(site)!;
+    for (const p of patients) {
+      if (seen.has(p.id)) continue;
+      seen.add(p.id);
+      if (idFraction(p.id) >= ACCOMPANY) continue;
+      if (this.inSite(site).filter((c) => !c.mine).length >= plan.cap) continue;
+      const wait = this.freeSeats(site, 'espera');
+      const free = wait.length ? wait : this.freeSeats(site);
+      if (!free.length) continue;
+      const s = free[rng.int(free.length)];
+      const c = this.spawn(site, false);
+      c.of = { id: p.id, name: p.name };
+      if (!first) {
+        this.goSeat(c, s);
+        continue;
+      }
+      this.take(c, s);
+      c.at = plan.seats[s].p;
+      c.node = plan.seats[s].node;
+      c.face = plan.seats[s].face;
+      c.activity = 'sentado';
+      this.schedule(this.now + this.exp(site, STAY[plan.seats[s].kind]), () => this.afterSeat(c));
+    }
   }
 
   /** Posición actual y los puntos que le faltan del recorrido en curso. */
@@ -240,6 +300,7 @@ export class Social {
   private populate(site: Site): void {
     const plan = this.plans.get(site)!;
     const rng = this.rng.get(site)!;
+    if (this.linked.has(site)) return; // T36: aquí los acompañantes llegan con sus pacientes (syncPatients)
     for (let k = 0; k < Math.min(3, plan.cap); k++) {
       const free = this.freeSeats(site);
       if (!free.length) break;
@@ -320,6 +381,7 @@ export class Social {
     if (!this.companions.has(c.id) || c.activity !== 'sentado') return;
     this.release(c);
     if (!c.holding && this.rng.get(c.site)!.next() < 0.3 && this.tryMachine(c)) return;
+    if (c.of) return this.settle(c); // T36: sigue esperando a su paciente
     this.leave(c);
   }
 
@@ -411,6 +473,13 @@ export class Social {
         const node = this.plans.get(c.site)!.machines[0].node;
         this.walkTo(c, node, this.plans.get(c.site)!.nodes[node], () => {});
       }
+      return;
+    }
+    if (c.of) {
+      // T36: espera a su paciente sentado; si no queda silla, sale un rato (no se queda de pie ocupando paso)
+      const any = free.length ? free : this.freeSeats(c.site);
+      if (any.length) this.goSeat(c, any[this.rng.get(c.site)!.int(any.length)]);
+      else this.leave(c);
       return;
     }
     if (free.length && this.rng.get(c.site)!.next() < 0.5) this.goSeat(c, free[this.rng.get(c.site)!.int(free.length)]);

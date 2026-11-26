@@ -21,7 +21,8 @@ export class ClinicInterior {
   ) {
     host.innerHTML = `<div class="ward-head"><div><small>Interior de la clínica</small><h3></h3></div><button type="button" class="ward-back">Volver al mapa</button></div>
       <p class="ward-count" role="status"></p>
-      <p class="ward-legend"><span class="lg-occ">Ocupada</span><span class="lg-res">Reservada · traslado en camino</span><span class="lg-free">Disponible</span></p>
+      <p class="ward-legend"><span class="lg-occ">Ocupada</span><span class="lg-res">Reservada · traslado en camino</span><span class="lg-free">Disponible</span><span class="lg-ref">Remitido desde urgencias (con nombre)</span><span class="lg-map">Paciente del mapa (con nombre)</span></p>
+      <p class="ward-hint">Haz clic en una cama para ver quién la ocupa.</p>
       <div class="ward-wings" role="group" aria-label="Alas de la clínica"></div>
       <p class="ward-receipt"></p>`;
     this.title = host.querySelector('h3')!;

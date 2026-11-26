@@ -255,6 +255,8 @@ export class PlanView {
   private readonly mineLabel: Phaser.GameObjects.Text;
   private hovered?: MachineView;
   private readonly lastDir = new Map<string, 'SE' | 'SW' | 'NE' | 'NW'>();
+  /** T36: pies de cada acompañante en el último cuadro (para el texto emergente) */
+  private readonly feet = new Map<string, { x: number; y: number }>();
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -357,6 +359,17 @@ export class PlanView {
   }
 
   /** Máquina bajo el punto (px de mundo). */
+  /** T36: acompañante bajo el punto (mundo), por cercanía al centro del cuerpo. */
+  companionAt(x: number, y: number): string | undefined {
+    let best: string | undefined;
+    let bestD = 16;
+    for (const [id, q] of this.feet) {
+      const d = Math.hypot(x - q.x, y - (q.y - 22));
+      if (d < bestD) [best, bestD] = [id, d];
+    }
+    return best;
+  }
+
   machineAt(x: number, y: number): MachineKind | undefined {
     return this.machines.find((m) => Phaser.Geom.Polygon.Contains(m.area, x, y))?.kind;
   }
@@ -379,6 +392,7 @@ export class PlanView {
       const p = social.position(c, snap);
       const q = iso(p);
       seen.add(c.id);
+      this.feet.set(c.id, q);
       let img = this.sprites.get(c.id);
       if (!img) {
         img = this.scene.add.image(0, 0, '__WHITE').setOrigin(0.5, 1).setScale(PERSON);
@@ -424,6 +438,7 @@ export class PlanView {
         img.destroy();
         this.sprites.delete(id);
         this.lastDir.delete(id);
+        this.feet.delete(id);
       }
   }
 }

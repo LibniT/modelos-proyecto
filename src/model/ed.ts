@@ -148,6 +148,22 @@ export interface PrehospitalLeg {
   amb?: string;
 }
 
+/**
+ * T36 — Paciente con identidad que ocupa (o tiene reservada) una cama de una sede: remitido desde urgencias o
+ * llevado desde el mapa. La demanda propia de cada sede sigue siendo anónima (solo se cuenta).
+ */
+export interface ClinicStay {
+  id: string;
+  name: string;
+  level: TriageLevel;
+  condition?: ConditionId;
+  from: 'urgencias' | 'mapa';
+  reservedAt: number;
+  arrived?: number;
+  /** fin de la estancia simulada (se conoce al llegar) */
+  until?: number;
+}
+
 /** Historia de un paciente prehospitalario, con los tiempos exactos del motor. */
 export interface PrehospitalCase {
   id: string;
@@ -204,6 +220,7 @@ export class EmergencyDepartment {
   private obsCapacity: number;
   private obsOccupied = 0;
   private readonly clinics: Clinic[];
+  private readonly stays = new Map<number, ClinicStay[]>();
   /** flujos solo del escenario de red (no alteran los flujos de los escenarios originales) */
   private readonly net?: { condition: Rng; crue: Rng; handover: Rng; accept: Rng };
   private remitOutOfNetwork = 0;
@@ -349,7 +366,10 @@ export class EmergencyDepartment {
     }
     c.destination = dest.site;
     const unit = dest.kind === 'definitiva' ? this.unitOf(dest.site, CONDITION_POOL[req.condition]) : -1;
-    if (unit >= 0) this.clinicOccupy(unit); // la cama se reserva al decidir (regulación por el CRUE)
+    if (unit >= 0) {
+      this.clinicOccupy(unit); // la cama se reserva al decidir (regulación por el CRUE)
+      this.stayReserve(unit, c.id, req.info.name, req.level, req.condition, 'mapa');
+    }
     const toDest = routes[dest.site]!;
     const goDest = (amb?: number) => this.preLeg(c, 'a-destino', dest.site, toDest, amb, () => this.preArrive(c, dest.site, unit, req, amb));
     if (!req.ambulance) {
@@ -386,6 +406,11 @@ export class EmergencyDepartment {
   }
 
   /** Ambulancias prehospitalarias ocupadas y en cola. */
+  /** T36: pacientes con identidad en la unidad j (reservas en camino y hospitalizados); solo lectura. */
+  clinicStays(j: number): readonly ClinicStay[] {
+    return this.stays.get(j) ?? [];
+  }
+
   get prehospitalAmbulances(): { capacity: number; busy: number; queue: number; utilization: number } | undefined {
     const a = this.preAmb;
     return a && { capacity: a.capacity, busy: a.inService, queue: a.queueLength, utilization: a.capacity ? a.busy.mean(this.sim.now) / a.capacity : NaN };
@@ -869,6 +894,7 @@ export class EmergencyDepartment {
         p.journey.referralAt = this.sim.now;
         p.reservedClinic = c.clinic;
         this.clinicOccupy(c.clinic);
+        this.stayReserve(c.clinic, p.info.id, p.info.name, p.level, p.condition, 'urgencias');
         this.ambulances.request(p, 0, (aid) => this.startTransfer(p, aid));
         continue;
       }
@@ -891,6 +917,7 @@ export class EmergencyDepartment {
       if (best < 0) continue;
       p.reservedClinic = best;
       this.clinicOccupy(best);
+      this.stayReserve(best, p.info.id, p.info.name, p.level, p.condition, 'urgencias');
       this.ambulances.request(p, 0, (aid) => this.startTransfer(p, aid));
     }
   }
@@ -923,7 +950,7 @@ export class EmergencyDepartment {
       p.zone = `clinic_${j}`;
       this.depart(p, 'remitido');
       // Estancia en la clínica (fuera del hospital, pero ocupa su cama).
-      this.sim.schedule(sample(cl.los, this.r.observation), () => this.clinicRelease(j));
+      this.stayArrive(j, p.info.id, sample(cl.los, this.r.observation));
       this.sim.schedule(handover + back, () => this.ambulances.release(ambId));
     });
   }
@@ -1030,7 +1057,7 @@ export class EmergencyDepartment {
       c.outcome = 'cama en la sede';
       c.status = 'hospitalizado en la sede';
       this.emit('BED_ASSIGNED', { id: c.id, resourceId: `clinic_${unit}`, data: { prehospital: true, site } });
-      this.sim.schedule(sample(this.params.clinics[unit].los, this.preRng!), () => this.clinicRelease(unit));
+      this.stayArrive(unit, c.id, sample(this.params.clinics[unit].los, this.preRng!));
       return;
     }
     // Sede de estabilización: después se busca la atención definitiva (CRUE).
@@ -1054,7 +1081,10 @@ export class EmergencyDepartment {
         return;
       }
       const unit = best.site === n.origin ? -1 : this.unitOf(best.site, CONDITION_POOL[req.condition]);
-      if (unit >= 0) this.clinicOccupy(unit);
+      if (unit >= 0) {
+        this.clinicOccupy(unit);
+        this.stayReserve(unit, c.id, req.info.name, req.level, req.condition, 'mapa');
+      }
       c.onward = { site: best.site, decidedAt: this.sim.now, minutes: best.minutes, requested: this.sim.now };
       c.status = 'esperando ambulancia para la remisión';
       this.preAmb!.request(c, 0, (aid) => {
@@ -1067,6 +1097,26 @@ export class EmergencyDepartment {
           });
         });
       });
+    });
+  }
+
+  private stayReserve(j: number, id: string, name: string, level: TriageLevel, condition: ConditionId | undefined, from: ClinicStay['from']): void {
+    if (!this.stays.has(j)) this.stays.set(j, []);
+    this.stays.get(j)!.push({ id, name, level, condition, from, reservedAt: this.sim.now });
+  }
+
+  /** Llega a la cama reservada; al terminar la estancia `los` se libera la cama (mismo sorteo que antes). */
+  private stayArrive(j: number, id: string, los: number): void {
+    const stay = this.stays.get(j)?.find((x) => x.id === id);
+    if (stay) {
+      stay.arrived = this.sim.now;
+      stay.until = this.sim.now + los;
+    }
+    this.sim.schedule(los, () => {
+      const list = this.stays.get(j);
+      const k = list?.findIndex((x) => x.id === id) ?? -1;
+      if (k >= 0) list!.splice(k, 1);
+      this.clinicRelease(j);
     });
   }
 

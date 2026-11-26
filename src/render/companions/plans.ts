@@ -94,6 +94,52 @@ export interface SitePlan {
 export const QUEUE_SPOTS = 4;
 const BED_HALF = { x: 0.5, y: 0.975 };
 
+/** T36: paciente con identidad en una sede (remitido desde urgencias o llevado desde el mapa). */
+export interface NamedBed {
+  id: string;
+  reserved: boolean;
+  from: 'urgencias' | 'mapa';
+}
+/** Qué hay en una cama dibujada (para pintarla y para la tarjeta del clic). */
+export type BedSlot = ({ kind: 'named' } & NamedBed) | { kind: 'anon' } | { kind: 'reserved' } | { kind: 'free' };
+
+/**
+ * T36: reparte `n` camas dibujadas. Cada paciente con identidad conserva su cama mientras esté (`assigned` se
+ * actualiza en el lugar); el resto de las plazas ocupadas (demanda propia, anónima) y las reservas sin nombre
+ * toman las primeras libres del orden fijo `order`. `occ` y `res` ya están acotados a `n` e incluyen a los con nombre.
+ */
+export function assignBeds(order: number[], n: number, assigned: Map<string, number>, occ: number, res: number, named: NamedBed[]): BedSlot[] {
+  named = named.slice(0, occ);
+  const ids = new Set(named.map((x) => x.id));
+  for (const id of [...assigned.keys()]) if (!ids.has(id)) assigned.delete(id);
+  const used = new Set(assigned.values());
+  for (const x of named) {
+    if (assigned.has(x.id)) continue;
+    const bed = order.find((b) => !used.has(b));
+    if (bed === undefined) break;
+    assigned.set(x.id, bed);
+    used.add(bed);
+  }
+  const slots: BedSlot[] = Array.from({ length: n }, () => ({ kind: 'free' }));
+  for (const x of named) {
+    const bed = assigned.get(x.id);
+    if (bed !== undefined) slots[bed] = { kind: 'named', ...x };
+  }
+  let anonRes = Math.max(0, res - named.filter((x) => x.reserved).length);
+  let anon = Math.max(0, occ - named.length - anonRes);
+  for (const bed of order) {
+    if (used.has(bed)) continue;
+    if (anon > 0) {
+      anon--;
+      slots[bed] = { kind: 'anon' };
+    } else if (anonRes > 0) {
+      anonRes--;
+      slots[bed] = { kind: 'reserved' };
+    }
+  }
+  return slots;
+}
+
 /** Cafetería común de las clínicas: rincón x0..x0+7, y0..y0+5, con puerta en el muro y0 + 5 (x 4,0–5,2). */
 function clinicCafe(plan: SitePlan, x0: number, y0: number): void {
   const at = (x: number, y: number) => ({ x: x0 + x, y: y0 + y });
