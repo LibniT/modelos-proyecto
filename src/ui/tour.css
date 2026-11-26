@@ -10,7 +10,14 @@
 .visit-strip select { max-width:100% }
 #practice,#enter-destination { color:white; background:var(--teal) }
 #session-banner { background:#fff0d6; border-color:#cca76b; justify-content:flex-start }
-.trip-strip { background:#e4f1e7 } #session-banner strong,.trip-strip strong { font-size:1.05rem }
+.trip-strip { background:#e4f1e7; position:relative }
+.trip-strip .fold { position:absolute; top:8px; right:10px; font-size:13px; padding:4px 10px }
+.trip-strip>div:first-child { padding-right:130px }
+.trip-strip.folded { padding-top:8px; padding-bottom:8px }
+.trip-strip.folded>div:not(:first-of-type) { display:none !important }
+.trip-strip.folded #trip-pick { display:none }
+.fs-only { display:none }
+:fullscreen .fs-only { display:inline-block; background:#226d69; border-color:#226d69; color:#fff } #session-banner strong,.trip-strip strong { font-size:1.05rem }
 .acc-facts { display:flex; flex-wrap:wrap; gap:6px 20px; margin:8px 0 }
 .acc-facts dt { font-size:.82em; color:#675b45 }
 .acc-facts dd { font-weight:650; margin:2px 0 }

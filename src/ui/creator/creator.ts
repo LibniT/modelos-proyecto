@@ -1,6 +1,8 @@
 /**
  * T10 — Creador de paciente (SPEC E1–E2, F4: ventana modal). El paciente creado REEMPLAZA a la siguiente
  * llegada Poisson (`ed.injectVisitor`), así el proceso de llegadas sigue siendo Poisson. Desactivado en validación.
+ * El sexo (T37) es de la interfaz: elige el peinado inicial y se muestra en «Mi paciente». El motor no lo usa
+ * (ningún tiempo depende de él) y el contrato de eventos congelado no tiene ese campo, así que no viaja en ARRIVAL.
  */
 import type { AppearanceSpec, PatientInfo } from '../../engine/events';
 import type { EmergencyDepartment } from '../../model/ed';
@@ -8,6 +10,9 @@ import { CLOTH, HAIR_COLORS, HAIR_STYLES, SKIN, TOP_STYLES, W, H, characterPixel
 import { LEVEL_NAME, SYMPTOMS } from './symptoms';
 
 const AGES: PatientInfo['ageRange'][] = ['0-17', '18-39', '40-64', '65+'];
+export type Sex = 'mujer' | 'hombre';
+/** peinado inicial según el sexo elegido (índices de HAIR_STYLES: largo / corto); se puede cambiar después */
+const HAIR_FOR: Record<Sex, number> = { mujer: 1, hombre: 0 };
 const ACCESSORIES: [AppearanceSpec['accessory'], string][] = [
   [undefined, 'Ninguno'],
   ['cap', 'Gorra'],
@@ -21,7 +26,11 @@ const swatches = (name: string, colors: string[], label: string) =>
     .join('')}</div>`;
 
 /** `getEd` da el motor activo (cambia al cambiar de modo) o una fachada con su EPS y la inyección. `onSent` avisa a la página. */
-export function mountCreator(openButton: HTMLButtonElement, getEd: () => Pick<EmergencyDepartment, 'params' | 'injectVisitor'>, onSent: (msg: string) => void): void {
+export function mountCreator(
+  openButton: HTMLButtonElement,
+  getEd: () => Pick<EmergencyDepartment, 'params'> & { injectVisitor: (info: Parameters<EmergencyDepartment['injectVisitor']>[0], sex: Sex) => boolean },
+  onSent: (msg: string) => void,
+): void {
   const dlg = document.createElement('dialog');
   dlg.className = 'cr';
   dlg.innerHTML = `
@@ -38,6 +47,10 @@ export function mountCreator(openButton: HTMLButtonElement, getEd: () => Pick<Em
   .cr-sw span { display: block; width: 22px; height: 22px; border-radius: 50%; border: 2px solid #e1e6da; cursor: pointer; }
   .cr-sw input:checked + span { border-color: white; outline: 2px solid #245e59; }
   .cr-sw input:focus-visible + span { outline: 2px solid #60a5fa; }
+  .cr .sex { display: flex; gap: 6px; border: 0; padding: 0; margin: 0; }
+  .cr .sex legend { padding: 0; margin-bottom: 3px; }
+  .cr .sex label { display: flex; align-items: center; gap: 6px; padding: 5px 12px; border: 1px solid #bbcabc; border-radius: 99px; background: #f4f6ec; cursor: pointer; }
+  .cr .sex label:has(input:checked) { background: #226d69; border-color: #226d69; color: #fff; }
   .cr .prev { text-align: center; align-self: start; background: #deeadf; border-radius: 10px; padding: 12px; }
   .cr canvas { image-rendering: pixelated; width: ${W * 3}px; height: ${H * 3}px; }
   .cr .lvl { font-weight: bold; }
@@ -51,6 +64,7 @@ export function mountCreator(openButton: HTMLButtonElement, getEd: () => Pick<Em
 <form method="dialog">
   <div class="fields">
     <label>Nombre <input type="text" name="name" maxlength="30" required autocomplete="off"></label>
+    <fieldset class="sex"><legend>Sexo</legend><label><input type="radio" name="sex" value="mujer" checked> Mujer</label><label><input type="radio" name="sex" value="hombre"> Hombre</label></fieldset>
     <label>Edad <select name="age">${AGES.map((a) => `<option value="${a}" ${a === '18-39' ? 'selected' : ''}>${a} años</option>`).join('')}</select></label>
     <label>EPS <select name="eps"></select></label>
     <label>Síntoma <select name="symptom">${SYMPTOMS.map((s, i) => `<option value="${i}">${s.text}</option>`).join('')}</select></label>
@@ -94,7 +108,19 @@ export function mountCreator(openButton: HTMLButtonElement, getEd: () => Pick<Em
     dlg.querySelector('#cr-lvl')!.textContent = LEVEL_NAME[SYMPTOMS[Number(val('symptom'))].level];
   };
   form.addEventListener('input', draw);
-  form.addEventListener('change', draw);
+  form.addEventListener('change', (e) => {
+    // Cambiar el sexo propone su peinado inicial, salvo que ya hayan elegido uno a mano.
+    const t = e.target as HTMLInputElement;
+    if (t.name === 'hairStyle') hairTouched = true;
+    if (t.name === 'sex' && !hairTouched) (form.elements.namedItem('hairStyle') as HTMLSelectElement).value = String(HAIR_FOR[t.value as Sex]);
+    draw();
+  });
+  let hairTouched = false;
+  const resetHair = () => {
+    hairTouched = false;
+    (form.elements.namedItem('hairStyle') as HTMLSelectElement).value = String(HAIR_FOR.mujer);
+  };
+  resetHair();
   // El pantalón por defecto es azul y la camisa roja, para que el primer personaje no salga de un solo color.
   (form.querySelector('input[name=topColor][value="1"]') as HTMLInputElement).checked = true;
 
@@ -118,7 +144,7 @@ export function mountCreator(openButton: HTMLButtonElement, getEd: () => Pick<Em
       return;
     }
     const s = SYMPTOMS[Number(val('symptom'))];
-    const ok = getEd().injectVisitor({ name, ageRange: val('age') as PatientInfo['ageRange'], eps: val('eps'), symptom: s.text, triage: s.level, appearance: appearance() });
+    const ok = getEd().injectVisitor({ name, ageRange: val('age') as PatientInfo['ageRange'], eps: val('eps'), symptom: s.text, triage: s.level, appearance: appearance() }, val('sex') as Sex);
     if (!ok) {
       err.textContent = 'En modo validación no se pueden agregar pacientes (cambiaría el proceso de llegadas). Cambia a modo realista.';
       err.hidden = false;
@@ -126,6 +152,7 @@ export function mountCreator(openButton: HTMLButtonElement, getEd: () => Pick<Em
     }
     dlg.close();
     form.reset();
+    resetHair();
     (form.querySelector('input[name=topColor][value="1"]') as HTMLInputElement).checked = true;
     onSent(`${name} llegará al hospital con la próxima llegada (busca la flecha amarilla).`);
   };

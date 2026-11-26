@@ -71,9 +71,10 @@ app.innerHTML = `
       <div class="map-column">
       <section class="visit-strip" id="visit-strip">
         <div><strong>Mi paciente</strong><span id="visitor-state" role="status">Crea un visitante para seguir su recorrido.</span></div>
+        <button id="create-fs" type="button" class="fs-only">Crear mi paciente</button>
         <div><label>Destino del ensayo <select id="destination"></select></label><button id="practice">Demostrar traslado con mi paciente</button></div>
       </section>
-      <section class="trip-strip" id="trip-strip" hidden><div><strong id="trip-label"></strong><select id="trip-pick" aria-label="Remisión a mostrar" hidden></select><span id="trip-state"></span></div><div id="trip-why" hidden><ol id="trip-steps" class="steps"></ol><details id="trip-eval"><summary></summary><ul></ul></details></div><div><button id="ride">Seguir ambulancia</button><button id="enter-destination" hidden>Entrar a la clínica</button><button id="repeat" hidden>Repetir demostración</button></div></section>
+      <section class="trip-strip" id="trip-strip" hidden><div><strong id="trip-label"></strong><select id="trip-pick" aria-label="Remisión a mostrar" hidden></select><span id="trip-state"></span></div><div id="trip-why" hidden><ol id="trip-steps" class="steps"></ol><details id="trip-eval"><summary></summary><ul></ul></details></div><div><button id="ride">Seguir ambulancia</button><button id="enter-destination" hidden>Entrar a la clínica</button><button id="repeat" hidden>Repetir demostración</button></div><button id="trip-fold" type="button" class="fold" aria-expanded="true">Minimizar</button></section>
       <div class="map-card">
         <div class="map-head"><div><span class="map-symbol" aria-hidden="true">◇</span><b id="map-heading">Plano del hospital</b></div>
           <div class="view-group" role="group" aria-label="Vista y cámara"><input id="site-search" list="site-list" placeholder="Buscar institución" aria-label="Buscar institución" hidden autocomplete="off"><datalist id="site-list"></datalist><span id="cafe-group" role="group" aria-label="Cafetería"><button id="buy-drink">Máquina de refrescos</button><button id="buy-snack">Máquina de papas</button></span><button id="view">Ver ciudad</button><button id="minus" aria-label="Alejar">−</button><button id="plus" aria-label="Acercar">+</button><button id="fit">Ver todo</button><select id="map-focus" aria-label="Resaltar sedes por condición" hidden><option value="">Todas las sedes</option></select><select id="map-style" aria-label="Vista del mapa" hidden><option value="mapa">Mapa</option><option value="satelite">Satélite</option><option value="simple">Solo calles</option></select><select id="map-traffic" aria-label="Tráfico (supuesto de simulación)" hidden><option value="fluido">Tráfico fluido</option><option value="moderado">Tráfico moderado</option><option value="congestionado">Tráfico congestionado</option></select><button id="fullscreen" title="Tecla F">Pantalla completa</button></div>
@@ -161,7 +162,7 @@ const original = primary ?? new MockDriver();
 let live = primary;
 const driver = new SessionDriver(original);
 let practice: ReturnType<typeof rehearse> | undefined;
-let tracked: { info: Visitor; id?: string; outcome?: string } | undefined;
+let tracked: { info: Visitor; id?: string; outcome?: string; sex?: 'mujer' | 'hombre' } | undefined;
 let pending: NonNullable<typeof tracked>[] = [];
 type Ride = { amb: string; patientId: string; destination: number; initialSpeed: number; arrived: boolean; name: string };
 let ride: Ride | undefined;
@@ -406,6 +407,26 @@ document.addEventListener('keydown', (e) => {
   toggleFullscreen();
 });
 document.addEventListener('fullscreenchange', () => ($('fullscreen').textContent = document.fullscreenElement ? 'Salir de pantalla completa' : 'Pantalla completa'));
+// En pantalla completa la barra de herramientas queda fuera: este botón (solo visible ahí) abre el mismo creador.
+button('create-fs').onclick = () => button('create').click();
+// La franja de remisión se puede minimizar a una línea; se recuerda en este navegador.
+const tripFold = button('trip-fold');
+const setFold = (folded: boolean) => {
+  $('trip-strip').classList.toggle('folded', folded);
+  tripFold.textContent = folded ? 'Mostrar detalle' : 'Minimizar';
+  tripFold.setAttribute('aria-expanded', String(!folded));
+  try {
+    localStorage.setItem('franja-remision', folded ? 'min' : '');
+  } catch {
+    /* sin almacenamiento: solo dura esta sesión */
+  }
+};
+tripFold.onclick = () => setFold(!$('trip-strip').classList.contains('folded'));
+try {
+  setFold(localStorage.getItem('franja-remision') === 'min');
+} catch {
+  setFold(false);
+}
 button('buy-drink').onclick = () => openMachine(ward.index ?? -1, 'refrescos');
 button('buy-snack').onclick = () => openMachine(ward.index ?? -1, 'papas');
 // Solo en desarrollo (npm run dev): inspeccionar el estado desde la consola. No existe en el build de la feria.
@@ -552,9 +573,9 @@ if (primary)
     button('create'),
     () => ({
       params: primary.ed.params,
-      injectVisitor: (info) => {
+      injectVisitor: (info, sex) => {
         if (practice || !primary.injectVisitor(info)) return false;
-        tracked = { info };
+        tracked = { info, sex };
         pending.push(tracked);
         return true;
       },
@@ -782,6 +803,9 @@ setInterval(() => {
     $('map-heading').textContent = 'Interior de la clínica';
     $('city-key').hidden = true;
   }
+  // La máquina abierta pertenece a la cafetería visible: si cambias de vista (mapa, otra sede, otra pestaña), se cierra.
+  const cafeSite = $('tab-scene').hidden ? undefined : (ward.index ?? (scene.inCity ? undefined : -1));
+  if (vending.isOpen && vending.site !== cafeSite) vending.close();
   // T24: el modelo social sigue el reloj de la sesión visible (también en el mapa) y avisa las entregas.
   const soc = social();
   soc.advance(driver.pb.t);
@@ -895,7 +919,8 @@ setInterval(() => {
   const outcomes: Record<string, string> = { alta: 'alta', abandono: 'abandono', hospitalizacion: 'hospitalización', remitido: 'remisión' };
   let state = tracked ? tracked.info.name + ' · pendiente de la próxima llegada.' : 'Crea un visitante para seguir su recorrido.';
   if (v) {
-    state = v.name + ' · ' + v.state + (v.triage ? ' · Triage ' + ['', 'I', 'II', 'III', 'IV', 'V'][v.triage] : ' · sin clasificar');
+    const sex = tracked?.id === v.id && tracked.sex ? ` (${tracked.sex})` : '';
+    state = v.name + sex + ' · ' + v.state + (v.triage ? ' · Triage ' + ['', 'I', 'II', 'III', 'IV', 'V'][v.triage] : ' · sin clasificar');
     if (v.state === 'en pasillo' && !snap.ambulances.capacity) state += ' · sin ambulancias habilitadas';
     else if (v.state === 'en pasillo' && snap.ambulances.queue) state += ' · ambulancias ocupadas, en espera de un vehículo';
     else if (

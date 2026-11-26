@@ -375,3 +375,9 @@ Hecho:
 A medias: no se vio en pantalla un alfiler azul (remisión) dentro de un interior: en la red las remisiones van a UCI (sin planta) y en el modo original tardan; la lógica está probada.
 Siguiente paso: ensayo de la guía con el recorrido nuevo del paciente en su cama.
 Preguntas para el autor: ¿40 % de pacientes acompañados está bien como supuesto?
+
+## 2026-11-25 · Claude · feat/T36-interiores (T37)
+Hecho: la máquina de la cafetería se cierra si dejas de ver esa cafetería (mapa, otra sede, otra pestaña); la franja «Remisión desde el hospital de origen» tiene «Minimizar» (se recuerda en el navegador); en pantalla completa aparece «Crear mi paciente» dentro de la columna; el creador pide el sexo (Mujer/Hombre: propone el peinado y se muestra en «Mi paciente»); al arrastrar el muñeco solo se levanta la figura y un anillo marca en sus pies el punto exacto donde cae.
+A medias: el sexo no viaja en el motor: `PatientInfo` es parte del contrato congelado (`src/engine/events.ts`) y no tiene ese campo. Pantalla completa no se pudo probar en el panel del navegador (lo bloquea); se probó el botón y el creador por separado.
+Siguiente paso: probar en el monitor la pantalla completa con «Crear mi paciente».
+Preguntas para el autor: ¿agregar `sex?` opcional al contrato de eventos para que el sexo aparezca en el texto emergente del paciente?

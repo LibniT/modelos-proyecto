@@ -233,19 +233,21 @@ export function mountPrehospital(o: Options): PrehospitalUi {
     const x0 = e.clientX,
       y0 = e.clientY;
     let ghost: HTMLElement | undefined;
+    // Como el muñequito de un mapa: se levanta solo la figura y sus pies marcan el punto exacto donde caerá.
     const move = (m: PointerEvent) => {
       if (!ghost && Math.hypot(m.clientX - x0, m.clientY - y0) > 6) {
-        ghost = o.doll.cloneNode(true) as HTMLElement;
-        ghost.classList.add('ghost');
-        document.body.append(ghost);
+        ghost = el('div', { class: 'doll-ghost', 'aria-hidden': 'true' }, o.doll.querySelector('svg')!.cloneNode(true) as SVGElement, el('i', { class: 'drop' }));
+        (o.stage.closest(':fullscreen') ?? document.body).append(ghost);
+        o.doll.classList.add('lifted');
       }
-      if (ghost) Object.assign(ghost.style, { left: `${m.clientX - 22}px`, top: `${m.clientY - 50}px` });
+      if (ghost) Object.assign(ghost.style, { left: `${m.clientX}px`, top: `${m.clientY}px` });
     };
     const up = (u: PointerEvent) => {
       document.removeEventListener('pointermove', move);
       document.removeEventListener('pointerup', up);
       if (!ghost) return arm(); // fue un clic
       ghost.remove();
+      o.doll.classList.remove('lifted');
       const r = o.stage.getBoundingClientRect();
       const city = o.city();
       if (city && u.clientX >= r.left && u.clientX <= r.right && u.clientY >= r.top && u.clientY <= r.bottom) {

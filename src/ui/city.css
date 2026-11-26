@@ -66,7 +66,11 @@
   padding: 8px 10px 6px; border-radius: 14px; background: #fffdf6; box-shadow: var(--shadow); cursor: grab; touch-action: none; font-size: 13px
 }
 .doll:active { cursor: grabbing }
-.doll.ghost { position: fixed; z-index: 1000; pointer-events: none; opacity: .9; right: auto; bottom: auto; transform: scale(1.08) }
+/* figura levantada: los pies (y el anillo) quedan en la punta del puntero */
+.doll-ghost { position: fixed; z-index: 1000; pointer-events: none; width: 0; height: 0 }
+.doll-ghost svg { position: absolute; left: -26px; top: -66px; width: 52px; height: 66px; filter: drop-shadow(0 6px 6px #16383d55) }
+.doll-ghost .drop { position: absolute; left: -9px; top: -5px; width: 18px; height: 10px; border: 2.5px solid #c8442f; border-radius: 50%; background: #c8442f33 }
+.doll.lifted svg { opacity: .25 }
 @media (max-width: 760px) { .side { top: auto; height: 62%; width: calc(100% - 24px) } .pre-form { grid-template-columns: 1fr } }
 
 /* ---------- T32: vista Ciudad con el mapa como protagonista ---------- */
